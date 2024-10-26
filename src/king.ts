@@ -16,7 +16,9 @@ export class King extends Piece {
 
     // Le Roi se déplace d'une case dans n'importe quelle direction
     if (dx <= 1 && dy <= 1) {
-      return true;
+      // Vérifie que la case cible n'est pas occupée par un roi adverse
+      const targetPiece = board.getPiece(toX, toY);
+      return !(targetPiece && targetPiece.type === PieceType.KING);
     }
 
     // Logique pour le roque

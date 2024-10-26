@@ -48,8 +48,13 @@ export class Board {
     const piece = this.getPiece(fromX, fromY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
-      // Capturer la pièce adverse si présente
+      // Interdit de capturer le roi
       const targetPiece = this.getPiece(toX, toY);
+      if (targetPiece && targetPiece.type === PieceType.KING) {
+        return false; // Mouvement invalide si la cible est un roi
+      }
+
+      // Capturer la pièce adverse si présente
       if (targetPiece && targetPiece.color !== piece.color) {
         this.grid[toY][toX] = null; // Capture de la pièce
       }

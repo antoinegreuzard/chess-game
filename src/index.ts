@@ -13,6 +13,7 @@ const capturedWhiteElement = document.getElementById('capturedWhite')!;
 const capturedBlackElement = document.getElementById('capturedBlack')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
+const replayButton = document.getElementById('replayButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Contrôle du statut de jeu
@@ -47,10 +48,8 @@ function endGame() {
   gameState = 'waiting'; // Empêcher les mouvements après la fin du jeu
   showMessage("La partie est terminée !");
 
-  // Recharger la page après un délai pour permettre la lecture du message
-  setTimeout(() => {
-    location.reload();
-  }, 3000); // 3 secondes avant le rechargement
+  // Afficher le bouton "Rejouer"
+  replayButton.style.display = 'block';
 }
 
 // Fonction pour afficher un message dans l'élément gameMessage
@@ -189,4 +188,9 @@ passTurnButton.addEventListener('click', (event) => {
     showMessage(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
     updateTurn();
   }
+});
+
+// Gérer le clic sur "Rejouer"
+replayButton.addEventListener('click', () => {
+  location.reload(); // Recharge la page pour redémarrer la partie
 });

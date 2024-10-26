@@ -49,11 +49,21 @@
         font-size: 16px;
         cursor: pointer;
       }
+      #replayButton {
+        display: none;
+        margin-bottom: 10px;
+        padding: 5px 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <header>Jeu d'échecs en TypeScript</header>
     <div id="gameMessage" style=" display: none; background-color: #f8d7da; color: #721c24; padding: 10px; border: 1px solid #f5c6cb; margin-bottom: 20px;"></div>
+    <button id="replayButton">Rejouer</button>
     <div class="container">
       <div id="sidebar">
         <h3>Informations de Jeu</h3>
