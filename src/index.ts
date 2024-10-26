@@ -77,6 +77,12 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
     return;
   }
 
+  // Validate coordinates
+  if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7 || toX < 0 || toX > 7 || toY < 0 || toY > 7) {
+    alert("Coordonnées invalides !");
+    return;
+  }
+
   const piece = board.getPiece(fromX, fromY);
 
   // Vérifie que c'est bien le tour du joueur qui joue
