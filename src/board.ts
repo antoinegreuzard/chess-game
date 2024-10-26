@@ -45,6 +45,9 @@ export class Board {
 
   // Déplacer une pièce sur l'échiquier (capture incluse)
   public movePiece(fromX: number, fromY: number, toX: number, toY: number): boolean {
+    if (!Number.isInteger(toX) || !Number.isInteger(toY) || toX < 0 || toX > 7 || toY < 0 || toY > 7) {
+      return false;
+    }
     const piece = this.getPiece(fromX, fromY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {

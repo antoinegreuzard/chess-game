@@ -76,6 +76,10 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
     alert("Veuillez attendre le prochain tour !");
     return;
   }
+  if (!Number.isInteger(toX) || !Number.isInteger(toY) || toX < 0 || toX > 7 || toY < 0 || toY > 7) {
+    alert("Coordonnées invalides !");
+    return;
+  }
 
   const piece = board.getPiece(fromX, fromY);
 
