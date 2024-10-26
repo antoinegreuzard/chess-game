@@ -1,7 +1,6 @@
 name: CI Pipeline
 
 on:
-  # Déclenche le workflow sur des événements de push ou pull request sur la branche principale
   push:
     branches:
       - main
