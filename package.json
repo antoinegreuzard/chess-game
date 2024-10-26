@@ -4,9 +4,15 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "dev": "vite",
+    "start": "vite"
   },
   "devDependencies": {
-    "typescript": "^4.0.0"
+    "typescript": "^4.0.0",
+    "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "@types/node": "^22.8.1",
+    "undici": "^6.20.1"
   }
 }

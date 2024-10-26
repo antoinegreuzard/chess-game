@@ -2,15 +2,19 @@
 import {Board} from './board';
 
 export class Game {
-  private board: Board;
+  private readonly board: Board;
 
   constructor() {
     this.board = new Board();
   }
 
-  // Démarrer le jeu
+  // Commencer une nouvelle partie (initialisation de la logique du jeu)
   public start(): void {
-    console.log("Bienvenue dans le jeu d'échecs !");
-    this.board.printBoard();
+    console.log("Nouvelle partie d'échecs démarrée !");
+  }
+
+  // Retourner l'état actuel de l'échiquier
+  public getBoard(): Board {
+    return this.board;
   }
 }
