@@ -77,6 +77,12 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
     return;
   }
 
+  // Validate toY parameter
+  if (toY < 0 || toY > 7) {
+    alert("Position Y invalide !");
+    return;
+  }
+
   const piece = board.getPiece(fromX, fromY);
 
   // Vérifie que c'est bien le tour du joueur qui joue
