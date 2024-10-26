@@ -46,10 +46,10 @@ export class Board {
   // Déplacer une pièce sur l'échiquier (capture incluse)
   public movePiece(fromX: number, fromY: number, toX: number, toY: number): boolean {
     const piece = this.getPiece(fromX, fromY);
-    const targetPiece = this.getPiece(toX, toY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
       // Capturer la pièce adverse si présente
+      const targetPiece = this.getPiece(toX, toY);
       if (targetPiece && targetPiece.color !== piece.color) {
         this.grid[toY][toX] = null; // Capture de la pièce
       }

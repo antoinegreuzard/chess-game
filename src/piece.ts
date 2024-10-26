@@ -1,5 +1,5 @@
 // src/piece.ts
-import {Board} from './board'; // Import de Board pour être utilisé dans isValidMove
+import {Board} from './board';
 
 export enum PieceColor {
   WHITE = "white",
@@ -26,6 +26,7 @@ export abstract class Piece {
     board: Board
   ): boolean;
 
+  // Vérifie si le chemin est dégagé pour certaines pièces
   protected isPathClear(
     fromX: number, fromY: number,
     toX: number, toY: number,
@@ -44,5 +45,11 @@ export abstract class Piece {
     }
 
     return true;
+  }
+
+  // Vérifie si une pièce peut capturer une autre
+  protected canCapture(toX: number, toY: number, board: Board): boolean {
+    const targetPiece = board.getPiece(toX, toY);
+    return targetPiece !== null && targetPiece.color !== this.color;
   }
 }
