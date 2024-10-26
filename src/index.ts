@@ -9,10 +9,15 @@ const board = game.getBoard();
 const moveHistoryElement = document.getElementById('moveHistory')!;
 const currentTurnElement = document.getElementById('currentTurn')!;
 const timerElement = document.getElementById('timer')!;
+const capturedWhiteElement = document.getElementById('capturedWhite')!;
+const capturedBlackElement = document.getElementById('capturedBlack')!;
+const passTurnButton = document.getElementById('passTurnButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Contrôle du statut de jeu
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
+let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
+let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
 let whiteTimer = new Timer(60, (timeLeft) => updateTimerDisplay(timeLeft, PieceColor.WHITE));
@@ -70,6 +75,38 @@ function addMoveToHistory(fromX: number, fromY: number, toX: number, toY: number
   moveHistoryElement.appendChild(listItem);
 }
 
+// Fonction pour mettre à jour l'affichage des pièces capturées
+function updateCapturedPieces(piece: PieceType, color: PieceColor) {
+  const pieceSymbol = getPieceSymbol(piece, color);
+  if (color === PieceColor.WHITE) {
+    capturedWhite.push(pieceSymbol);
+    capturedWhiteElement.textContent = capturedWhite.join(' ');
+  } else {
+    capturedBlack.push(pieceSymbol);
+    capturedBlackElement.textContent = capturedBlack.join(' ');
+  }
+}
+
+// Fonction pour obtenir le symbole de la pièce capturée
+function getPieceSymbol(piece: PieceType, color: PieceColor): string {
+  switch (piece) {
+    case 'pawn':
+      return color === PieceColor.WHITE ? '♙' : '♟';
+    case 'rook':
+      return color === PieceColor.WHITE ? '♖' : '♜';
+    case 'knight':
+      return color === PieceColor.WHITE ? '♘' : '♞';
+    case 'bishop':
+      return color === PieceColor.WHITE ? '♗' : '♝';
+    case 'queen':
+      return color === PieceColor.WHITE ? '♕' : '♛';
+    case 'king':
+      return color === PieceColor.WHITE ? '♔' : '♚';
+    default:
+      return '';
+  }
+}
+
 // Fonction pour gérer un mouvement sur le plateau
 export function handleMove(fromX: number, fromY: number, toX: number, toY: number): void {
   if (gameState === 'waiting' || hasMoved) {
@@ -78,6 +115,7 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
   }
 
   const piece = board.getPiece(fromX, fromY);
+  const targetPiece = board.getPiece(toX, toY);
 
   // Vérifie que c'est bien le tour du joueur qui joue
   if (!piece || piece.color !== currentPlayer) {
@@ -91,6 +129,11 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
     if (board.movePiece(fromX, fromY, toX, toY)) {
       // Marquer que le joueur a effectué son coup
       hasMoved = true;
+
+      // Si une pièce est capturée, l'ajouter aux pièces capturées
+      if (targetPiece) {
+        updateCapturedPieces(targetPiece.type, targetPiece.color);
+      }
 
       // Ajoute le mouvement à l'historique
       addMoveToHistory(fromX, fromY, toX, toY, piece.type);
@@ -113,3 +156,11 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
     alert("Mouvement invalide !");
   }
 }
+
+// Gérer le clic sur "Passer son tour"
+passTurnButton.addEventListener('click', () => {
+  if (gameState === 'playing') {
+    alert(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
+    updateTurn();
+  }
+});
