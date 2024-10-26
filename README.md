@@ -22,7 +22,7 @@ movements, and rules enforcement.
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/antoinegreuzard/chess-game.git
    cd chess-game
    ```
 
@@ -40,10 +40,10 @@ movements, and rules enforcement.
 
 2. Start the development server:
    ```bash
-   npm run dev
+   npm run start
    ```
 
-3. Open your browser and navigate to `http://localhost:3000` to play the game.
+3. Open your browser and navigate to `http://localhost:5173` to play the game.
 
 ### Project Structure
 
