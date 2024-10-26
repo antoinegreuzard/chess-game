@@ -12,6 +12,7 @@ const timerElement = document.getElementById('timer')!;
 const capturedWhiteElement = document.getElementById('capturedWhite')!;
 const capturedBlackElement = document.getElementById('capturedBlack')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
+const gameMessageElement = document.getElementById('gameMessage')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Contrôle du statut de jeu
@@ -28,7 +29,7 @@ function updateTimerDisplay(timeLeft: number, color: PieceColor) {
   if (color === currentPlayer) {
     timerElement.textContent = `Temps restant: ${timeLeft}s`;
     if (timeLeft <= 0) {
-      alert(`Temps écoulé ! ${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne !`);
+      showMessage(`${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par temps écoulé !`);
       endGame();
     }
   }
@@ -44,7 +45,13 @@ function endGame() {
   whiteTimer.stop();
   blackTimer.stop();
   gameState = 'waiting'; // Empêcher les mouvements après la fin du jeu
-  alert("La partie est terminée.");
+  showMessage("La partie est terminée !");
+}
+
+// Fonction pour afficher un message dans l'élément gameMessage
+function showMessage(message: string) {
+  gameMessageElement.textContent = message;
+  gameMessageElement.style.display = 'block'; // Afficher le message
 }
 
 // Fonction pour mettre à jour le tour et l'affichage
@@ -110,7 +117,7 @@ function getPieceSymbol(piece: PieceType, color: PieceColor): string {
 // Fonction pour gérer un mouvement sur le plateau
 export function handleMove(fromX: number, fromY: number, toX: number, toY: number): void {
   if (gameState === 'waiting' || hasMoved) {
-    alert("Veuillez attendre le prochain tour !");
+    showMessage("Veuillez attendre le prochain tour !");
     return;
   }
 
@@ -119,7 +126,7 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
 
   // Vérifie que c'est bien le tour du joueur qui joue
   if (!piece || piece.color !== currentPlayer) {
-    alert(`Ce n'est pas le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
+    showMessage(`Ce n'est pas le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
     return;
   }
 
@@ -143,24 +150,25 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
 
       // Vérifie si cela met le roi adverse en échec
       if (board.isKingInCheck(currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE)) {
-        alert(`Échec au ${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} !`);
+        showMessage(`Échec au ${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} !`);
       }
 
       // Change de tour après un mouvement valide
       gameState = 'waiting'; // Bloque les mouvements jusqu'à ce que le tour change
       updateTurn();
     } else {
-      alert("Mouvement invalide !");
+      showMessage("Mouvement invalide !");
     }
   } else {
-    alert("Mouvement invalide !");
+    showMessage("Mouvement invalide !");
   }
 }
 
 // Gérer le clic sur "Passer son tour"
-passTurnButton.addEventListener('click', () => {
+passTurnButton.addEventListener('click', (event) => {
+  event.preventDefault(); // Empêche tout comportement par défaut
   if (gameState === 'playing') {
-    alert(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
+    showMessage(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
     updateTurn();
   }
 });
