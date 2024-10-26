@@ -8,7 +8,7 @@ export class CanvasRenderer {
   private readonly tileSize: number;
   private selectedPiece: { x: number; y: number } | null = null;
 
-  constructor(private board: Board, canvasId: string) {
+  constructor(private board: Board, canvasId: string, private moveHandler: (fromX: number, fromY: number, toX: number, toY: number) => void) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.context = this.canvas.getContext('2d')!;
     this.tileSize = this.canvas.width / 8;
@@ -34,36 +34,6 @@ export class CanvasRenderer {
     }
   }
 
-  // Dessiner une pièce spécifique
-  private drawPiece(piece: Piece, x: number, y: number): void {
-    const pieceText = this.getPieceText(piece);
-    this.context.fillStyle = piece.color === PieceColor.WHITE ? 'white' : 'black';
-    this.context.font = '48px Arial';
-    this.context.textAlign = 'center';
-    this.context.textBaseline = 'middle';
-    this.context.fillText(pieceText, x * this.tileSize + this.tileSize / 2, y * this.tileSize + this.tileSize / 2);
-  }
-
-  // Déterminer le symbole texte pour chaque pièce
-  private getPieceText(piece: Piece): string {
-    switch (piece.type) {
-      case 'pawn':
-        return '♙';
-      case 'rook':
-        return '♖';
-      case 'knight':
-        return '♘';
-      case 'bishop':
-        return '♗';
-      case 'queen':
-        return '♕';
-      case 'king':
-        return '♔';
-      default:
-        return '';
-    }
-  }
-
   // Dessiner toutes les pièces sur l'échiquier
   private drawPieces(): void {
     for (let y = 0; y < 8; y++) {
@@ -73,6 +43,36 @@ export class CanvasRenderer {
           this.drawPiece(piece, x, y);
         }
       }
+    }
+  }
+
+  // Dessiner une pièce spécifique
+  private drawPiece(piece: Piece, x: number, y: number): void {
+    this.context.fillStyle = piece.color === 'white' ? 'white' : 'black';
+    this.context.font = '48px Arial';
+    this.context.textAlign = 'center';
+    this.context.textBaseline = 'middle';
+    const pieceText = this.getPieceText(piece);
+    this.context.fillText(pieceText, x * this.tileSize + this.tileSize / 2, y * this.tileSize + this.tileSize / 2);
+  }
+
+  // Convertir le type de pièce en texte pour affichage
+  private getPieceText(piece: Piece): string {
+    switch (piece.type) {
+      case 'pawn':
+        return piece.color === 'white' ? '♙' : '♟';
+      case 'rook':
+        return piece.color === 'white' ? '♖' : '♜';
+      case 'knight':
+        return piece.color === 'white' ? '♘' : '♞';
+      case 'bishop':
+        return piece.color === 'white' ? '♗' : '♝';
+      case 'queen':
+        return piece.color === 'white' ? '♕' : '♛';
+      case 'king':
+        return piece.color === 'white' ? '♔' : '♚';
+      default:
+        return '';
     }
   }
 
@@ -119,15 +119,16 @@ export class CanvasRenderer {
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
     if (this.selectedPiece) {
-      // Déplacer la pièce sélectionnée vers la nouvelle position
-      const piece = this.board.getPiece(this.selectedPiece.x, this.selectedPiece.y);
-      if (piece && this.board.movePiece(this.selectedPiece.x, this.selectedPiece.y, x, y)) {
-        // Animation du mouvement
-        this.animateMove(this.selectedPiece.x, this.selectedPiece.y, x, y, piece);
-      }
+      // Si une pièce est déjà sélectionnée, tente de la déplacer
+      const fromX = this.selectedPiece.x;
+      const fromY = this.selectedPiece.y;
+
+      // Utilise la fonction de rappel `moveHandler` pour déplacer la pièce
+      this.moveHandler(fromX, fromY, x, y);
+
       this.selectedPiece = null;
     } else {
-      // Sélectionner une pièce
+      // Sélectionne une nouvelle pièce
       this.selectedPiece = {x, y};
     }
   }
