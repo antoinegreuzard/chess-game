@@ -2,10 +2,15 @@
 import { Board } from './board';
 import { Piece, PieceColor } from './piece';
 export class CanvasRenderer {
+    board;
+    moveHandler;
+    canvas;
+    context;
+    tileSize;
+    selectedPiece = null;
     constructor(board, canvasId, moveHandler) {
         this.board = board;
         this.moveHandler = moveHandler;
-        this.selectedPiece = null;
         this.canvas = document.getElementById(canvasId);
         this.context = this.canvas.getContext('2d');
         this.tileSize = this.canvas.width / 8;

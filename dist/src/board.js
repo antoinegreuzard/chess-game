@@ -7,6 +7,7 @@ import { Bishop } from './bishop';
 import { Queen } from './queen';
 import { Pawn } from './pawn';
 export class Board {
+    grid;
     constructor() {
         this.grid = this.initializeBoard();
     }

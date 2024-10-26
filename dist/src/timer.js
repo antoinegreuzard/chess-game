@@ -1,8 +1,11 @@
 // src/timer.ts
 export class Timer {
+    initialTime;
+    intervalId = null;
+    currentTime;
+    onTimeUpdate;
     constructor(initialTime, onTimeUpdate) {
         this.initialTime = initialTime;
-        this.intervalId = null;
         this.currentTime = initialTime;
         this.onTimeUpdate = onTimeUpdate;
     }

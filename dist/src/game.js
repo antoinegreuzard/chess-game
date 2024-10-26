@@ -1,6 +1,7 @@
 // src/game.ts
 import { Board } from './board';
 export class Game {
+    board;
     constructor() {
         this.board = new Board();
     }

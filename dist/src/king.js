@@ -3,9 +3,9 @@ import { Piece, PieceColor, PieceType } from './piece';
 import { Board } from './board';
 import { Rook } from './rook';
 export class King extends Piece {
+    hasMoved = false;
     constructor(color) {
         super(color, PieceType.KING);
-        this.hasMoved = false;
     }
     isValidMove(fromX, fromY, toX, toY, board) {
         const dx = Math.abs(toX - fromX);

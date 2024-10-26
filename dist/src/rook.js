@@ -2,9 +2,9 @@
 import { Piece, PieceColor, PieceType } from './piece';
 import { Board } from './board';
 export class Rook extends Piece {
+    hasMoved = false;
     constructor(color) {
         super(color, PieceType.ROOK);
-        this.hasMoved = false;
     }
     isValidMove(fromX, fromY, toX, toY, board) {
         // Vérifie si le mouvement est en ligne droite et que le chemin est dégagé

@@ -15,6 +15,8 @@ export var PieceType;
     PieceType["KING"] = "king";
 })(PieceType || (PieceType = {}));
 export class Piece {
+    color;
+    type;
     constructor(color, type) {
         this.color = color;
         this.type = type;
