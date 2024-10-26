@@ -1,5 +1,6 @@
 // src/rook.ts
-import { Piece, PieceType } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
+import { Board } from './board';
 export class Rook extends Piece {
     constructor(color) {
         super(color, PieceType.ROOK);

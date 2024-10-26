@@ -1,5 +1,5 @@
 // src/knight.ts
-import { Piece, PieceType } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
 export class Knight extends Piece {
     constructor(color) {
         super(color, PieceType.KNIGHT);

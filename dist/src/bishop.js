@@ -1,5 +1,6 @@
 // src/bishop.ts
-import { Piece, PieceType } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
+import { Board } from './board';
 export class Bishop extends Piece {
     constructor(color) {
         super(color, PieceType.BISHOP);

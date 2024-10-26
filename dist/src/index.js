@@ -2,7 +2,7 @@
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
-import { PieceColor } from './piece';
+import { PieceColor, PieceType } from './piece';
 const game = new Game();
 const board = game.getBoard();
 const moveHistoryElement = document.getElementById('moveHistory');

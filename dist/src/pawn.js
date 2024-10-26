@@ -1,5 +1,6 @@
 // src/pawn.ts
 import { Piece, PieceColor, PieceType } from './piece';
+import { Board } from './board';
 export class Pawn extends Piece {
     constructor(color) {
         super(color, PieceType.PAWN);

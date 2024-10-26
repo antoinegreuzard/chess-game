@@ -1,3 +1,5 @@
+// src/piece.ts
+import { Board } from './board';
 export var PieceColor;
 (function (PieceColor) {
     PieceColor["WHITE"] = "white";

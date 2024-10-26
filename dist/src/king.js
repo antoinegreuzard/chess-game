@@ -1,5 +1,6 @@
 // src/king.ts
-import { Piece, PieceType } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
+import { Board } from './board';
 import { Rook } from './rook';
 export class King extends Piece {
     constructor(color) {
