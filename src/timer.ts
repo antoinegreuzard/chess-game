@@ -4,7 +4,10 @@ export class Timer {
   private currentTime: number;
   private readonly onTimeUpdate: (timeLeft: number) => void;
 
-  constructor(private initialTime: number, onTimeUpdate: (timeLeft: number) => void) {
+  constructor(
+    private initialTime: number,
+    onTimeUpdate: (timeLeft: number) => void,
+  ) {
     this.currentTime = initialTime;
     this.onTimeUpdate = onTimeUpdate;
   }
