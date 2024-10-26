@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     minify: 'terser', // Utilise esbuild pour minimiser le code
-    sourcemap: true,   // Génère une carte source pour le debugging
+    sourcemap: true, // Génère une carte source pour le debugging
     rollupOptions: {
       output: {
         format: 'es', // Utilise le format ES Modules
