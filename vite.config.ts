@@ -2,16 +2,15 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  root: 'public',
+  root: '',
   base: '/chess-game/',
   build: {
-    outDir: '../dist',
-    minify: 'terser', // Utilise esbuild pour minimiser le code
+    outDir: 'public',
+    minify: 'esbuild', // Utilise esbuild pour minimiser le code
     sourcemap: true, // Génère une carte source pour le debugging
     rollupOptions: {
       output: {
         format: 'es', // Utilise le format ES Modules
-        preserveModules: true,
         preserveModulesRoot: 'src', // Préserve la structure des modules
         entryFileNames: '[name].js', // Conserve .js dans les fichiers générés
         chunkFileNames: '[name]-[hash].js',

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "vite build",
     "start": "vite",
     "prettier": "prettier --write '**/*.{js,ts,html,css}'",
     "prettier-check": "prettier --check '**/*.{js,ts,html,css}'",
