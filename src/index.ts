@@ -2,6 +2,7 @@
 import {Game} from './game';
 import {CanvasRenderer} from './canvas-renderer';
 import {Timer} from './timer';
+import {PieceColor} from './piece'; // Ajoute cette ligne
 
 const game = new Game();
 const board = game.getBoard();
@@ -36,4 +37,20 @@ function addMoveToHistory(move: string) {
   const listItem = document.createElement('li');
   listItem.textContent = move;
   moveHistoryElement.appendChild(listItem);
+}
+
+// Ajoute la vérification d'échec après chaque mouvement
+function handleMove(fromX: number, fromY: number, toX: number, toY: number): void {
+  const piece = board.getPiece(fromX, fromY);
+  if (piece && piece.isValidMove(fromX, fromY, toX, toY, board)) {
+    board.movePiece(fromX, fromY, toX, toY);
+
+    if (board.isKingInCheck(currentPlayer === 'white' ? PieceColor.WHITE : PieceColor.BLACK)) {
+      alert(`Échec au ${currentPlayer === 'white' ? 'Blanc' : 'Noir'} !`);
+    }
+
+    updateTurn();
+  } else {
+    alert("Mouvement invalide !");
+  }
 }

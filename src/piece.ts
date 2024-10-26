@@ -1,4 +1,6 @@
 // src/piece.ts
+import {Board} from './board'; // Import de Board pour être utilisé dans isValidMove
+
 export enum PieceColor {
   WHITE = "white",
   BLACK = "black"
@@ -17,9 +19,30 @@ export abstract class Piece {
   protected constructor(public color: PieceColor, public type: PieceType) {
   }
 
-  // Vérifie si le mouvement est valide pour cette pièce
+  // Mise à jour pour inclure le paramètre 'board'
   abstract isValidMove(
     fromX: number, fromY: number,
-    toX: number, toY: number
+    toX: number, toY: number,
+    board: Board
   ): boolean;
+
+  protected isPathClear(
+    fromX: number, fromY: number,
+    toX: number, toY: number,
+    board: Board
+  ): boolean {
+    const dx = Math.sign(toX - fromX);
+    const dy = Math.sign(toY - fromY);
+
+    let x = fromX + dx;
+    let y = fromY + dy;
+
+    while (x !== toX || y !== toY) {
+      if (board.getPiece(x, y)) return false;
+      x += dx;
+      y += dy;
+    }
+
+    return true;
+  }
 }

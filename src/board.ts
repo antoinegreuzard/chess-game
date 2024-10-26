@@ -1,5 +1,5 @@
 // src/board.ts
-import {Piece, PieceColor} from './piece';
+import {Piece, PieceColor, PieceType} from './piece';
 import {Pawn} from './pawn';
 import {Rook} from './rook';
 import {Knight} from './knight';
@@ -38,19 +38,46 @@ export class Board {
     return board;
   }
 
-  // Récupérer une pièce à une position spécifique
   public getPiece(x: number, y: number): BoardSquare {
     return this.grid[y][x];
   }
 
-  // Déplacer une pièce sur l'échiquier
   public movePiece(fromX: number, fromY: number, toX: number, toY: number): boolean {
     const piece = this.getPiece(fromX, fromY);
-    if (piece && piece.isValidMove(fromX, fromY, toX, toY)) {
+    if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
       return true;
     }
     return false;
+  }
+
+  public isKingInCheck(color: PieceColor): boolean {
+    const kingPosition = this.findKing(color);
+    if (!kingPosition) return false;
+
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece && piece.color !== color) {
+          if (piece.isValidMove(x, y, kingPosition.x, kingPosition.y, this)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  private findKing(color: PieceColor): { x: number; y: number } | null {
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece && piece.type === PieceType.KING && piece.color === color) {
+          return {x, y};
+        }
+      }
+    }
+    return null;
   }
 }

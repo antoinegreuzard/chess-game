@@ -1,13 +1,16 @@
 // src/rook.ts
 import {Piece, PieceColor, PieceType} from './piece';
+import {Board} from './board';
 
 export class Rook extends Piece {
   constructor(color: PieceColor) {
     super(color, PieceType.ROOK);
   }
 
-  isValidMove(fromX: number, fromY: number, toX: number, toY: number): boolean {
-    // La Tour se déplace en ligne droite, soit horizontalement, soit verticalement
-    return fromX === toX || fromY === toY;
+  isValidMove(fromX: number, fromY: number, toX: number, toY: number, board: Board): boolean {
+    if (fromX === toX || fromY === toY) {
+      return this.isPathClear(fromX, fromY, toX, toY, board);
+    }
+    return false;
   }
 }
