@@ -1,5 +1,5 @@
 // src/board.ts
-import { Piece, PieceColor } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
 import { King } from './king';
 import { Rook } from './rook';
 import { Knight } from './knight';

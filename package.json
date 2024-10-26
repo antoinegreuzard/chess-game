@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "vite",
-    "prettier": "prettier --write '**/*.{js,ts,json,html,css}'",
-    "prettier-check": "prettier --check '**/*.{js,ts,json,html,css}'",
+    "prettier": "prettier --write '**/*.{js,ts,html,css}'",
+    "prettier-check": "prettier --check '**/*.{js,ts,html,css}'",
     "lint": "eslint '**/*.{js,ts}' --config ./eslint.config.js"
   },
   "devDependencies": {

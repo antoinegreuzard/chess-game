@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
     "outDir": "./public/dist",
-    "rootDir": "./src",
     "target": "ES6",
-    "module": "commonjs",
+    "module": "NodeNext",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "nodenext", 
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "vite.config.ts"]
+  "include": [
+    "src/**/*",
+    "vite.config.ts"
+  ]
 }

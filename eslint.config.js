@@ -8,7 +8,7 @@ const config = /** @type {Linter.FlatConfig[]} */ ([
     languageOptions: {
       parser,
       parserOptions: {
-        project: './tsconfig.json', // Assurez-vous que le chemin est correct
+        project: './tsconfig.eslint.json', // Utilise le nouveau fichier de configuration
         sourceType: 'module',
       },
     },
