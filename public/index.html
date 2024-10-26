@@ -1,6 +1,6 @@
 <!-- public/index.html -->
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +9,18 @@
       body {
         display: flex;
         justify-content: center;
-        align-items: center;
-        height: 100vh;
+        align-items: flex-start;
         margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+      #sidebar {
+        width: 200px;
+        padding: 20px;
+        background-color: #f4f4f4;
+        height: 640px;
+        overflow-y: auto;
+        margin-right: 20px;
       }
       canvas {
         border: 2px solid black;
@@ -19,6 +28,13 @@
     </style>
   </head>
   <body>
+    <div id="sidebar">
+      <h3>Informations de Jeu</h3>
+      <div id="currentTurn">Tour actuel: Blanc</div>
+      <div id="timer">Temps restant: 60s</div>
+      <h4>Historique des Mouvements</h4>
+      <ul id="moveHistory"></ul>
+    </div>
     <canvas id="chessBoard" width="640" height="640"></canvas>
     <script type="module" src="/dist/index.js"></script>
   </body>
