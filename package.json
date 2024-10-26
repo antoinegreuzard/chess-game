@@ -2,6 +2,7 @@
   "name": "chess-game",
   "version": "1.0.0",
   "license": "MIT",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

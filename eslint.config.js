@@ -1,6 +1,6 @@
-const { Linter } = require('eslint');
-const typescriptPlugin = require('@typescript-eslint/eslint-plugin');
-const parser = require('@typescript-eslint/parser');
+import { Linter } from 'eslint';
+import typescriptPlugin from '@typescript-eslint/eslint-plugin';
+import parser from '@typescript-eslint/parser';
 
 const config = /** @type {Linter.FlatConfig[]} */ ([
   {
@@ -23,4 +23,4 @@ const config = /** @type {Linter.FlatConfig[]} */ ([
   },
 ]);
 
-module.exports = config;
+export default config;
