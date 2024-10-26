@@ -1,5 +1,5 @@
 // src/game.ts
-import {Board} from './board';
+import { Board } from './board';
 
 export class Game {
   private readonly board: Board;

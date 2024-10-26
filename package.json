@@ -2,14 +2,22 @@
   "name": "chess-game",
   "version": "1.0.0",
   "license": "MIT",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "vite",
-    "start": "vite"
+    "start": "vite",
+    "prettier": "prettier --write '**/*.{js,ts,html,css}'",
+    "prettier-check": "prettier --check '**/*.{js,ts,html,css}'",
+    "lint": "eslint '**/*.{js,ts}' --config ./eslint.config.js",
+    "test-server": "npm run start & sleep 5 && pkill -f vite"    
   },
   "devDependencies": {
-    "typescript": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.11.0",
+    "@typescript-eslint/parser": "^8.11.0",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
     "vite": "^5.4.10"
   },
   "dependencies": {

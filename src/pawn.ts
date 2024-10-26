@@ -1,19 +1,25 @@
 // src/pawn.ts
-import {Piece, PieceColor, PieceType} from './piece';
-import {Board} from './board';
+import { Piece, PieceColor, PieceType } from './piece';
+import { Board } from './board';
 
 export class Pawn extends Piece {
   constructor(color: PieceColor) {
     super(color, PieceType.PAWN);
   }
 
-  isValidMove(fromX: number, fromY: number, toX: number, toY: number, board: Board): boolean {
+  isValidMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    board: Board,
+  ): boolean {
     // Corrige la direction : 1 pour les blancs, -1 pour les noirs
     const direction = this.color === PieceColor.WHITE ? 1 : -1; // Inverser la logique
     const startRow = this.color === PieceColor.WHITE ? 1 : 6; // Ajuster la ligne de départ pour correspondre à la direction
     const distanceY = (toY - fromY) * direction; // Déplacement vertical en tenant compte de la couleur
     const distanceX = Math.abs(toX - fromX); // Déplacement horizontal
-    
+
     // 1. Déplacement d'une case vers l'avant
     if (distanceX === 0 && distanceY === 1) {
       if (!board.getPiece(toX, toY)) {
@@ -23,7 +29,10 @@ export class Pawn extends Piece {
 
     // 2. Déplacement de deux cases vers l'avant depuis la ligne de départ
     if (distanceX === 0 && distanceY === 2 && fromY === startRow) {
-      if (!board.getPiece(toX, toY) && !board.getPiece(fromX, fromY + direction)) {
+      if (
+        !board.getPiece(toX, toY) &&
+        !board.getPiece(fromX, fromY + direction)
+      ) {
         return true;
       }
     }
