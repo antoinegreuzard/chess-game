@@ -1,11 +1,11 @@
 // src/board.ts
-import {Piece, PieceColor} from './piece';
-import {King} from './king';
-import {Rook} from './rook';
-import {Knight} from './knight';
-import {Bishop} from './bishop';
-import {Queen} from './queen';
-import {Pawn} from "./pawn";
+import { Piece, PieceColor } from './piece';
+import { King } from './king';
+import { Rook } from './rook';
+import { Knight } from './knight';
+import { Bishop } from './bishop';
+import { Queen } from './queen';
+import { Pawn } from './pawn';
 
 type BoardSquare = Piece | null;
 
@@ -17,23 +17,39 @@ export class Board {
   }
 
   private initializeBoard(): BoardSquare[][] {
-    const board: BoardSquare[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+    const board: BoardSquare[][] = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
 
     // Ajouter les pièces blanches
     board[0] = [
-      new Rook(PieceColor.WHITE), new Knight(PieceColor.WHITE), new Bishop(PieceColor.WHITE),
-      new Queen(PieceColor.WHITE), new King(PieceColor.WHITE),
-      new Bishop(PieceColor.WHITE), new Knight(PieceColor.WHITE), new Rook(PieceColor.WHITE)
+      new Rook(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Queen(PieceColor.WHITE),
+      new King(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Rook(PieceColor.WHITE),
     ];
-    board[1] = Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE));
+    board[1] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.WHITE));
 
     // Ajouter les pièces noires
     board[7] = [
-      new Rook(PieceColor.BLACK), new Knight(PieceColor.BLACK), new Bishop(PieceColor.BLACK),
-      new Queen(PieceColor.BLACK), new King(PieceColor.BLACK),
-      new Bishop(PieceColor.BLACK), new Knight(PieceColor.BLACK), new Rook(PieceColor.BLACK)
+      new Rook(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Queen(PieceColor.BLACK),
+      new King(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Rook(PieceColor.BLACK),
     ];
-    board[6] = Array(8).fill(null).map(() => new Pawn(PieceColor.BLACK));
+    board[6] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.BLACK));
 
     return board;
   }
@@ -44,7 +60,12 @@ export class Board {
   }
 
   // Déplacer une pièce sur l'échiquier (capture incluse)
-  public movePiece(fromX: number, fromY: number, toX: number, toY: number): boolean {
+  public movePiece(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
     const piece = this.getPiece(fromX, fromY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
@@ -82,13 +103,15 @@ export class Board {
   // Gérer le roque (déplacement de la tour)
   private handleCastling(kingX: number, kingY: number): void {
     // Si le roi se déplace de 2 cases (roque), déplace la tour correspondante
-    if (kingX === 6) { // Roque du côté roi
+    if (kingX === 6) {
+      // Roque du côté roi
       const rook = this.getPiece(7, kingY);
       if (rook instanceof Rook) {
         this.grid[5][kingY] = rook;
         this.grid[7][kingY] = null;
       }
-    } else if (kingX === 2) { // Roque du côté dame
+    } else if (kingX === 2) {
+      // Roque du côté dame
       const rook = this.getPiece(0, kingY);
       if (rook instanceof Rook) {
         this.grid[3][kingY] = rook;
@@ -161,7 +184,7 @@ export class Board {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
         if (piece && piece instanceof King && piece.color === color) {
-          return {x, y};
+          return { x, y };
         }
       }
     }
