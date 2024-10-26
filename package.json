@@ -7,9 +7,9 @@
   "scripts": {
     "build": "vite build",
     "start": "vite",
-    "prettier": "prettier --write '**/*.{js,ts,html,css}'",
-    "prettier-check": "prettier --check '**/*.{js,ts,html,css}'",
-    "lint": "eslint '**/*.{js,ts}' --config ./eslint.config.js",
+    "prettier": "prettier --write 'src/*.{js,ts,html,css}'",
+    "prettier-check": "prettier --check 'src/*.{js,ts,html,css}'",
+    "lint": "eslint 'src/*.{js,ts}' --config ./eslint.config.js",
     "test-server": "npm run start & sleep 5 && pkill -f vite"    
   },
   "devDependencies": {
