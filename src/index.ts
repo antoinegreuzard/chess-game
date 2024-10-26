@@ -46,6 +46,11 @@ function endGame() {
   blackTimer.stop();
   gameState = 'waiting'; // Empêcher les mouvements après la fin du jeu
   showMessage("La partie est terminée !");
+
+  // Recharger la page après un délai pour permettre la lecture du message
+  setTimeout(() => {
+    location.reload();
+  }, 3000); // 3 secondes avant le rechargement
 }
 
 // Fonction pour afficher un message dans l'élément gameMessage
@@ -54,8 +59,15 @@ function showMessage(message: string) {
   gameMessageElement.style.display = 'block'; // Afficher le message
 }
 
+// Fonction pour effacer le message d'erreur
+function clearMessage() {
+  gameMessageElement.textContent = '';
+  gameMessageElement.style.display = 'none'; // Masquer le message
+}
+
 // Fonction pour mettre à jour le tour et l'affichage
 function updateTurn() {
+  clearMessage(); // Efface le message d'erreur au début de chaque tour
   currentPlayer = currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
   hasMoved = false; // Réinitialise l'état de mouvement pour le prochain tour
@@ -149,8 +161,14 @@ export function handleMove(fromX: number, fromY: number, toX: number, toY: numbe
       renderer.animateMove(fromX, fromY, toX, toY, piece);
 
       // Vérifie si cela met le roi adverse en échec
-      if (board.isKingInCheck(currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE)) {
-        showMessage(`Échec au ${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} !`);
+      const opponentColor = currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+      if (board.isKingInCheck(opponentColor)) {
+        if (board.isCheckmate(opponentColor)) {
+          showMessage(`Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`);
+          endGame();
+        } else {
+          showMessage(`Échec au ${opponentColor === PieceColor.WHITE ? 'Blanc' : 'Noir'} !`);
+        }
       }
 
       // Change de tour après un mouvement valide

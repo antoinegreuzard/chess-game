@@ -111,6 +111,45 @@ export class Board {
     return false;
   }
 
+  // Vérifie si le Roi est en échec et mat
+  public isCheckmate(color: PieceColor): boolean {
+    if (!this.isKingInCheck(color)) {
+      return false;
+    }
+
+    // Parcourt toutes les pièces du joueur
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece && piece.color === color) {
+          // Essaye chaque mouvement possible pour voir si l'échec peut être évité
+          for (let toY = 0; toY < 8; toY++) {
+            for (let toX = 0; toX < 8; toX++) {
+              if (piece.isValidMove(x, y, toX, toY, this)) {
+                // Sauvegarde l'état actuel de l'échiquier
+                const originalPiece = this.getPiece(toX, toY);
+                this.grid[toY][toX] = piece;
+                this.grid[y][x] = null;
+
+                const kingSafe = !this.isKingInCheck(color);
+
+                // Restaure l'état initial de l'échiquier
+                this.grid[y][x] = piece;
+                this.grid[toY][toX] = originalPiece;
+
+                if (kingSafe) {
+                  return false; // Si un mouvement légal est trouvé, pas d'échec et mat
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return true; // Si aucun mouvement légal n'est trouvé, c'est un échec et mat
+  }
+
   // Trouve la position du roi d'une couleur spécifique
   private findKing(color: PieceColor): { x: number; y: number } | null {
     for (let y = 0; y < 8; y++) {
