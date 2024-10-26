@@ -77,7 +77,7 @@ export class CanvasRenderer {
   }
 
   // Animation pour déplacer une pièce
-  private animateMove(fromX: number, fromY: number, toX: number, toY: number, piece: Piece): void {
+  animateMove(fromX: number, fromY: number, toX: number, toY: number, piece: Piece): void {
     const frames = 10;
     let currentFrame = 0;
 

@@ -3,6 +3,8 @@ import {Piece, PieceColor, PieceType} from './piece';
 import {Board} from './board';
 
 export class Rook extends Piece {
+  public hasMoved: boolean = false;
+
   constructor(color: PieceColor) {
     super(color, PieceType.ROOK);
   }
