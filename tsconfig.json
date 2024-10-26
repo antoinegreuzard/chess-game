@@ -2,10 +2,10 @@
   "compilerOptions": {
     "outDir": "./public/dist",
     "target": "ES6",
-    "module": "NodeNext",
+    "module": "ESNext",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "nodenext", 
+    "moduleResolution": "node",
     "skipLibCheck": true
   },
   "include": [
