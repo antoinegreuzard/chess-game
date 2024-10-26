@@ -35,7 +35,7 @@ jobs:
 
     # Test si le serveur démarre correctement
       - name: Test server start
-        run: npm run start & sleep 5 && kill $(lsof -t -i:3000) # Utilise le port 3000 par défaut pour vérifier
+        run: npm run test-server # Utilise le port 3000 par défaut pour vérifier
 
     # Lancer Prettier pour formater le code
       - name: Run Prettier
