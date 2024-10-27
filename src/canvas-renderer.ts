@@ -18,7 +18,7 @@ export class CanvasRenderer {
       fromY: number,
       toX: number,
       toY: number,
-    ) => boolean,  // Utilisation d'un retour booléen pour vérifier si le mouvement est valide
+    ) => boolean, // Utilisation d'un retour booléen pour vérifier si le mouvement est valide
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.context = this.canvas.getContext('2d')!;
@@ -184,21 +184,19 @@ export class CanvasRenderer {
     const mouseY = event.clientY - rect.top;
 
     // Dessiner la pièce en mouvement
-    this.context.fillStyle = this.draggingPiece.color === 'white' ? 'white' : 'black';
+    this.context.fillStyle =
+      this.draggingPiece.color === 'white' ? 'white' : 'black';
     this.context.font = '48px Arial';
     this.context.textAlign = 'center';
     this.context.textBaseline = 'middle';
     const pieceText = this.getPieceText(this.draggingPiece);
-    this.context.fillText(
-      pieceText,
-      mouseX,
-      mouseY,
-    );
+    this.context.fillText(pieceText, mouseX, mouseY);
   }
 
   // Gérer la fin du glissement
   private handleMouseUp(event: MouseEvent): void {
-    if (!this.draggingPiece || this.startX === null || this.startY === null) return;
+    if (!this.draggingPiece || this.startX === null || this.startY === null)
+      return;
 
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);

@@ -12,7 +12,7 @@ type BoardSquare = Piece | null;
 export class Board {
   private readonly grid: BoardSquare[][];
   private enPassantTarget: { x: number; y: number } | null = null;
-  private halfMoveCount: number = 0;  // Compteur pour la règle des 50 coups
+  private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
 
   constructor() {
     this.grid = this.initializeBoard();
@@ -124,7 +124,12 @@ export class Board {
     return false;
   }
 
-  private isCastlingValid(king: King, fromX: number, fromY: number, toX: number): boolean {
+  private isCastlingValid(
+    king: King,
+    fromX: number,
+    fromY: number,
+    toX: number,
+  ): boolean {
     const direction = toX > fromX ? 1 : -1;
     const rookX = toX > fromX ? 7 : 0;
     const rook = this.getPiece(rookX, fromY);
@@ -173,7 +178,8 @@ export class Board {
     toY: number,
   ): void {
     if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
-      const direction = this.getPiece(fromX, fromY)?.color === PieceColor.WHITE ? -1 : 1;
+      const direction =
+        this.getPiece(fromX, fromY)?.color === PieceColor.WHITE ? -1 : 1;
       this.grid[toY - direction][toX] = null; // Capture du pion en passant
     }
   }
@@ -185,18 +191,19 @@ export class Board {
     toY: number,
     piece: Piece,
   ): void {
-    if (
-      piece instanceof Pawn &&
-      Math.abs(toY - fromY) === 2 &&
-      fromX === toX
-    ) {
+    if (piece instanceof Pawn && Math.abs(toY - fromY) === 2 && fromX === toX) {
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
       this.enPassantTarget = null;
     }
   }
 
-  public captureEnPassant(fromX: number, fromY: number, toX: number, toY: number): void {
+  public captureEnPassant(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {
     const piece = this.getPiece(fromX, fromY);
 
     // Vérifie que le mouvement est une prise en passant valide
@@ -207,7 +214,12 @@ export class Board {
     }
   }
 
-  public isEnPassantMove(fromX: number, fromY: number, toX: number, toY: number): boolean {
+  public isEnPassantMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
     if (!this.enPassantTarget) return false;
     return (
       toX === this.enPassantTarget.x &&
@@ -350,14 +362,18 @@ export class Board {
 
   // Vérifie le matériel insuffisant pour un échec et mat
   public isInsufficientMaterial(): boolean {
-    const pieces = this.grid.flat().filter(piece => piece !== null);
+    const pieces = this.grid.flat().filter((piece) => piece !== null);
 
     // Cas les plus courants de matériel insuffisant
     if (pieces.length <= 2) return true; // Seulement les rois sur le plateau
     if (
       pieces.length === 3 &&
-      pieces.some(piece => piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT)
-    ) return true;
+      pieces.some(
+        (piece) =>
+          piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT,
+      )
+    )
+      return true;
 
     return false;
   }
