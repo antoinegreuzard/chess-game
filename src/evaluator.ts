@@ -1,3 +1,4 @@
+// src/evaluator.ts
 import { Board } from './board';
 import { PieceColor, PieceType } from './piece';
 
