@@ -1,17 +1,22 @@
 {
   "compilerOptions": {
-    "outDir": "./public/dist",
+    "outDir": "./dist",
     "target": "ESNext",
     "module": "ESNext",
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
-    "verbatimModuleSyntax": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src"
   },
   "include": [
     "src/**/*",
     "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }

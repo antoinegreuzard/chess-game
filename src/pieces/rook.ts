@@ -1,3 +1,4 @@
+// src/pieces/rook.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 
@@ -16,12 +17,12 @@ export class Rook extends Piece {
     board: Board,
   ): boolean {
     // Vérifie si le mouvement est en ligne droite et que le chemin est dégagé
-    if (
-      (fromX === toX || fromY === toY) &&
-      this.isPathClear(fromX, fromY, toX, toY, board)
-    ) {
-      // Vérifie si la case cible est vide ou contient une pièce ennemie
-      return this.canCapture(toX, toY, board);
+    const isStraightMove = fromX === toX || fromY === toY;
+    const isPathClear = this.isPathClear(fromX, fromY, toX, toY, board);
+    const canCapture = this.canCapture(toX, toY, board);
+
+    if (isStraightMove && isPathClear) {
+      return canCapture;
     }
     return false;
   }
