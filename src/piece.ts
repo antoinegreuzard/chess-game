@@ -19,7 +19,8 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   // Mise à jour pour inclure le paramètre 'board'
   abstract isValidMove(
@@ -47,7 +48,7 @@ export abstract class Piece {
 
     while (x !== toX || y !== toY) {
       // Vérifie s'il y a une pièce sur le chemin
-      if (board.getPiece(x, y)) return false;
+      if (board.isWithinBounds(x, y) && board.getPiece(x, y)) return false;
 
       // Avance dans la direction
       x += dx;

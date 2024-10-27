@@ -63,17 +63,12 @@ export class Board {
   }
 
   public getPiece(x: number, y: number): BoardSquare {
-    if (!this.isWithinBounds(x, y)) {
-      if (x > 7) x = 7;
-      if (x < 0) x = 0;
-      if (y > 7) x = 7;
-      if (y < 0) x = 0;
-    }
     return this.grid[y][x];
   }
 
   public getValidMoves(x: number, y: number): { x: number; y: number }[] {
-    const piece = this.getPiece(x, y);
+    let piece = null;
+    if (this.isWithinBounds(x, y)) piece = this.getPiece(x, y);
     if (!piece) return [];
 
     const validMoves: { x: number; y: number }[] = [];
@@ -114,10 +109,13 @@ export class Board {
     ) {
       return false; // Invalid move if fromY or toY is out of bounds or a special property name
     }
-    const piece = this.getPiece(fromX, fromY);
+
+    let piece = null;
+    if (this.isWithinBounds(fromX, fromY)) piece = this.getPiece(fromX, fromY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
-      const targetPiece = this.getPiece(toX, toY);
+      let targetPiece = null;
+      if (this.isWithinBounds(toX, toY)) targetPiece = this.getPiece(toX, toY);
 
       if (targetPiece && targetPiece.type === PieceType.KING) {
         return false; // Mouvement invalide si la cible est un roi
@@ -140,7 +138,8 @@ export class Board {
       }
 
       // Sauvegarder l'état actuel pour vérifier l'échec
-      const originalPiece = this.getPiece(toX, toY);
+      let originalPiece = null;
+      if (this.isWithinBounds(toX, toY)) originalPiece = this.getPiece(toX, toY);
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
 
@@ -183,7 +182,8 @@ export class Board {
   ): boolean {
     const direction = toX > fromX ? 1 : -1;
     const rookX = toX > fromX ? 7 : 0;
-    const rook = this.getPiece(rookX, fromY);
+    let rook = null;
+    if (this.isWithinBounds(rookX, fromY)) rook = this.getPiece(rookX, fromY);
 
     if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) {
       return false;
