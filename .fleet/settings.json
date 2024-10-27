@@ -1,5 +1,5 @@
 {
-  "nodejs.typescript.rebuildOnChanges": true,
+  "nodejs.typescript.rebuildOnChanges": false,
   "prettier.mode": "Enabled",
   "nodejs.editor.formatOnSave.eslint.mode": "Enabled",
   "prettier.applicableFilesGlob": "{src/**/*,*}.{js,ts,html,css}",
