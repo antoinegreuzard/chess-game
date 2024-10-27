@@ -399,20 +399,22 @@ export class Board {
 
     // Cas les plus courants de matériel insuffisant
     if (pieces.length <= 2) return true; // Seulement les rois sur le plateau
-    if (
-      pieces.length === 3 &&
+    return pieces.length === 3 &&
       pieces.some(
         (piece) =>
           piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT,
-      )
-    )
-      return true;
+      );
 
-    return false;
+
   }
 
   // Vérifie si la règle des 50 coups est remplie
   public isFiftyMoveRule(): boolean {
     return this.halfMoveCount >= 50;
+  }
+
+  // Ajoute cette méthode dans la classe Board
+  public setPiece(x: number, y: number, piece: Piece | null): void {
+    this.grid[y][x] = piece;
   }
 }
