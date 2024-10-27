@@ -35,7 +35,6 @@ export class Timer {
   // Arrêter le compte à rebours
   public stop(): void {
     if (!this.isRunning) {
-      console.warn('Timer is already stopped. Ignoring stop() call.');
       return;
     }
 
