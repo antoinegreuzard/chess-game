@@ -104,12 +104,21 @@ export class Board {
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
       const targetPiece = this.getPiece(toX, toY);
-      if (targetPiece && targetPiece.type === PieceType.KING) {
-        return false; // Mouvement invalide si la cible est un roi
-      }
 
       if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
         this.captureEnPassant(fromX, fromY, toX, toY);
+      }
+
+      // Vérifie si c'est un mouvement de roque pour le roi
+      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
+        console.log('King');
+        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
+          return false; // Roque invalide
+        }
+
+        console.log(true);
+        // Effectue le roque
+        this.handleCastling(toX, fromY);
       }
 
       // Sauvegarder l'état actuel pour vérifier l'échec
@@ -123,14 +132,6 @@ export class Board {
         this.grid[fromY][fromX] = piece;
         this.grid[toY][toX] = originalPiece;
         return false;
-      }
-
-      // Vérifie si c'est un mouvement de roque pour le roi
-      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
-        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
-          return false; // Roque invalide
-        }
-        this.handleCastling(toX, toY);
       }
 
       // Compte les mouvements pour la règle des 50 coups
@@ -191,20 +192,22 @@ export class Board {
   }
 
   private handleCastling(kingX: number, kingY: number): void {
+    // Déplacement pour le petit roque (roi se déplace vers la droite)
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
       if (rook instanceof Rook) {
-        this.grid[5][kingY] = rook;
-        this.grid[7][kingY] = null;
+        this.movePiece(7, kingY, 5, kingY);
       }
-    } else if (kingX === 2) {
+    }
+    // Déplacement pour le grand roque (roi se déplace vers la gauche)
+    else if (kingX === 2) {
       const rook = this.getPiece(0, kingY);
       if (rook instanceof Rook) {
-        this.grid[3][kingY] = rook;
-        this.grid[0][kingY] = null;
+        this.movePiece(0, kingY, 3, kingY);
       }
     }
   }
+
 
   public updateEnPassantTarget(
     fromX: number,

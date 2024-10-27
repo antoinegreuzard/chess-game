@@ -8,9 +8,25 @@ import { Queen } from '../src/pieces/queen';
 describe('Board', () => {
   let board: Board;
 
-  beforeEach(() => {
-    // Réinitialise le plateau avant chaque test
+  beforeAll(() => {
     board = new Board();
+    
+    // Ajoute des éléments DOM pour les pièces capturées avant tous les tests
+    const capturedWhiteElement = document.createElement('div');
+    capturedWhiteElement.id = 'capturedWhite';
+    document.body.appendChild(capturedWhiteElement);
+
+    const capturedBlackElement = document.createElement('div');
+    capturedBlackElement.id = 'capturedBlack';
+    document.body.appendChild(capturedBlackElement);
+  });
+
+  afterAll(() => {
+    // Nettoie le DOM après tous les tests
+    const capturedWhiteElement = document.getElementById('capturedWhite');
+    const capturedBlackElement = document.getElementById('capturedBlack');
+    if (capturedWhiteElement) document.body.removeChild(capturedWhiteElement);
+    if (capturedBlackElement) document.body.removeChild(capturedBlackElement);
   });
 
   test('should initialize the board correctly', () => {
@@ -139,5 +155,19 @@ describe('Board', () => {
 
     // Le roi blanc est en pat
     expect(board.isStalemate(PieceColor.WHITE)).toBe(true);
+  });
+
+  test('should update captured pieces when a piece is captured', () => {
+    board.clearBoard();
+    const whitePawn = new Pawn(PieceColor.WHITE);
+    const blackRook = new Rook(PieceColor.BLACK);
+
+    board.setPiece(4, 4, whitePawn);
+    board.setPiece(4, 6, blackRook);
+
+    // Capture le Rook noir avec le Pawn blanc
+    expect(board.movePiece(4, 4, 4, 6)).toBe(true);
+    expect(board.getPiece(4, 6)).toBe(whitePawn);
+    expect(board.getPiece(4, 4)).toBeNull();
   });
 });

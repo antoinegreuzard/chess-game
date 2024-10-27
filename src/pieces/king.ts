@@ -1,4 +1,3 @@
-// src/pieces/king.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 import { Rook } from './rook';
@@ -29,7 +28,7 @@ export class King extends Piece {
       );
     }
 
-    // Logique pour le roque
+    // Logique pour le roque (grand ou petit)
     if (!this.hasMoved && dy === 0 && dx === 2) {
       const direction = toX > fromX ? 1 : -1;
       const rookX = toX > fromX ? 7 : 0;
