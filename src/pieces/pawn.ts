@@ -14,15 +14,18 @@ export class Pawn extends Piece {
     toY: number,
     board: Board,
   ): boolean {
-    // Corrige la direction : 1 pour les blancs, -1 pour les noirs
-    const direction = this.color === PieceColor.WHITE ? 1 : -1; // Inverser la logique
-    const startRow = this.color === PieceColor.WHITE ? 1 : 6; // Ajuster la ligne de départ pour correspondre à la direction
-    const distanceY = (toY - fromY) * direction; // Déplacement vertical en tenant compte de la couleur
-    const distanceX = Math.abs(toX - fromX); // Déplacement horizontal
+    const direction = this.color === PieceColor.WHITE ? 1 : -1;
+    const startRow = this.color === PieceColor.WHITE ? 1 : 6;
+    const distanceY = (toY - fromY) * direction;
+    const distanceX = Math.abs(toX - fromX);
 
     // 1. Déplacement d'une case vers l'avant
     if (distanceX === 0 && distanceY === 1) {
       if (!board.getPiece(toX, toY)) {
+        // Promotion si le pion atteint la dernière rangée
+        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+          this.handlePromotion(toX, toY, board);
+        }
         return true;
       }
     }
@@ -33,6 +36,7 @@ export class Pawn extends Piece {
         !board.getPiece(toX, toY) &&
         !board.getPiece(fromX, fromY + direction)
       ) {
+        board.updateEnPassantTarget(toX, toY);
         return true;
       }
     }
@@ -41,11 +45,33 @@ export class Pawn extends Piece {
     if (distanceX === 1 && distanceY === 1) {
       const targetPiece = board.getPiece(toX, toY);
       if (targetPiece && targetPiece.color !== this.color) {
+        // Promotion si le pion atteint la dernière rangée
+        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+          this.handlePromotion(toX, toY, board);
+        }
+        return true;
+      }
+
+      // Prise en passant
+      if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
+        board.captureEnPassant(fromX, fromY, toX, toY);
         return true;
       }
     }
 
-    // Si aucune condition n'est remplie, le mouvement est invalide
     return false;
+  }
+
+  private handlePromotion(toX: number, toY: number, board: Board): void {
+    const promotionDialog = document.getElementById('promotionDialog');
+    if (promotionDialog) {
+      promotionDialog.style.display = 'block';
+
+      // Définis la fonction promote sur l'objet global window
+      window.promote = (pieceType: string) => {
+        promotionDialog.style.display = 'none';
+        board.promotePawn(toX, toY, pieceType);
+      };
+    }
   }
 }

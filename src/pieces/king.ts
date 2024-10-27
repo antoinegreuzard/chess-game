@@ -20,11 +20,13 @@ export class King extends Piece {
     const dx = Math.abs(toX - fromX);
     const dy = Math.abs(toY - fromY);
 
-    // Le Roi se déplace d'une case dans n'importe quelle direction
+    // Vérification pour le mouvement classique du roi
     if (dx <= 1 && dy <= 1) {
-      // Vérifie que la case cible n'est pas occupée par un roi adverse
       const targetPiece = board.getPiece(toX, toY);
-      return !(targetPiece && targetPiece.type === PieceType.KING);
+      if (!targetPiece || (targetPiece.color !== this.color && targetPiece.type !== PieceType.KING)) {
+        return true;
+      }
+      return false;
     }
 
     // Logique pour le roque
@@ -40,8 +42,12 @@ export class King extends Piece {
         }
 
         // Assure que le roi n'est pas en échec avant, pendant ou après le roque
-        if (!board.isKingInCheck(this.color)) {
-          return true;
+        if (
+          !board.isKingInCheck(this.color) &&
+          !board.isSquareUnderAttack(fromX + direction, fromY, this.color) &&
+          !board.isSquareUnderAttack(toX, fromY, this.color)
+        ) {
+          return true; // Roque valide
         }
       }
     }

@@ -1,6 +1,5 @@
 import { Board } from './board';
 import { Piece, PieceColor } from './piece';
-import { showMessage } from './utils';
 
 export class CanvasRenderer {
   private canvas: HTMLCanvasElement;
