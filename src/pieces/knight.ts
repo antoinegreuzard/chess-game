@@ -1,4 +1,4 @@
-// src/knight.ts
+// src/pieces/knight.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 
 export class Knight extends Piece {

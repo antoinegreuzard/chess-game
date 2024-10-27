@@ -1,4 +1,4 @@
-// src/queen.ts
+// src/pieces/queen.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 
@@ -22,12 +22,7 @@ export class Queen extends Piece {
     ) {
       // Vérifie que la trajectoire est dégagée
       if (this.isPathClear(fromX, fromY, toX, toY, board)) {
-        const targetPiece = board.getPiece(toX, toY);
-
-        // Vérifie que la case cible n'est pas occupée par une pièce alliée
-        if (!targetPiece || targetPiece.color !== this.color) {
-          return true;
-        }
+        return this.canCapture(toX, toY, board);
       }
     }
 
