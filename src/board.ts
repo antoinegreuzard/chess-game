@@ -66,7 +66,11 @@ export class Board {
     toX: number,
     toY: number,
   ): boolean {
-    if (toY < 0 || toY >= this.grid.length || ['__proto__', 'constructor', 'prototype'].includes(toY.toString())) {
+    if (
+      toY < 0 ||
+      toY >= this.grid.length ||
+      ['__proto__', 'constructor', 'prototype'].includes(toY.toString())
+    ) {
       return false; // Invalid move if toY is out of bounds or a special property name
     }
     const piece = this.getPiece(fromX, fromY);
