@@ -205,6 +205,13 @@ export function handleMove(
 
       // Change de tour après un mouvement valide
       updateTurn();
+
+      // Appeler l'IA après le tour des Blancs
+      if (currentPlayer === PieceColor.BLACK) {
+        game.makeAIMove();
+        updateTurn(); // Change de tour après que l'IA a joué
+      }
+      
       return true;
     }
 

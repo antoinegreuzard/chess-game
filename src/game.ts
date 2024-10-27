@@ -1,20 +1,38 @@
-// src/game.ts
 import { Board } from './board';
+import { AI } from './ai';
+import { PieceColor } from './piece';
 
 export class Game {
   private readonly board: Board;
+  private readonly ai: AI | null;
 
   constructor() {
     this.board = new Board();
+    // Initialise l'IA pour jouer avec les Noirs par exemple
+    this.ai = new AI(PieceColor.BLACK);
   }
 
-  // Commencer une nouvelle partie (initialisation de la logique du jeu)
   public start(): void {
-    console.log("Nouvelle partie d'échecs démarrée !");
+    console.log('Nouvelle partie d\'échecs démarrée !');
   }
 
-  // Retourner l'état actuel de l'échiquier
   public getBoard(): Board {
     return this.board;
+  }
+
+  // Méthode pour faire jouer l'IA
+  public makeAIMove(): void {
+    if (this.ai) {
+      const move = this.ai.makeMove(this.board);
+
+      if (move) {
+        this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        console.log(
+          `L'IA a déplacé une pièce de (${move.fromX}, ${move.fromY}) à (${move.toX}, ${move.toY})`,
+        );
+      } else {
+        console.log('Aucun mouvement valide pour l\'IA.');
+      }
+    }
   }
 }
