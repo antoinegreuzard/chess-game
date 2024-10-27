@@ -105,11 +105,12 @@ export class Board {
     toY: number,
   ): boolean {
     if (
-      toY < 0 ||
-      toY >= this.grid.length ||
-      ['__proto__', 'constructor', 'prototype'].includes(toY.toString())
+      toY < 0 || toY >= this.grid.length ||
+      fromY < 0 || fromY >= this.grid.length ||
+      ['__proto__', 'constructor', 'prototype'].includes(toY.toString()) ||
+      ['__proto__', 'constructor', 'prototype'].includes(fromY.toString())
     ) {
-      return false; // Invalid move if toY is out of bounds or a special property name
+      return false; // Invalid move if toY or fromY is out of bounds or a special property name
     }
     const piece = this.getPiece(fromX, fromY);
 
@@ -204,6 +205,12 @@ export class Board {
   }
 
   private handleCastling(kingX: number, kingY: number): void {
+    if (
+      kingY < 0 || kingY >= this.grid.length ||
+      ['__proto__', 'constructor', 'prototype'].includes(kingY.toString())
+    ) {
+      return; // Invalid move if kingY is out of bounds or a special property name
+    }
     // Déplacement pour le petit roque (roi se déplace vers la droite)
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
