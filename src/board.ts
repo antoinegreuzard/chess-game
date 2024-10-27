@@ -66,6 +66,9 @@ export class Board {
     toX: number,
     toY: number,
   ): boolean {
+    if (toY < 0 || toY >= this.grid.length) {
+      return false; // Invalid move if toY is out of bounds
+    }
     const piece = this.getPiece(fromX, fromY);
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
