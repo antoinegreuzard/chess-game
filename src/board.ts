@@ -60,6 +60,32 @@ export class Board {
     return this.grid[y][x];
   }
 
+  public getValidMoves(x: number, y: number): { x: number, y: number }[] {
+    const piece = this.getPiece(x, y);
+    if (!piece) return [];
+
+    const validMoves: { x: number, y: number }[] = [];
+
+    for (let toY = 0; toY < 8; toY++) {
+      for (let toX = 0; toX < 8; toX++) {
+        if (piece.isValidMove(x, y, toX, toY, this)) {
+          validMoves.push({ x: toX, y: toY });
+        }
+      }
+    }
+
+    return validMoves;
+  }
+
+  public getKingInCheck(): { x: number, y: number } | null {
+    if (this.isKingInCheck(PieceColor.WHITE)) {
+      return this.findKing(PieceColor.WHITE);
+    } else if (this.isKingInCheck(PieceColor.BLACK)) {
+      return this.findKing(PieceColor.BLACK);
+    }
+    return null;
+  }
+
   public movePiece(
     fromX: number,
     fromY: number,

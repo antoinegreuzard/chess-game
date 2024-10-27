@@ -1,4 +1,3 @@
-// src/king.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 import { Rook } from './rook';
@@ -23,10 +22,7 @@ export class King extends Piece {
     // Vérification pour le mouvement classique du roi
     if (dx <= 1 && dy <= 1) {
       const targetPiece = board.getPiece(toX, toY);
-      if (!targetPiece || (targetPiece.color !== this.color && targetPiece.type !== PieceType.KING)) {
-        return true;
-      }
-      return false;
+      return this.canCapture(toX, toY, board) && (!targetPiece || targetPiece.type !== PieceType.KING);
     }
 
     // Logique pour le roque

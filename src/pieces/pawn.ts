@@ -1,4 +1,3 @@
-// src/pawn.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 
@@ -43,8 +42,7 @@ export class Pawn extends Piece {
 
     // 3. Capture en diagonale
     if (distanceX === 1 && distanceY === 1) {
-      const targetPiece = board.getPiece(toX, toY);
-      if (targetPiece && targetPiece.color !== this.color) {
+      if (this.canCapture(toX, toY, board)) {
         // Promotion si le pion atteint la dernière rangée
         if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
           this.handlePromotion(toX, toY, board);

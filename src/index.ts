@@ -16,12 +16,22 @@ const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
 const drawButton = document.getElementById('drawButton')!;
+const undoButton = document.getElementById('undoButton')!;
+const acceptDrawButton = document.getElementById('acceptDrawButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
-let gameState: 'playing' | 'waiting' = 'playing'; // Contrôle du statut de jeu
+let gameState: 'playing' | 'waiting' | 'drawProposed' = 'playing'; // Ajout de l'état pour la proposition de nullité
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
 let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
 let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
+let moveHistory: {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  pieceType: PieceType;
+}[] = []; // Historique des mouvements
+let isGameEnded = false;
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
 let whiteTimer = new Timer(60, (timeLeft) =>
@@ -35,7 +45,7 @@ let blackTimer = new Timer(60, (timeLeft) =>
 function updateTimerDisplay(timeLeft: number, color: PieceColor) {
   if (color === currentPlayer) {
     timerElement.textContent = `Temps restant: ${timeLeft}s`;
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && !isGameEnded) {
       showMessage(
         `${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par temps écoulé !`,
       );
@@ -45,66 +55,76 @@ function updateTimerDisplay(timeLeft: number, color: PieceColor) {
 }
 
 // Démarrer le jeu et dessiner le plateau
-const renderer = new CanvasRenderer(board, 'chessBoard', handleMove); // Passe handleMove comme callback
+const renderer = new CanvasRenderer(board, 'chessBoard', handleMove);
 renderer.drawBoard();
-whiteTimer.start(); // Démarre le timer pour les blancs au début
+whiteTimer.start();
 
 // Fonction pour terminer la partie
+
 function endGame() {
-  whiteTimer.stop();
-  blackTimer.stop();
-  gameState = 'waiting'; // Empêcher les mouvements après la fin du jeu
+  // Empêche l'appel multiple d'endGame
+  if (isGameEnded) return;
+  isGameEnded = true;
+
+  // Stoppez les timers seulement si ce n'est pas déjà fait
+  if (whiteTimer.isRunning) whiteTimer.stop();
+  if (blackTimer.isRunning) blackTimer.stop();
+
+  gameState = 'waiting';
   showMessage('La partie est terminée !');
-
-  // Assure que le timer reste à 0 si la partie se termine par temps écoulé
-  updateTimerDisplay(0, currentPlayer);
-
-  // Afficher le bouton "Rejouer"
   replayButton.style.display = 'block';
 }
 
 // Fonction pour effacer le message d'erreur
 function clearMessage() {
   gameMessageElement.textContent = '';
-  gameMessageElement.style.display = 'none'; // Masquer le message
+  gameMessageElement.style.display = 'none';
 }
 
 // Fonction pour mettre à jour le tour et l'affichage
 function updateTurn() {
-  clearMessage(); // Efface le message d'erreur au début de chaque tour
+  clearMessage();
   currentPlayer =
     currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
-  hasMoved = false; // Réinitialise l'état de mouvement pour le prochain tour
+  hasMoved = false;
 
-  // Gérer le changement de timer en s'assurant qu'on ne redémarre pas un timer déjà actif
+  // Gestion des timers
   if (currentPlayer === PieceColor.WHITE) {
     if (blackTimer.isRunning) blackTimer.stop();
-    whiteTimer.reset(60); // Réinitialise et démarre le timer pour les Blancs
+    whiteTimer.reset(60);
   } else {
     if (whiteTimer.isRunning) whiteTimer.stop();
-    blackTimer.reset(60); // Réinitialise et démarre le timer pour les Noirs
+    blackTimer.reset(60);
   }
 
-  // Vérifie si le jeu est en situation de pat
+  // Vérifie les conditions de nullité
   if (board.isStalemate(currentPlayer)) {
     showMessage('Pat ! La partie est nulle.');
     endGame();
   }
 
-  // Vérifie le matériel insuffisant
   if (board.isInsufficientMaterial()) {
     showMessage('Matériel insuffisant pour continuer, partie nulle !');
     endGame();
   }
 
-  // Vérifie la règle des 50 coups
   if (board.isFiftyMoveRule()) {
     showMessage('Règle des 50 coups, partie nulle !');
     endGame();
   }
 
-  gameState = 'playing'; // Réactive les mouvements pour le prochain joueur
+  // Gestion de la proposition de nullité
+  if (gameState === 'drawProposed') {
+    acceptDrawButton.style.display = 'block';
+  } else {
+    acceptDrawButton.style.display = 'none';
+  }
+
+  // Seul "playing" permet de jouer
+  if (gameState === 'playing') {
+    gameState = 'playing';
+  }
 }
 
 // Ajouter un mouvement à l'historique
@@ -119,6 +139,8 @@ function addMoveToHistory(
   const listItem = document.createElement('li');
   listItem.textContent = moveText;
   moveHistoryElement.appendChild(listItem);
+
+  moveHistory.push({ fromX, fromY, toX, toY, pieceType });
 }
 
 // Fonction pour mettre à jour l'affichage des pièces capturées
@@ -160,25 +182,8 @@ export function handleMove(
   toX: number,
   toY: number,
 ): boolean {
-  if (
-    gameState === 'waiting' ||
-    hasMoved ||
-    !Number.isInteger(fromX) ||
-    fromX < 0 ||
-    fromX > 7 ||
-    !Number.isInteger(fromY) ||
-    fromY < 0 ||
-    fromY > 7 ||
-    !Number.isInteger(toX) ||
-    toX < 0 ||
-    toX > 7 ||
-    !Number.isInteger(toY) ||
-    toY < 0 ||
-    toY > 7
-  ) {
-    showMessage(
-      'Veuillez attendre le prochain tour ou vérifier les coordonnées !',
-    );
+  if (gameState === 'waiting' || hasMoved) {
+    showMessage('Veuillez attendre le prochain tour !');
     return false;
   }
 
@@ -242,7 +247,7 @@ export function handleMove(
 
 // Gérer le clic sur "Passer son tour"
 passTurnButton.addEventListener('click', (event) => {
-  event.preventDefault(); // Empêche tout comportement par défaut
+  event.preventDefault();
   if (gameState === 'playing') {
     showMessage(
       `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
@@ -253,13 +258,42 @@ passTurnButton.addEventListener('click', (event) => {
 
 // Gérer le clic sur "Rejouer"
 replayButton.addEventListener('click', () => {
-  location.reload(); // Recharge la page pour redémarrer la partie
+  location.reload();
 });
 
-// Gérer le clic sur "Partie Nulle par Accord Mutuel"
+// Gérer le clic sur "Proposer une Nulle"
 drawButton.addEventListener('click', () => {
   if (gameState === 'playing') {
+    showMessage(
+      'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
+    );
+    gameState = 'drawProposed';
+    updateTurn(); // Change de tour pour que l'adversaire décide
+  }
+});
+
+// Gérer le clic sur "Accepter la Nulle"
+acceptDrawButton.addEventListener('click', () => {
+  if (gameState === 'drawProposed') {
     showMessage('Partie Nulle par Accord Mutuel !');
+    gameState = 'waiting'; // Change l'état du jeu à "waiting"
     endGame();
+  }
+});
+
+// Gérer le clic sur "Annuler le dernier coup"
+undoButton.addEventListener('click', () => {
+  if (moveHistory.length > 0 && gameState === 'playing') {
+    const lastMove = moveHistory.pop();
+    if (lastMove) {
+      board.movePiece(
+        lastMove.toX,
+        lastMove.toY,
+        lastMove.fromX,
+        lastMove.fromY,
+      );
+      showMessage('Dernier coup annulé !');
+      renderer.drawBoard();
+    }
   }
 });
