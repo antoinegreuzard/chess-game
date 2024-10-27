@@ -139,7 +139,8 @@ export class Board {
 
       // Sauvegarder l'état actuel pour vérifier l'échec
       let originalPiece = null;
-      if (this.isWithinBounds(toX, toY)) originalPiece = this.getPiece(toX, toY);
+      if (this.isWithinBounds(toX, toY))
+        originalPiece = this.getPiece(toX, toY);
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
 
@@ -343,10 +344,6 @@ export class Board {
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
-
-                console.log(
-                  `Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`,
-                );
 
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
