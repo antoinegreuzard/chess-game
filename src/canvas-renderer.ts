@@ -1,3 +1,4 @@
+// src/canvas-renderer.ts
 import { Board } from './board';
 import { Piece, PieceColor } from './piece';
 

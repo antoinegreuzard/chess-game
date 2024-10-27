@@ -1,3 +1,4 @@
+// src/index.ts
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
