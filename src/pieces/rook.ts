@@ -1,6 +1,6 @@
 // src/rook.ts
-import { Piece, PieceColor, PieceType } from './piece';
-import { Board } from './board';
+import { Piece, PieceColor, PieceType } from '../piece';
+import { Board } from '../board';
 
 export class Rook extends Piece {
   public hasMoved: boolean = false;

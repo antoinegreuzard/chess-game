@@ -1,4 +1,3 @@
-<!-- public/index.html -->
 <!doctype html>
 <html lang="fr">
   <head>
@@ -28,7 +27,7 @@
         width: 200px;
         padding: 20px;
         background-color: #f4f4f4;
-        height: 604px;
+        min-height: 604px;
         overflow-y: auto;
         margin-right: 20px;
       }
@@ -36,7 +35,7 @@
         width: 200px;
         padding: 20px;
         background-color: #f4f4f4;
-        height: 604px;
+        min-height: 604px;
         overflow-y: auto;
         margin-left: 20px;
       }
@@ -64,7 +63,7 @@
     <header>Jeu d'échecs en TypeScript</header>
     <div
       id="gameMessage"
-      style="  
+      style=" 
 display: none;
 background-color: #f8d7da;
 color: #721c24;
@@ -82,6 +81,8 @@ margin-bottom: 20px;
         <h4>Historique des Mouvements</h4>
         <ul id="moveHistory"></ul>
         <button id="passTurnButton">Passer son tour</button>
+        <!-- Ajout du bouton pour proposer une nullité -->
+        <button id="drawButton">Proposer une Nulle</button>
       </div>
       <canvas id="chessBoard" width="640" height="640"></canvas>
       <div id="capturedSidebar">

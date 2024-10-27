@@ -9,7 +9,9 @@ movements, and rules enforcement.
 - **Animation** for piece movements.
 - Enforced **Chess rules** for piece movements.
 - **Timer** for each turn.
-- Capture of pieces and implementation of **Castling** will be included.
+- **Capture of pieces** and implementation of **Castling** will be included.
+- **Stalemate** and **Checkmate** detection.
+- Possibility of declaring the game a **draw by mutual agreement**.
 
 ## Setup Instructions
 
@@ -59,22 +61,39 @@ movements, and rules enforcement.
 
 To implement the capture of pieces:
 
-1. Update the move validation to allow capturing of opponent's pieces.
-2. Remove the captured piece from the board.
+1. The game validates moves and allows capturing of opponent's pieces if the move is legal.
+2. Captured pieces are removed from the board and displayed in the "Captured Pieces" sidebar.
 
 ### Implementing Castling
 
 To implement castling:
 
-1. Add conditions for castling in the King’s move validation.
-2. Ensure neither the King nor the Rook involved has moved before.
-3. Ensure there are no pieces between the King and the Rook.
-4. Ensure the King is not in check before, during, or after castling.
+1. Conditions for castling have been added in the King’s move validation.
+2. The King and the Rook involved must not have moved before.
+3. There must be no pieces between the King and the Rook.
+4. The King must not be in check before, during, or after castling.
+
+### Implementing Special Chess Rules
+
+- **En Passant**: This special pawn capture move is implemented, allowing pawns to capture opponents in specific
+  conditions.
+- **Pawn Promotion**: When a pawn reaches the opponent's back rank, it can be promoted to another piece (Queen by
+  default, with options to choose another piece).
+- **Stalemate**: The game correctly identifies situations of stalemate, leading to a draw.
+- **50-Move Rule**: The game can end in a draw if 50 moves are made without a pawn move or a capture.
+- **Draw by Agreement**: Players can agree to a draw using the "Proposer une Nulle" button in the interface.
 
 ### Scripts
 
 - **`npm run build`**: Compiles the TypeScript code.
 - **`npm run dev`**: Starts the development server using a local server.
+
+## Additional Features
+
+- **Draw by Mutual Agreement**: A button in the UI allows players to propose a draw. If both players agree, the game
+  ends in a draw.
+- **Insufficient Material**: The game detects situations where a checkmate is impossible due to insufficient material (
+  e.g., King vs. King).
 
 ## Contributions
 

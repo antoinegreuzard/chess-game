@@ -6,7 +6,9 @@ export class CanvasRenderer {
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
   private readonly tileSize: number;
-  private selectedPiece: { x: number; y: number } | null = null;
+  private draggingPiece: Piece | null = null;
+  private startX: number | null = null;
+  private startY: number | null = null;
 
   constructor(
     private board: Board,
@@ -16,14 +18,64 @@ export class CanvasRenderer {
       fromY: number,
       toX: number,
       toY: number,
-    ) => void,
+    ) => boolean, // Utilisation d'un retour booléen pour vérifier si le mouvement est valide
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.context = this.canvas.getContext('2d')!;
     this.tileSize = this.canvas.width / 8;
 
-    // Ajouter un écouteur pour gérer les clics de la souris
-    this.canvas.addEventListener('click', this.handleCanvasClick.bind(this));
+    // Définir le curseur par défaut
+    this.canvas.style.cursor = 'default';
+
+    // Ajouter des écouteurs pour gérer les événements de glisser-déposer
+    this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+  }
+
+  // Animation pour déplacer une pièce
+  animateMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    piece: Piece,
+  ): void {
+    const frames = 10;
+    let currentFrame = 0;
+
+    const startX = fromX * this.tileSize;
+    const startY = fromY * this.tileSize;
+    const deltaX = ((toX - fromX) * this.tileSize) / frames;
+    const deltaY = ((toY - fromY) * this.tileSize) / frames;
+
+    const animate = () => {
+      if (currentFrame <= frames) {
+        // Redessine l'échiquier pour effacer l'ancienne position de la pièce
+        this.drawBoard();
+
+        this.context.fillStyle =
+          piece.color === PieceColor.WHITE ? 'white' : 'black';
+        this.context.font = '48px Arial';
+        this.context.textAlign = 'center';
+        this.context.textBaseline = 'middle';
+
+        // Dessine la pièce en mouvement
+        this.context.fillText(
+          this.getPieceText(piece),
+          startX + deltaX * currentFrame + this.tileSize / 2,
+          startY + deltaY * currentFrame + this.tileSize / 2,
+        );
+
+        currentFrame++;
+        requestAnimationFrame(animate);
+      } else {
+        // Redessiner l'échiquier à la fin de l'animation pour afficher la pièce à la position finale
+        this.drawBoard();
+      }
+    };
+
+    animate();
   }
 
   // Dessiner l'échiquier et les pièces
@@ -94,67 +146,77 @@ export class CanvasRenderer {
     }
   }
 
-  // Animation pour déplacer une pièce
-  animateMove(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    piece: Piece,
-  ): void {
-    const frames = 10;
-    let currentFrame = 0;
-
-    const startX = fromX * this.tileSize;
-    const startY = fromY * this.tileSize;
-    const deltaX = ((toX - fromX) * this.tileSize) / frames;
-    const deltaY = ((toY - fromY) * this.tileSize) / frames;
-
-    const animate = () => {
-      if (currentFrame <= frames) {
-        this.drawBoard();
-        this.context.fillStyle =
-          piece.color === PieceColor.WHITE ? 'white' : 'black';
-        this.context.font = '48px Arial';
-        this.context.textAlign = 'center';
-        this.context.textBaseline = 'middle';
-
-        // Dessiner la pièce en mouvement
-        this.context.fillText(
-          this.getPieceText(piece),
-          startX + deltaX * currentFrame + this.tileSize / 2,
-          startY + deltaY * currentFrame + this.tileSize / 2,
-        );
-
-        currentFrame++;
-        requestAnimationFrame(animate);
-      } else {
-        // Redessiner la grille finale
-        this.drawBoard();
-      }
-    };
-
-    animate();
-  }
-
-  // Gérer les clics sur le canevas pour déplacer les pièces
-  private handleCanvasClick(event: MouseEvent): void {
+  // Gérer le début du glissement
+  private handleMouseDown(event: MouseEvent): void {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
-    if (this.selectedPiece) {
-      // Si une pièce est déjà sélectionnée, tente de la déplacer
-      const fromX = this.selectedPiece.x;
-      const fromY = this.selectedPiece.y;
+    const piece = this.board.getPiece(x, y);
+    if (piece) {
+      this.draggingPiece = piece;
+      this.startX = x;
+      this.startY = y;
+      this.canvas.style.cursor = 'grabbing'; // Change le curseur pendant le drag
+    }
+  }
 
-      // Utilise la fonction de rappel `moveHandler` pour déplacer la pièce
-      this.moveHandler(fromX, fromY, x, y);
+  // Gérer le mouvement pendant le glissement
+  private handleMouseMove(event: MouseEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = Math.floor((event.clientX - rect.left) / this.tileSize);
+    const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
-      this.selectedPiece = null;
-    } else {
-      // Sélectionne une nouvelle pièce
-      this.selectedPiece = { x, y };
+    // Changer le curseur lorsque la souris survole une pièce
+    const piece = this.board.getPiece(x, y);
+    if (piece && !this.draggingPiece) {
+      this.canvas.style.cursor = 'pointer';
+    } else if (!this.draggingPiece) {
+      this.canvas.style.cursor = 'default';
+    }
+
+    if (!this.draggingPiece) return;
+
+    // Dessiner l'échiquier et les pièces
+    this.drawBoard();
+
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Dessiner la pièce en mouvement
+    this.context.fillStyle =
+      this.draggingPiece.color === 'white' ? 'white' : 'black';
+    this.context.font = '48px Arial';
+    this.context.textAlign = 'center';
+    this.context.textBaseline = 'middle';
+    const pieceText = this.getPieceText(this.draggingPiece);
+    this.context.fillText(pieceText, mouseX, mouseY);
+  }
+
+  // Gérer la fin du glissement
+  private handleMouseUp(event: MouseEvent): void {
+    if (!this.draggingPiece || this.startX === null || this.startY === null)
+      return;
+
+    const rect = this.canvas.getBoundingClientRect();
+    const x = Math.floor((event.clientX - rect.left) / this.tileSize);
+    const y = Math.floor((event.clientY - rect.top) / this.tileSize);
+
+    // Utilise la fonction de rappel `moveHandler` pour déplacer la pièce
+    const moveSuccessful = this.moveHandler(this.startX, this.startY, x, y);
+
+    // Réinitialise l'état de glissement
+    this.draggingPiece = null;
+    this.startX = null;
+    this.startY = null;
+    this.canvas.style.cursor = 'default'; // Rétablir le curseur par défaut
+
+    // Redessine le plateau après la fin du glissement
+    this.drawBoard();
+
+    // Si le mouvement est réussi, met à jour le tour
+    if (moveSuccessful) {
+      this.drawBoard();
     }
   }
 }
