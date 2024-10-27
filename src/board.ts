@@ -19,7 +19,7 @@ export class Board {
     this.grid = this.initializeBoard();
   }
 
-  private initializeBoard(): BoardSquare[][] {
+  public initializeBoard(): BoardSquare[][] {
     const board: BoardSquare[][] = Array(8)
       .fill(null)
       .map(() => Array(8).fill(null));
@@ -55,6 +55,40 @@ export class Board {
       .map(() => new Pawn(PieceColor.BLACK));
 
     return board;
+  }
+
+  public setupInitialPosition(): void {
+    this.clearBoard();
+
+    // Ajouter les pièces blanches
+    this.grid[0] = [
+      new Rook(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Queen(PieceColor.WHITE),
+      new King(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Rook(PieceColor.WHITE),
+    ];
+    this.grid[1] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.WHITE));
+
+    // Ajouter les pièces noires
+    this.grid[7] = [
+      new Rook(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Queen(PieceColor.BLACK),
+      new King(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Rook(PieceColor.BLACK),
+    ];
+    this.grid[6] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.BLACK));
   }
 
   // Méthode générale pour vérifier les limites
@@ -480,5 +514,26 @@ export class Board {
     // Vérifie s'il y a une pièce à la destination et si elle est de la même couleur
     const destinationPiece = this.getPiece(toRow, toCol);
     return !(destinationPiece && destinationPiece.color === piece.color);
+  }
+
+  public isCapture(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
+    const piece = this.isWithinBounds(fromX, fromY)
+      ? this.getPiece(fromX, fromY)
+      : null;
+    const targetPiece = this.isWithinBounds(toX, toY)
+      ? this.getPiece(toX, toY)
+      : null;
+
+    // Vérifie qu'il y a une pièce à la position cible et qu'elle est d'une couleur opposée
+    return (
+      piece !== null &&
+      targetPiece !== null &&
+      piece.color !== targetPiece.color
+    );
   }
 }

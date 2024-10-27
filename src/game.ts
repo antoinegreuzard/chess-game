@@ -3,7 +3,7 @@ import { AI } from './ai';
 import { PieceColor } from './piece';
 
 export class Game {
-  private readonly board: Board;
+  private board: Board;
   private readonly ai: AI | null;
 
   constructor() {
@@ -20,6 +20,13 @@ export class Game {
     return this.board;
   }
 
+  // Réinitialise le jeu
+  public reset(): void {
+    this.board = new Board(); // Crée un nouveau plateau
+    this.board.setupInitialPosition(); // Réinitialise les positions initiales des pièces
+    console.log('Partie réinitialisée !');
+  }
+
   // Méthode pour faire jouer l'IA
   public makeAIMove(): void {
     if (this.ai) {
@@ -27,9 +34,6 @@ export class Game {
 
       if (move) {
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        console.log(
-          `L'IA a déplacé une pièce de (${move.fromX}, ${move.fromY}) à (${move.toX}, ${move.toY})`,
-        );
       } else {
         console.log("Aucun mouvement valide pour l'IA.");
       }
