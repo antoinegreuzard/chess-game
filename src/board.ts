@@ -156,9 +156,6 @@ export class Board {
         piece.hasMoved = true;
       }
 
-      // Gérer la cible pour la prise en passant
-      this.updateEnPassantTarget(fromX, fromY, toX, toY, piece);
-
       return true;
     }
     return false;
