@@ -161,14 +161,24 @@ export function handleMove(
   toY: number,
 ): boolean {
   if (
-    gameState === 'waiting' || 
-    hasMoved || 
-    !Number.isInteger(fromX) || fromX < 0 || fromX > 7 ||
-    !Number.isInteger(fromY) || fromY < 0 || fromY > 7 ||
-    !Number.isInteger(toX) || toX < 0 || toX > 7 ||
-    !Number.isInteger(toY) || toY < 0 || toY > 7
+    gameState === 'waiting' ||
+    hasMoved ||
+    !Number.isInteger(fromX) ||
+    fromX < 0 ||
+    fromX > 7 ||
+    !Number.isInteger(fromY) ||
+    fromY < 0 ||
+    fromY > 7 ||
+    !Number.isInteger(toX) ||
+    toX < 0 ||
+    toX > 7 ||
+    !Number.isInteger(toY) ||
+    toY < 0 ||
+    toY > 7
   ) {
-    showMessage('Veuillez attendre le prochain tour ou vérifier les coordonnées !');
+    showMessage(
+      'Veuillez attendre le prochain tour ou vérifier les coordonnées !',
+    );
     return false;
   }
 
