@@ -12,6 +12,7 @@ type BoardSquare = Piece | null;
 export class Board {
   private readonly grid: BoardSquare[][];
   private enPassantTarget: { x: number; y: number } | null = null;
+  private halfMoveCount: number = 0;  // Compteur pour la règle des 50 coups
 
   constructor() {
     this.grid = this.initializeBoard();
@@ -96,6 +97,13 @@ export class Board {
 
       // Gérer la prise en passant
       this.handleEnPassant(fromX, fromY, toX, toY);
+
+      // Compte les mouvements pour la règle des 50 coups
+      if (piece.type === PieceType.PAWN || targetPiece) {
+        this.halfMoveCount = 0; // Réinitialise le compteur si un pion bouge ou si une capture a lieu
+      } else {
+        this.halfMoveCount++;
+      }
 
       // Déplace la pièce
       this.grid[toY][toX] = piece;
@@ -247,12 +255,10 @@ export class Board {
   }
 
   public isCheckmate(color: PieceColor): boolean {
-    // Vérifie que le roi est en échec
     if (!this.isKingInCheck(color)) {
-      return false; // Pas en échec, donc pas un échec et mat
+      return false;
     }
 
-    // Parcourt toutes les pièces du joueur pour vérifier s'il y a un coup légal qui pourrait sauver le roi
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
@@ -260,19 +266,17 @@ export class Board {
           for (let toY = 0; toY < 8; toY++) {
             for (let toX = 0; toX < 8; toX++) {
               if (piece.isValidMove(x, y, toX, toY, this)) {
-                // Simule le mouvement
                 const originalPiece = this.getPiece(toX, toY);
                 this.grid[toY][toX] = piece;
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
 
-                // Restaure l'état initial
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
                 if (kingSafe) {
-                  return false; // Il existe un mouvement pour sauver le roi
+                  return false;
                 }
               }
             }
@@ -281,16 +285,14 @@ export class Board {
       }
     }
 
-    return true; // Pas de mouvement légal pour sortir de l'échec
+    return true;
   }
 
   public isStalemate(color: PieceColor): boolean {
-    // Vérifie que le roi n'est pas en échec
     if (this.isKingInCheck(color)) {
-      return false; // En échec, donc pas un pat
+      return false;
     }
 
-    // Parcourt toutes les pièces du joueur pour vérifier s'il y a un coup légal
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
@@ -298,19 +300,17 @@ export class Board {
           for (let toY = 0; toY < 8; toY++) {
             for (let toX = 0; toX < 8; toX++) {
               if (piece.isValidMove(x, y, toX, toY, this)) {
-                // Simule le mouvement
                 const originalPiece = this.getPiece(toX, toY);
                 this.grid[toY][toX] = piece;
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
 
-                // Restaure l'état initial
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
                 if (kingSafe) {
-                  return false; // Il existe un mouvement légal
+                  return false;
                 }
               }
             }
@@ -319,7 +319,7 @@ export class Board {
       }
     }
 
-    return true; // Pas de mouvement légal mais pas en échec => pat
+    return true;
   }
 
   private findKing(color: PieceColor): { x: number; y: number } | null {
@@ -346,5 +346,24 @@ export class Board {
       }
     }
     return false;
+  }
+
+  // Vérifie le matériel insuffisant pour un échec et mat
+  public isInsufficientMaterial(): boolean {
+    const pieces = this.grid.flat().filter(piece => piece !== null);
+
+    // Cas les plus courants de matériel insuffisant
+    if (pieces.length <= 2) return true; // Seulement les rois sur le plateau
+    if (
+      pieces.length === 3 &&
+      pieces.some(piece => piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT)
+    ) return true;
+
+    return false;
+  }
+
+  // Vérifie si la règle des 50 coups est remplie
+  public isFiftyMoveRule(): boolean {
+    return this.halfMoveCount >= 50;
   }
 }

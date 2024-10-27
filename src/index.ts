@@ -1,4 +1,3 @@
-// src/index.ts
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
@@ -15,6 +14,7 @@ const capturedBlackElement = document.getElementById('capturedBlack')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
+const drawButton = document.getElementById('drawButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Contrôle du statut de jeu
@@ -88,6 +88,18 @@ function updateTurn() {
   // Vérifie si le jeu est en situation de pat
   if (board.isStalemate(currentPlayer)) {
     showMessage('Pat ! La partie est nulle.');
+    endGame();
+  }
+
+  // Vérifie le matériel insuffisant
+  if (board.isInsufficientMaterial()) {
+    showMessage('Matériel insuffisant pour continuer, partie nulle !');
+    endGame();
+  }
+
+  // Vérifie la règle des 50 coups
+  if (board.isFiftyMoveRule()) {
+    showMessage('Règle des 50 coups, partie nulle !');
     endGame();
   }
 
@@ -224,4 +236,12 @@ passTurnButton.addEventListener('click', (event) => {
 // Gérer le clic sur "Rejouer"
 replayButton.addEventListener('click', () => {
   location.reload(); // Recharge la page pour redémarrer la partie
+});
+
+// Gérer le clic sur "Partie Nulle par Accord Mutuel"
+drawButton.addEventListener('click', () => {
+  if (gameState === 'playing') {
+    showMessage('Partie Nulle par Accord Mutuel !');
+    endGame();
+  }
 });
