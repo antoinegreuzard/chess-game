@@ -247,10 +247,12 @@ export class Board {
   }
 
   public isCheckmate(color: PieceColor): boolean {
+    // Vérifie que le roi est en échec
     if (!this.isKingInCheck(color)) {
-      return false;
+      return false; // Pas en échec, donc pas un échec et mat
     }
 
+    // Parcourt toutes les pièces du joueur pour vérifier s'il y a un coup légal qui pourrait sauver le roi
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
@@ -258,17 +260,19 @@ export class Board {
           for (let toY = 0; toY < 8; toY++) {
             for (let toX = 0; toX < 8; toX++) {
               if (piece.isValidMove(x, y, toX, toY, this)) {
+                // Simule le mouvement
                 const originalPiece = this.getPiece(toX, toY);
                 this.grid[toY][toX] = piece;
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
 
+                // Restaure l'état initial
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
                 if (kingSafe) {
-                  return false;
+                  return false; // Il existe un mouvement pour sauver le roi
                 }
               }
             }
@@ -277,14 +281,16 @@ export class Board {
       }
     }
 
-    return true;
+    return true; // Pas de mouvement légal pour sortir de l'échec
   }
 
   public isStalemate(color: PieceColor): boolean {
+    // Vérifie que le roi n'est pas en échec
     if (this.isKingInCheck(color)) {
-      return false;
+      return false; // En échec, donc pas un pat
     }
 
+    // Parcourt toutes les pièces du joueur pour vérifier s'il y a un coup légal
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
@@ -292,17 +298,19 @@ export class Board {
           for (let toY = 0; toY < 8; toY++) {
             for (let toX = 0; toX < 8; toX++) {
               if (piece.isValidMove(x, y, toX, toY, this)) {
+                // Simule le mouvement
                 const originalPiece = this.getPiece(toX, toY);
                 this.grid[toY][toX] = piece;
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
 
+                // Restaure l'état initial
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
                 if (kingSafe) {
-                  return false;
+                  return false; // Il existe un mouvement légal
                 }
               }
             }
@@ -311,7 +319,7 @@ export class Board {
       }
     }
 
-    return true;
+    return true; // Pas de mouvement légal mais pas en échec => pat
   }
 
   private findKing(color: PieceColor): { x: number; y: number } | null {

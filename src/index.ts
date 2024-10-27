@@ -49,7 +49,6 @@ renderer.drawBoard();
 whiteTimer.start(); // Démarre le timer pour les blancs au début
 
 // Fonction pour terminer la partie
-// Fonction pour terminer la partie
 function endGame() {
   whiteTimer.stop();
   blackTimer.stop();
@@ -84,6 +83,12 @@ function updateTurn() {
   } else {
     if (whiteTimer.isRunning) whiteTimer.stop();
     blackTimer.reset(60); // Réinitialise et démarre le timer pour les Noirs
+  }
+
+  // Vérifie si le jeu est en situation de pat
+  if (board.isStalemate(currentPlayer)) {
+    showMessage('Pat ! La partie est nulle.');
+    endGame();
   }
 
   gameState = 'playing'; // Réactive les mouvements pour le prochain joueur
