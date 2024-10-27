@@ -1,3 +1,4 @@
+// src/index.ts
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
@@ -23,7 +24,14 @@ let gameState: 'playing' | 'waiting' | 'drawProposed' = 'playing'; // Ajout de l
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
 let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
 let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
-let moveHistory: { fromX: number, fromY: number, toX: number, toY: number, pieceType: PieceType }[] = []; // Historique des mouvements
+let moveHistory: {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  pieceType: PieceType;
+}[] = []; // Historique des mouvements
+let isGameEnded = false;
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
 let whiteTimer = new Timer(60, (timeLeft) =>
@@ -37,7 +45,7 @@ let blackTimer = new Timer(60, (timeLeft) =>
 function updateTimerDisplay(timeLeft: number, color: PieceColor) {
   if (color === currentPlayer) {
     timerElement.textContent = `Temps restant: ${timeLeft}s`;
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && !isGameEnded) {
       showMessage(
         `${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par temps écoulé !`,
       );
@@ -52,12 +60,18 @@ renderer.drawBoard();
 whiteTimer.start();
 
 // Fonction pour terminer la partie
+
 function endGame() {
-  whiteTimer.stop();
-  blackTimer.stop();
+  // Empêche l'appel multiple d'endGame
+  if (isGameEnded) return;
+  isGameEnded = true;
+
+  // Stoppez les timers seulement si ce n'est pas déjà fait
+  if (whiteTimer.isRunning) whiteTimer.stop();
+  if (blackTimer.isRunning) blackTimer.stop();
+
   gameState = 'waiting';
   showMessage('La partie est terminée !');
-  updateTimerDisplay(0, currentPlayer);
   replayButton.style.display = 'block';
 }
 
@@ -107,7 +121,10 @@ function updateTurn() {
     acceptDrawButton.style.display = 'none';
   }
 
-  gameState = 'playing';
+  // Seul "playing" permet de jouer
+  if (gameState === 'playing') {
+    gameState = 'playing';
+  }
 }
 
 // Ajouter un mouvement à l'historique
@@ -247,7 +264,9 @@ replayButton.addEventListener('click', () => {
 // Gérer le clic sur "Proposer une Nulle"
 drawButton.addEventListener('click', () => {
   if (gameState === 'playing') {
-    showMessage('Proposition de nullité faite. Attente de la réponse de l\'adversaire.');
+    showMessage(
+      'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
+    );
     gameState = 'drawProposed';
     updateTurn(); // Change de tour pour que l'adversaire décide
   }
@@ -257,6 +276,7 @@ drawButton.addEventListener('click', () => {
 acceptDrawButton.addEventListener('click', () => {
   if (gameState === 'drawProposed') {
     showMessage('Partie Nulle par Accord Mutuel !');
+    gameState = 'waiting'; // Change l'état du jeu à "waiting"
     endGame();
   }
 });
@@ -266,7 +286,12 @@ undoButton.addEventListener('click', () => {
   if (moveHistory.length > 0 && gameState === 'playing') {
     const lastMove = moveHistory.pop();
     if (lastMove) {
-      board.movePiece(lastMove.toX, lastMove.toY, lastMove.fromX, lastMove.fromY);
+      board.movePiece(
+        lastMove.toX,
+        lastMove.toY,
+        lastMove.fromX,
+        lastMove.fromY,
+      );
       showMessage('Dernier coup annulé !');
       renderer.drawBoard();
     }

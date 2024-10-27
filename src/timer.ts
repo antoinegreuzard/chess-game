@@ -1,9 +1,9 @@
+// src/timer.ts
 export class Timer {
   private intervalId: number | null = null;
   private currentTime: number;
   private readonly onTimeUpdate: (timeLeft: number) => void;
-  private isStopped: boolean = false;
-  private isRunning: boolean = false; // Ajoute un flag pour vérifier si le timer est actif
+  public isRunning: boolean = false;
 
   constructor(
     private initialTime: number,
@@ -15,34 +15,41 @@ export class Timer {
 
   // Démarrer le compte à rebours
   public start(): void {
-    if (this.isRunning) return; // Empêche de démarrer si déjà en cours
+    if (this.isRunning) return;
 
-    this.isStopped = false;
-    this.isRunning = true; // Indique que le timer est maintenant actif
+    console.log('Timer started.');
+    this.isRunning = true;
     this.intervalId = window.setInterval(() => {
-      if (this.isStopped) return;
-
       this.currentTime--;
+      this.onTimeUpdate(this.currentTime);
+
       if (this.currentTime <= 0) {
         this.currentTime = 0;
         this.stop();
+        // Appel de la fonction onTimeUpdate une dernière fois pour garantir l'affichage du temps écoulé
+        this.onTimeUpdate(this.currentTime);
       }
-      this.onTimeUpdate(this.currentTime);
     }, 1000);
   }
 
   // Arrêter le compte à rebours
   public stop(): void {
+    if (!this.isRunning) {
+      console.warn('Timer is already stopped. Ignoring stop() call.');
+      return;
+    }
+
+    console.log('Stopping timer.');
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-    this.isStopped = true;
-    this.isRunning = false; // Indique que le timer est arrêté
+    this.isRunning = false;
   }
 
   // Réinitialiser le temps
   public reset(time: number): void {
+    console.log('Resetting timer to', time);
     this.stop();
     this.currentTime = time;
     this.start();
