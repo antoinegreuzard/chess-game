@@ -107,6 +107,8 @@ export class Board {
     if (
       toY < 0 ||
       toY >= this.grid.length ||
+      fromY < 0 ||
+      fromY >= this.grid.length ||
       ['__proto__', 'constructor', 'prototype'].includes(toY.toString()) ||
       ['__proto__', 'constructor', 'prototype'].includes(fromY.toString()) ||
       ['__proto__', 'constructor', 'prototype'].includes(toX.toString()) ||
