@@ -10,7 +10,7 @@ describe('Board', () => {
 
   beforeAll(() => {
     board = new Board();
-    
+
     // Ajoute des éléments DOM pour les pièces capturées avant tous les tests
     const capturedWhiteElement = document.createElement('div');
     capturedWhiteElement.id = 'capturedWhite';
@@ -134,10 +134,13 @@ describe('Board', () => {
     const whiteKing = new King(PieceColor.WHITE);
     const blackKing = new King(PieceColor.BLACK);
     const blackQueen = new Queen(PieceColor.BLACK);
+    const blackRook = new Rook(PieceColor.BLACK);
 
     board.setPiece(0, 0, whiteKing);
     board.setPiece(7, 7, blackKing);
-    board.setPiece(1, 1, blackQueen);
+    board.setPiece(3, 3, blackQueen);
+    board.setPiece(0, 7, blackRook);
+    board.setPiece(7, 0, blackRook);
 
     // Le roi blanc est en échec et mat
     expect(board.isCheckmate(PieceColor.WHITE)).toBe(true);
@@ -166,8 +169,8 @@ describe('Board', () => {
     board.setPiece(4, 6, blackRook);
 
     // Capture le Rook noir avec le Pawn blanc
-    expect(board.movePiece(4, 4, 4, 6)).toBe(true);
-    expect(board.getPiece(4, 6)).toBe(whitePawn);
-    expect(board.getPiece(4, 4)).toBeNull();
+    expect(board.movePiece(4, 6, 4, 4)).toBe(true);
+    expect(board.getPiece(4, 4)).toBe(blackRook);
+    expect(board.getPiece(4, 6)).toBeNull();
   });
 });

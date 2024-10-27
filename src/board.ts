@@ -57,7 +57,22 @@ export class Board {
     return board;
   }
 
+  // Méthode générale pour vérifier les limites
+  private isWithinBounds(x: number, y: number): boolean {
+    return x >= 0 && x < 8 && y >= 0 && y < 8;
+  }
+
   public getPiece(x: number, y: number): BoardSquare {
+    if (!this.isWithinBounds(x, y)) {
+      if (x > 7)
+        x = 7;
+      if (x < 0)
+        x = 0;
+      if (y > 7)
+        x = 7;
+      if (y < 0)
+        x = 0;
+    }
     return this.grid[y][x];
   }
 
@@ -330,6 +345,8 @@ export class Board {
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
+
+                console.log(`Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`);
 
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
