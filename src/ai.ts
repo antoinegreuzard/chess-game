@@ -1,6 +1,6 @@
 // src/ai.ts
 import { Board } from './board';
-import { evaluateBoard } from './evaluator';
+import { evaluateBoard, centerControlBonus } from './evaluator';
 import { PieceColor } from './piece';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning
@@ -14,7 +14,10 @@ export class AI {
     let bestValue = -Infinity;
 
     const depth = 3; // Définir la profondeur de recherche
-    const moves = this.getAllValidMoves(board);
+    let moves = this.getAllValidMoves(board);
+
+    // Trie les mouvements pour optimiser la recherche
+    moves = this.sortMoves(moves, board);
 
     for (const move of moves) {
       // Effectue le mouvement sur le plateau temporairement
@@ -48,7 +51,10 @@ export class AI {
 
     if (isMaximizing) {
       let maxEval = -Infinity;
-      const moves = this.getAllValidMoves(board);
+      let moves = this.getAllValidMoves(board);
+
+      // Trie les mouvements pour optimiser la recherche
+      moves = this.sortMoves(moves, board);
 
       for (const move of moves) {
         // Enregistre l'état actuel avant de déplacer la pièce
@@ -75,7 +81,10 @@ export class AI {
       return maxEval;
     } else {
       let minEval = Infinity;
-      const moves = this.getAllValidMoves(board);
+      let moves = this.getAllValidMoves(board);
+
+      // Trie les mouvements pour optimiser la recherche
+      moves = this.sortMoves(moves, board);
 
       for (const move of moves) {
         // Enregistre l'état actuel avant de déplacer la pièce
@@ -130,5 +139,28 @@ export class AI {
     }
 
     return validMoves;
+  }
+
+  // Fonction pour trier les mouvements afin d'optimiser la recherche
+  private sortMoves(moves: { fromX: number; fromY: number; toX: number; toY: number }[], board: Board): {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number
+  }[] {
+    return moves.sort((a, b) => {
+      const pieceA = board.getPiece(a.toX, a.toY);
+      const pieceB = board.getPiece(b.toX, b.toY);
+
+      // Préfère les captures
+      if (pieceA && !pieceB) return -1;
+      if (!pieceA && pieceB) return 1;
+
+      // Sinon, trie par position centrale (exemple simple)
+      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
+      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
+
+      return centerControlB - centerControlA;
+    });
   }
 }

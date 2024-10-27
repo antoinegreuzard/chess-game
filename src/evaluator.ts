@@ -13,7 +13,7 @@ const pieceValues: { [key in PieceType]: number } = {
 };
 
 // Bonus pour le contrôle du centre du plateau (cases centrales plus précieuses)
-const centerControlBonus: { [key: string]: number } = {
+export const centerControlBonus: { [key: string]: number } = {
   '3,3': 0.5, '3,4': 0.5, '4,3': 0.5, '4,4': 0.5, // Cases centrales
   '2,3': 0.25, '2,4': 0.25, '3,2': 0.25, '4,2': 0.25, '4,5': 0.25, '3,5': 0.25, '5,3': 0.25, '5,4': 0.25, // Cases autour
 };
