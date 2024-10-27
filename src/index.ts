@@ -14,7 +14,6 @@ const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
 const drawButton = document.getElementById('drawButton')!;
-const undoButton = document.getElementById('undoButton')!;
 const acceptDrawButton = document.getElementById('acceptDrawButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
@@ -243,7 +242,7 @@ if (drawButton) {
   drawButton.addEventListener('click', () => {
     if (gameState === 'playing') {
       showMessage(
-        "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
+        'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
       );
       gameState = 'drawProposed';
       updateTurn(); // Change de tour pour que l'adversaire décide
@@ -258,35 +257,6 @@ if (acceptDrawButton) {
       showMessage('Partie Nulle par Accord Mutuel !');
       gameState = 'waiting'; // Change l'état du jeu à "waiting"
       endGame();
-    }
-  });
-}
-
-// Gérer le clic sur "Annuler le dernier coup"
-if (undoButton) {
-  undoButton.addEventListener('click', () => {
-    if (gameState === 'playing' && moveHistory.length > 0) {
-      const currentTurnMoves = moveHistory[moveHistory.length - 1];
-
-      // Annule uniquement si c'est encore le tour actuel
-      if (currentTurnMoves.length > 0) {
-        const lastMove = currentTurnMoves.pop();
-        if (lastMove) {
-          board.movePiece(
-            lastMove.toX,
-            lastMove.toY,
-            lastMove.fromX,
-            lastMove.fromY,
-          );
-          showMessage('Dernier coup annulé !');
-          renderer.drawBoard();
-        }
-      }
-
-      // Si le tour n'a plus de mouvements, supprime le tour vide
-      if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
-        moveHistory.pop();
-      }
     }
   });
 }

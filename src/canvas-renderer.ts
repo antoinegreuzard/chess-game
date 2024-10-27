@@ -208,7 +208,8 @@ export class CanvasRenderer {
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
     // Changer le curseur lorsque la souris survole une pièce
-    const piece = this.board.getPiece(x, y);
+    let piece = null;
+    if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
     if (piece && !this.draggingPiece) {
       this.canvas.style.cursor = 'pointer';
     } else if (!this.draggingPiece) {
