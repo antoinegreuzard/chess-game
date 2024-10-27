@@ -4,7 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   base: '/chess-game/',
   build: {
-    outDir: 'public',
+    outDir: 'dist',
     minify: 'esbuild',
     sourcemap: true,
   },

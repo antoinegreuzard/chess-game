@@ -1,3 +1,4 @@
+// src/pieces/pawn.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 
@@ -18,23 +19,27 @@ export class Pawn extends Piece {
     const distanceY = (toY - fromY) * direction;
     const distanceX = Math.abs(toX - fromX);
 
-    // 1. Déplacement d'une case vers l'avant
+    // 1. Déplacement d'une case vers l'avant (sans capture)
     if (distanceX === 0 && distanceY === 1) {
       if (!board.getPiece(toX, toY)) {
         // Promotion si le pion atteint la dernière rangée
-        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+        if (
+          (this.color === PieceColor.WHITE && toY === 7) ||
+          (this.color === PieceColor.BLACK && toY === 0)
+        ) {
           this.handlePromotion(toX, toY, board);
         }
         return true;
       }
     }
 
-    // 2. Déplacement de deux cases vers l'avant depuis la ligne de départ
+    // 2. Déplacement de deux cases vers l'avant depuis la ligne de départ (sans capture)
     if (distanceX === 0 && distanceY === 2 && fromY === startRow) {
       if (
         !board.getPiece(toX, toY) &&
         !board.getPiece(fromX, fromY + direction)
       ) {
+        // Mettre à jour la cible de la prise en passant
         board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
         return true;
       }
@@ -42,9 +47,13 @@ export class Pawn extends Piece {
 
     // 3. Capture en diagonale
     if (distanceX === 1 && distanceY === 1) {
-      if (this.canCapture(toX, toY, board)) {
+      // Vérifie qu'il y a une pièce ennemie à capturer
+      if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
         // Promotion si le pion atteint la dernière rangée
-        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+        if (
+          (this.color === PieceColor.WHITE && toY === 7) ||
+          (this.color === PieceColor.BLACK && toY === 0)
+        ) {
           this.handlePromotion(toX, toY, board);
         }
         return true;
@@ -52,11 +61,11 @@ export class Pawn extends Piece {
 
       // Prise en passant
       if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
-        board.captureEnPassant(fromX, fromY, toX, toY);
         return true;
       }
     }
 
+    // Si aucune des conditions n'est remplie, le mouvement est invalide
     return false;
   }
 

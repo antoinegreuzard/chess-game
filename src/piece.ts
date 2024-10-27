@@ -31,31 +31,35 @@ export abstract class Piece {
   ): boolean;
 
   // Vérifie si le chemin est dégagé pour certaines pièces
-  protected isPathClear(
+  public isPathClear(
     fromX: number,
     fromY: number,
     toX: number,
     toY: number,
     board: Board,
   ): boolean {
-    const dx = Math.sign(toX - fromX);
-    const dy = Math.sign(toY - fromY);
+    const dx = Math.sign(toX - fromX); // Direction en X
+    const dy = Math.sign(toY - fromY); // Direction en Y
 
+    // Boucle sur toutes les cases intermédiaires jusqu'à la case cible exclue
     let x = fromX + dx;
     let y = fromY + dy;
 
     while (x !== toX || y !== toY) {
+      // Vérifie s'il y a une pièce sur le chemin
       if (board.getPiece(x, y)) return false;
+
+      // Avance dans la direction
       x += dx;
       y += dy;
     }
 
-    return true;
+    return true; // Chemin dégagé
   }
 
   // Vérifie si une pièce peut capturer une autre
-  protected canCapture(toX: number, toY: number, board: Board): boolean {
+  canCapture(toX: number, toY: number, board: Board): boolean {
     const targetPiece = board.getPiece(toX, toY);
-    return targetPiece === null || targetPiece.color !== this.color;
+    return !targetPiece || targetPiece.color !== this.color;
   }
 }

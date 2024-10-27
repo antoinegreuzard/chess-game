@@ -3,15 +3,13 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
-import { showMessage } from './utils';
+import { showMessage, updateCapturedPieces } from './utils';
 
 const game = new Game();
 const board = game.getBoard();
 const moveHistoryElement = document.getElementById('moveHistory')!;
 const currentTurnElement = document.getElementById('currentTurn')!;
 const timerElement = document.getElementById('timer')!;
-const capturedWhiteElement = document.getElementById('capturedWhite')!;
-const capturedBlackElement = document.getElementById('capturedBlack')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
@@ -22,8 +20,6 @@ const acceptDrawButton = document.getElementById('acceptDrawButton')!;
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' | 'drawProposed' = 'playing'; // Ajout de l'état pour la proposition de nullité
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
-let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
-let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
 let moveHistory: {
   fromX: number;
   fromY: number;
@@ -153,38 +149,6 @@ function addMoveToHistory(
   });
 }
 
-// Fonction pour mettre à jour l'affichage des pièces capturées
-function updateCapturedPieces(piece: PieceType, color: PieceColor) {
-  const pieceSymbol = getPieceSymbol(piece, color);
-  if (color === PieceColor.WHITE) {
-    capturedWhite.push(pieceSymbol);
-    capturedWhiteElement.textContent = capturedWhite.join(' ');
-  } else {
-    capturedBlack.push(pieceSymbol);
-    capturedBlackElement.textContent = capturedBlack.join(' ');
-  }
-}
-
-// Fonction pour obtenir le symbole de la pièce capturée
-function getPieceSymbol(piece: PieceType, color: PieceColor): string {
-  switch (piece) {
-    case 'pawn':
-      return color === PieceColor.WHITE ? '♙' : '♟';
-    case 'rook':
-      return color === PieceColor.WHITE ? '♖' : '♜';
-    case 'knight':
-      return color === PieceColor.WHITE ? '♘' : '♞';
-    case 'bishop':
-      return color === PieceColor.WHITE ? '♗' : '♝';
-    case 'queen':
-      return color === PieceColor.WHITE ? '♕' : '♛';
-    case 'king':
-      return color === PieceColor.WHITE ? '♔' : '♚';
-    default:
-      return '';
-  }
-}
-
 // Fonction pour gérer un mouvement sur le plateau
 export function handleMove(
   fromX: number,
@@ -203,19 +167,15 @@ export function handleMove(
   // Vérifie que c'est bien le tour du joueur qui joue
   if (!piece || piece.color !== currentPlayer) {
     showMessage(
-      `Ce n'est pas le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+      `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
     );
     return false;
   }
 
   // Vérifie si le mouvement est valide pour la pièce et respecte les règles des échecs
   if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
-    // Effectue le mouvement uniquement si valide
+    // Si une pièce normale est capturée, l'ajouter aux pièces capturées
     if (board.movePiece(fromX, fromY, toX, toY)) {
-      // Marquer que le joueur a effectué son coup
-      hasMoved = true;
-
-      // Si une pièce est capturée, l'ajouter aux pièces capturées
       if (targetPiece) {
         updateCapturedPieces(targetPiece.type, targetPiece.color);
       }
@@ -248,72 +208,85 @@ export function handleMove(
       updateTurn();
       return true;
     }
+
+    // Si le mouvement est invalide, retourne faux
+    showMessage('Mouvement invalide !');
+    return false;
   }
 
-  // Si le mouvement est invalide, retourne faux
-  showMessage('Mouvement invalide !');
+  // Ajoute un return false par défaut si aucune condition n'est remplie
   return false;
 }
 
 // Gérer le clic sur "Passer son tour"
-passTurnButton.addEventListener('click', (event) => {
-  event.preventDefault();
-  if (gameState === 'playing') {
-    showMessage(
-      `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
-    );
-    updateTurn();
-  }
-});
+if (passTurnButton) {
+  passTurnButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    if (gameState === 'playing') {
+      showMessage(
+        `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+      );
+      updateTurn();
+    }
+  });
+}
 
 // Gérer le clic sur "Rejouer"
-replayButton.addEventListener('click', () => {
-  location.reload();
-});
+if (replayButton) {
+  replayButton.addEventListener('click', () => {
+    location.reload();
+  });
+}
 
 // Gérer le clic sur "Proposer une Nulle"
-drawButton.addEventListener('click', () => {
-  if (gameState === 'playing') {
-    showMessage(
-      "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
-    );
-    gameState = 'drawProposed';
-    updateTurn(); // Change de tour pour que l'adversaire décide
-  }
-});
+if (drawButton) {
+  drawButton.addEventListener('click', () => {
+    if (gameState === 'playing') {
+      showMessage(
+        "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
+      );
+      gameState = 'drawProposed';
+      updateTurn(); // Change de tour pour que l'adversaire décide
+    }
+  });
+}
 
 // Gérer le clic sur "Accepter la Nulle"
-acceptDrawButton.addEventListener('click', () => {
-  if (gameState === 'drawProposed') {
-    showMessage('Partie Nulle par Accord Mutuel !');
-    gameState = 'waiting'; // Change l'état du jeu à "waiting"
-    endGame();
-  }
-});
+if (acceptDrawButton) {
+  acceptDrawButton.addEventListener('click', () => {
+    if (gameState === 'drawProposed') {
+      showMessage('Partie Nulle par Accord Mutuel !');
+      gameState = 'waiting'; // Change l'état du jeu à "waiting"
+      endGame();
+    }
+  });
+}
 
 // Gérer le clic sur "Annuler le dernier coup"
-undoButton.addEventListener('click', () => {
-  if (gameState === 'playing' && moveHistory.length > 0) {
-    const currentTurnMoves = moveHistory[moveHistory.length - 1];
+if (undoButton) {
+  undoButton.addEventListener('click', () => {
+    if (gameState === 'playing' && moveHistory.length > 0) {
+      const currentTurnMoves = moveHistory[moveHistory.length - 1];
 
-    // Annule uniquement si c'est encore le tour actuel
-    if (currentTurnMoves.length > 0) {
-      const lastMove = currentTurnMoves.pop();
-      if (lastMove) {
-        board.movePiece(
-          lastMove.toX,
-          lastMove.toY,
-          lastMove.fromX,
-          lastMove.fromY,
-        );
-        showMessage('Dernier coup annulé !');
-        renderer.drawBoard();
+      // Annule uniquement si c'est encore le tour actuel
+      if (currentTurnMoves.length > 0) {
+        const lastMove = currentTurnMoves.pop();
+        if (lastMove) {
+          board.movePiece(
+            lastMove.toX,
+            lastMove.toY,
+            lastMove.fromX,
+            lastMove.fromY,
+          );
+          showMessage('Dernier coup annulé !');
+          renderer.drawBoard();
+        }
+      }
+
+      // Si le tour n'a plus de mouvements, supprime le tour vide
+      if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
+        moveHistory.pop();
       }
     }
-
-    // Si le tour n'a plus de mouvements, supprime le tour vide
-    if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
-      moveHistory.pop();
-    }
-  }
-});
+  });
+}

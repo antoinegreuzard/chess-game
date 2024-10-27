@@ -22,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Assurez-vous d'utiliser une version compatible avec votre projet
+          node-version: 20 # Assurez-vous d'utiliser une version compatible avec votre projet
 
     # Installation des dépendances
       - name: Install dependencies
@@ -31,6 +31,10 @@ jobs:
     # Test de la compilation TypeScript
       - name: Build TypeScript
         run: npm run build
+
+    # Lancer les tests unitaires
+      - name: Run Unit Tests
+        run: npm test
 
     # Lancer Prettier pour formater le code
       - name: Run Prettier
@@ -56,7 +60,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
     # Installation des dépendances
       - name: Install dependencies
@@ -71,4 +75,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: ./dist

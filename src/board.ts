@@ -6,6 +6,7 @@ import { Bishop } from './pieces/bishop';
 import { Queen } from './pieces/queen';
 import { King } from './pieces/king';
 import { Pawn } from './pieces/pawn';
+import { updateCapturedPieces } from './utils';
 
 type BoardSquare = Piece | null;
 
@@ -56,7 +57,18 @@ export class Board {
     return board;
   }
 
+  // Méthode générale pour vérifier les limites
+  private isWithinBounds(x: number, y: number): boolean {
+    return x >= 0 && x < 8 && y >= 0 && y < 8;
+  }
+
   public getPiece(x: number, y: number): BoardSquare {
+    if (!this.isWithinBounds(x, y)) {
+      if (x > 7) x = 7;
+      if (x < 0) x = 0;
+      if (y > 7) x = 7;
+      if (y < 0) x = 0;
+    }
     return this.grid[y][x];
   }
 
@@ -103,8 +115,25 @@ export class Board {
 
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
       const targetPiece = this.getPiece(toX, toY);
+
       if (targetPiece && targetPiece.type === PieceType.KING) {
         return false; // Mouvement invalide si la cible est un roi
+      }
+
+      if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
+        this.captureEnPassant(fromX, fromY, toX, toY);
+      }
+
+      // Vérifie si c'est un mouvement de roque pour le roi
+      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
+        console.log('King');
+        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
+          return false; // Roque invalide
+        }
+
+        console.log(true);
+        // Effectue le roque
+        this.handleCastling(toX, fromY);
       }
 
       // Sauvegarder l'état actuel pour vérifier l'échec
@@ -119,17 +148,6 @@ export class Board {
         this.grid[toY][toX] = originalPiece;
         return false;
       }
-
-      // Vérifie si c'est un mouvement de roque pour le roi
-      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
-        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
-          return false; // Roque invalide
-        }
-        this.handleCastling(toX, toY);
-      }
-
-      // Gérer la prise en passant
-      this.handleEnPassant(fromX, fromY, toX, toY);
 
       // Compte les mouvements pour la règle des 50 coups
       if (piece.type === PieceType.PAWN || targetPiece) {
@@ -148,9 +166,6 @@ export class Board {
       } else if (piece instanceof Rook) {
         piece.hasMoved = true;
       }
-
-      // Gérer la cible pour la prise en passant
-      this.updateEnPassantTarget(fromX, fromY, toX, toY, piece);
 
       return true;
     }
@@ -189,31 +204,19 @@ export class Board {
   }
 
   private handleCastling(kingX: number, kingY: number): void {
+    // Déplacement pour le petit roque (roi se déplace vers la droite)
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
       if (rook instanceof Rook) {
-        this.grid[5][kingY] = rook;
-        this.grid[7][kingY] = null;
-      }
-    } else if (kingX === 2) {
-      const rook = this.getPiece(0, kingY);
-      if (rook instanceof Rook) {
-        this.grid[3][kingY] = rook;
-        this.grid[0][kingY] = null;
+        this.movePiece(7, kingY, 5, kingY);
       }
     }
-  }
-
-  private handleEnPassant(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-  ): void {
-    if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
-      const direction =
-        this.getPiece(fromX, fromY)?.color === PieceColor.WHITE ? -1 : 1;
-      this.grid[toY - direction][toX] = null; // Capture du pion en passant
+    // Déplacement pour le grand roque (roi se déplace vers la gauche)
+    else if (kingX === 2) {
+      const rook = this.getPiece(0, kingY);
+      if (rook instanceof Rook) {
+        this.movePiece(0, kingY, 3, kingY);
+      }
     }
   }
 
@@ -225,6 +228,7 @@ export class Board {
     piece: Piece,
   ): void {
     if (piece instanceof Pawn && Math.abs(toY - fromY) === 2 && fromX === toX) {
+      // Si le pion avance de deux cases, configure la cible pour la prise en passant
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
       this.enPassantTarget = null;
@@ -243,7 +247,20 @@ export class Board {
     if (this.isEnPassantMove(fromX, fromY, toX, toY) && piece instanceof Pawn) {
       // Détermine la direction pour la capture en passant
       const direction = piece.color === PieceColor.WHITE ? -1 : 1;
-      this.grid[toY - direction][toX] = null; // Enlève le pion capturé
+
+      // Calcul de la position du pion capturé (en passant)
+      const capturedPawnY = toY + direction; // Position Y du pion capturé
+      const capturedPawn = this.getPiece(toX, capturedPawnY);
+
+      // Vérifie si un pion est bien présent à capturer
+      if (capturedPawn && capturedPawn.type === PieceType.PAWN) {
+        this.grid[capturedPawnY][toX] = null;
+        updateCapturedPieces(capturedPawn.type, capturedPawn.color);
+      }
+
+      // Déplace le pion qui effectue la capture
+      this.grid[toY][toX] = piece;
+      this.grid[fromY][fromX] = null;
     }
   }
 
@@ -254,10 +271,15 @@ export class Board {
     toY: number,
   ): boolean {
     if (!this.enPassantTarget) return false;
+
+    // Vérifie que le mouvement cible la bonne case pour la prise en passant
+    const piece = this.getPiece(fromX, fromY);
     return (
+      piece instanceof Pawn &&
       toX === this.enPassantTarget.x &&
       toY === this.enPassantTarget.y &&
-      this.getPiece(fromX, fromY) instanceof Pawn
+      Math.abs(fromX - toX) === 1 &&
+      Math.abs(fromY - toY) === 1
     );
   }
 
@@ -284,7 +306,9 @@ export class Board {
 
   public isKingInCheck(color: PieceColor): boolean {
     const kingPosition = this.findKing(color);
-    if (!kingPosition) return false;
+    if (!kingPosition) {
+      return false;
+    }
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
@@ -316,6 +340,10 @@ export class Board {
                 this.grid[y][x] = null;
 
                 const kingSafe = !this.isKingInCheck(color);
+
+                console.log(
+                  `Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`,
+                );
 
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
@@ -399,20 +427,58 @@ export class Board {
 
     // Cas les plus courants de matériel insuffisant
     if (pieces.length <= 2) return true; // Seulement les rois sur le plateau
-    if (
+    return (
       pieces.length === 3 &&
       pieces.some(
         (piece) =>
           piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT,
       )
-    )
-      return true;
-
-    return false;
+    );
   }
 
   // Vérifie si la règle des 50 coups est remplie
   public isFiftyMoveRule(): boolean {
     return this.halfMoveCount >= 50;
+  }
+
+  public setPiece(x: number, y: number, piece: Piece | null): void {
+    this.grid[y][x] = piece;
+  }
+
+  public clearBoard(): void {
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        this.grid[y][x] = null;
+      }
+    }
+  }
+
+  // Vérifie si un mouvement est valide
+  public isMoveValid(
+    fromRow: number,
+    fromCol: number,
+    toRow: number,
+    toCol: number,
+  ): boolean {
+    const piece = this.getPiece(fromRow, fromCol);
+
+    // Si aucune pièce n'est présente à l'emplacement source, le mouvement est invalide
+    if (!piece) {
+      return false;
+    }
+
+    // Si la destination est en dehors de l'échiquier, mouvement invalide
+    if (toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8) {
+      return false;
+    }
+
+    // Vérifie si la pièce peut se déplacer à cette destination en utilisant la logique de mouvement de la pièce
+    if (!piece.isValidMove(fromRow, fromCol, toRow, toCol, this)) {
+      return false;
+    }
+
+    // Vérifie s'il y a une pièce à la destination et si elle est de la même couleur
+    const destinationPiece = this.getPiece(toRow, toCol);
+    return !(destinationPiece && destinationPiece.color === piece.color);
   }
 }

@@ -4,7 +4,7 @@ import parser from '@typescript-eslint/parser';
 
 const config = /** @type {Linter.FlatConfig[]} */ ([
   {
-    files: ['**/*.ts'],
+    files: ['src/**/*.ts'], // Inclure tous les fichiers TypeScript dans src
     languageOptions: {
       parser,
       parserOptions: {

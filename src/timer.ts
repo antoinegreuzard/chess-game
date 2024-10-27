@@ -17,7 +17,6 @@ export class Timer {
   public start(): void {
     if (this.isRunning) return;
 
-    console.log('Timer started.');
     this.isRunning = true;
     this.intervalId = window.setInterval(() => {
       this.currentTime--;
@@ -38,7 +37,6 @@ export class Timer {
       return;
     }
 
-    console.log('Stopping timer.');
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -48,7 +46,6 @@ export class Timer {
 
   // Réinitialiser le temps
   public reset(time: number): void {
-    console.log('Resetting timer to', time);
     this.stop();
     this.currentTime = time;
     this.start();

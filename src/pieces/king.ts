@@ -22,10 +22,13 @@ export class King extends Piece {
     // Vérification pour le mouvement classique du roi
     if (dx <= 1 && dy <= 1) {
       const targetPiece = board.getPiece(toX, toY);
-      return this.canCapture(toX, toY, board) && (!targetPiece || targetPiece.type !== PieceType.KING);
+      return (
+        this.canCapture(toX, toY, board) &&
+        (!targetPiece || targetPiece.type !== PieceType.KING)
+      );
     }
 
-    // Logique pour le roque
+    // Logique pour le roque (grand ou petit)
     if (!this.hasMoved && dy === 0 && dx === 2) {
       const direction = toX > fromX ? 1 : -1;
       const rookX = toX > fromX ? 7 : 0;
