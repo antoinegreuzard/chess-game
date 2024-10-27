@@ -105,6 +105,10 @@ export class Board {
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
       const targetPiece = this.getPiece(toX, toY);
 
+      if (targetPiece && targetPiece.type === PieceType.KING) {
+        return false; // Mouvement invalide si la cible est un roi
+      }
+
       if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
         this.captureEnPassant(fromX, fromY, toX, toY);
       }
