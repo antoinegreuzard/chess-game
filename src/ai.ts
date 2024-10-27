@@ -1,3 +1,4 @@
+// src/ai.ts
 import { Board } from './board';
 import { evaluateBoard } from './evaluator';
 import { PieceColor } from './piece';
@@ -43,22 +44,28 @@ export class AI {
       return evaluateBoard(board, this.color);
     }
 
+    console.log(`Simulation: ${isMaximizing ? 'Maximizing' : 'Minimizing'}, Depth: ${depth}, Alpha: ${alpha}, Beta: ${beta}`);
+
     if (isMaximizing) {
       let maxEval = -Infinity;
       const moves = this.getAllValidMoves(board);
 
       for (const move of moves) {
+        // Enregistre l'état actuel avant de déplacer la pièce
+        const fromPiece = board.getPiece(move.fromX, move.fromY);
+        const toPiece = board.getPiece(move.toX, move.toY);
+
         // Effectue le mouvement temporairement
-        const piece = board.getPiece(move.fromX, move.fromY);
-        const originalPiece = board.getPiece(move.toX, move.toY);
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
         // Appelle récursivement Minimax
         const evaluation = this.minimax(board, depth - 1, alpha, beta, false);
 
         // Annule le mouvement temporaire
-        board.setPiece(move.fromX, move.fromY, piece);
-        board.setPiece(move.toX, move.toY, originalPiece);
+        board.setPiece(move.fromX, move.fromY, fromPiece);
+        board.setPiece(move.toX, move.toY, toPiece);
+
+        console.log(`Move simulated from (${move.fromX}, ${move.fromY}) to (${move.toX}, ${move.toY})`);
 
         maxEval = Math.max(maxEval, evaluation);
         alpha = Math.max(alpha, evaluation);
@@ -71,17 +78,21 @@ export class AI {
       const moves = this.getAllValidMoves(board);
 
       for (const move of moves) {
+        // Enregistre l'état actuel avant de déplacer la pièce
+        const fromPiece = board.getPiece(move.fromX, move.fromY);
+        const toPiece = board.getPiece(move.toX, move.toY);
+
         // Effectue le mouvement temporairement
-        const piece = board.getPiece(move.fromX, move.fromY);
-        const originalPiece = board.getPiece(move.toX, move.toY);
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
         // Appelle récursivement Minimax
         const evaluation = this.minimax(board, depth - 1, alpha, beta, true);
 
         // Annule le mouvement temporaire
-        board.setPiece(move.fromX, move.fromY, piece);
-        board.setPiece(move.toX, move.toY, originalPiece);
+        board.setPiece(move.fromX, move.fromY, fromPiece);
+        board.setPiece(move.toX, move.toY, toPiece);
+
+        console.log(`Move simulated from (${move.fromX}, ${move.fromY}) to (${move.toX}, ${move.toY})`);
 
         minEval = Math.min(minEval, evaluation);
         beta = Math.min(beta, evaluation);
@@ -107,8 +118,12 @@ export class AI {
 
         if (piece && piece.color === this.color) {
           const moves = board.getValidMoves(x, y);
+
+          // Vérifie que chaque mouvement est valide avant de l'ajouter
           for (const move of moves) {
-            validMoves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+            if (board.isMoveValid(x, y, move.x, move.y)) {
+              validMoves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+            }
           }
         }
       }
