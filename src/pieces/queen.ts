@@ -1,3 +1,4 @@
+// src/pieces/queen.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 

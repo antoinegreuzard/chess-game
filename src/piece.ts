@@ -19,7 +19,8 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   // Mise à jour pour inclure le paramètre 'board'
   abstract isValidMove(
@@ -60,6 +61,6 @@ export abstract class Piece {
   // Vérifie si une pièce peut capturer une autre
   canCapture(toX: number, toY: number, board: Board): boolean {
     const targetPiece = board.getPiece(toX, toY);
-    return targetPiece === null || targetPiece.color !== this.color;
+    return !targetPiece || targetPiece.color !== this.color;
   }
 }

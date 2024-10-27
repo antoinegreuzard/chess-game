@@ -413,7 +413,6 @@ export class Board {
     return this.halfMoveCount >= 50;
   }
 
-  // Ajoute cette méthode dans la classe Board
   public setPiece(x: number, y: number, piece: Piece | null): void {
     this.grid[y][x] = piece;
   }
