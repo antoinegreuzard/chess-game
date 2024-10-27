@@ -1,3 +1,4 @@
+// src/board.ts
 import { Piece, PieceColor, PieceType } from './piece';
 import { Rook } from './pieces/rook';
 import { Knight } from './pieces/knight';
@@ -72,15 +73,29 @@ export class Board {
         return false; // Mouvement invalide si la cible est un roi
       }
 
+      // Sauvegarder l'état actuel pour vérifier l'échec
+      const originalPiece = this.getPiece(toX, toY);
+      this.grid[toY][toX] = piece;
+      this.grid[fromY][fromX] = null;
+
+      // Vérification de l'échec après le mouvement
+      if (this.isKingInCheck(piece.color)) {
+        // Annuler le mouvement
+        this.grid[fromY][fromX] = piece;
+        this.grid[toY][toX] = originalPiece;
+        return false;
+      }
+
       // Vérifie si c'est un mouvement de roque pour le roi
       if (piece instanceof King && Math.abs(toX - fromX) === 2) {
+        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
+          return false; // Roque invalide
+        }
         this.handleCastling(toX, toY);
       }
 
-      // Capturer la pièce adverse si présente
-      if (targetPiece && targetPiece.color !== piece.color) {
-        this.grid[toY][toX] = null; // Capture de la pièce
-      }
+      // Gérer la prise en passant
+      this.handleEnPassant(fromX, fromY, toX, toY);
 
       // Déplace la pièce
       this.grid[toY][toX] = piece;
@@ -101,6 +116,32 @@ export class Board {
     return false;
   }
 
+  private isCastlingValid(king: King, fromX: number, fromY: number, toX: number): boolean {
+    const direction = toX > fromX ? 1 : -1;
+    const rookX = toX > fromX ? 7 : 0;
+    const rook = this.getPiece(rookX, fromY);
+
+    if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) {
+      return false;
+    }
+
+    // Vérifie que les cases entre le roi et la tour sont libres
+    for (let x = fromX + direction; x !== rookX; x += direction) {
+      if (this.getPiece(x, fromY)) {
+        return false;
+      }
+    }
+
+    // Assure que le roi ne passe pas par une case attaquée
+    for (let x = fromX; x !== toX + direction; x += direction) {
+      if (this.isSquareUnderAttack(x, fromY, king.color)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   private handleCastling(kingX: number, kingY: number): void {
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
@@ -117,7 +158,6 @@ export class Board {
     }
   }
 
-  // Gérer la logique de la prise en passant
   private handleEnPassant(
     fromX: number,
     fromY: number,
@@ -130,15 +170,13 @@ export class Board {
     }
   }
 
-  // Définir la cible pour la prise en passant
-  private updateEnPassantTarget(
+  public updateEnPassantTarget(
     fromX: number,
     fromY: number,
     toX: number,
     toY: number,
     piece: Piece,
   ): void {
-    // Si un pion se déplace de deux cases, définir la cible pour la prise en passant
     if (
       piece instanceof Pawn &&
       Math.abs(toY - fromY) === 2 &&
@@ -147,6 +185,17 @@ export class Board {
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
       this.enPassantTarget = null;
+    }
+  }
+
+  public captureEnPassant(fromX: number, fromY: number, toX: number, toY: number): void {
+    const piece = this.getPiece(fromX, fromY);
+
+    // Vérifie que le mouvement est une prise en passant valide
+    if (this.isEnPassantMove(fromX, fromY, toX, toY) && piece instanceof Pawn) {
+      // Détermine la direction pour la capture en passant
+      const direction = piece.color === PieceColor.WHITE ? -1 : 1;
+      this.grid[toY - direction][toX] = null; // Enlève le pion capturé
     }
   }
 
@@ -199,6 +248,40 @@ export class Board {
 
   public isCheckmate(color: PieceColor): boolean {
     if (!this.isKingInCheck(color)) {
+      return false;
+    }
+
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece && piece.color === color) {
+          for (let toY = 0; toY < 8; toY++) {
+            for (let toX = 0; toX < 8; toX++) {
+              if (piece.isValidMove(x, y, toX, toY, this)) {
+                const originalPiece = this.getPiece(toX, toY);
+                this.grid[toY][toX] = piece;
+                this.grid[y][x] = null;
+
+                const kingSafe = !this.isKingInCheck(color);
+
+                this.grid[y][x] = piece;
+                this.grid[toY][toX] = originalPiece;
+
+                if (kingSafe) {
+                  return false;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  public isStalemate(color: PieceColor): boolean {
+    if (this.isKingInCheck(color)) {
       return false;
     }
 

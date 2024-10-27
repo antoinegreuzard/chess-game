@@ -36,7 +36,7 @@ export class Pawn extends Piece {
         !board.getPiece(toX, toY) &&
         !board.getPiece(fromX, fromY + direction)
       ) {
-        board.updateEnPassantTarget(toX, toY);
+        board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
         return true;
       }
     }
