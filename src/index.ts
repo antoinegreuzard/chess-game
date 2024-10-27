@@ -3,6 +3,7 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
+import { showMessage } from './utils';
 
 const game = new Game();
 const board = game.getBoard();
@@ -62,12 +63,6 @@ function endGame() {
   replayButton.style.display = 'block';
 }
 
-// Fonction pour afficher un message dans l'élément gameMessage
-function showMessage(message: string) {
-  gameMessageElement.textContent = message;
-  gameMessageElement.style.display = 'block'; // Afficher le message
-}
-
 // Fonction pour effacer le message d'erreur
 function clearMessage() {
   gameMessageElement.textContent = '';
@@ -77,7 +72,8 @@ function clearMessage() {
 // Fonction pour mettre à jour le tour et l'affichage
 function updateTurn() {
   clearMessage(); // Efface le message d'erreur au début de chaque tour
-  currentPlayer = currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+  currentPlayer =
+    currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
   hasMoved = false; // Réinitialise l'état de mouvement pour le prochain tour
 
@@ -145,10 +141,10 @@ export function handleMove(
   fromY: number,
   toX: number,
   toY: number,
-): void {
+): boolean {
   if (gameState === 'waiting' || hasMoved) {
     showMessage('Veuillez attendre le prochain tour !');
-    return;
+    return false;
   }
 
   const piece = board.getPiece(fromX, fromY);
@@ -159,7 +155,7 @@ export function handleMove(
     showMessage(
       `Ce n'est pas le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
     );
-    return;
+    return false;
   }
 
   // Vérifie si le mouvement est valide pour la pièce et respecte les règles des échecs
@@ -199,14 +195,14 @@ export function handleMove(
       }
 
       // Change de tour après un mouvement valide
-      gameState = 'waiting'; // Bloque les mouvements jusqu'à ce que le tour change
       updateTurn();
-    } else {
-      showMessage('Mouvement invalide !');
+      return true;
     }
-  } else {
-    showMessage('Mouvement invalide !');
   }
+
+  // Si le mouvement est invalide, retourne faux
+  showMessage('Mouvement invalide !');
+  return false;
 }
 
 // Gérer le clic sur "Passer son tour"
