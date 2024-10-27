@@ -399,13 +399,13 @@ export class Board {
 
     // Cas les plus courants de matériel insuffisant
     if (pieces.length <= 2) return true; // Seulement les rois sur le plateau
-    return pieces.length === 3 &&
+    return (
+      pieces.length === 3 &&
       pieces.some(
         (piece) =>
           piece?.type === PieceType.BISHOP || piece?.type === PieceType.KNIGHT,
-      );
-
-
+      )
+    );
   }
 
   // Vérifie si la règle des 50 coups est remplie
