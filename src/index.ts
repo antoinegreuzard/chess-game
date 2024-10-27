@@ -213,67 +213,80 @@ export function handleMove(
     showMessage('Mouvement invalide !');
     return false;
   }
+
+  // Ajoute un return false par défaut si aucune condition n'est remplie
+  return false;
 }
 
 // Gérer le clic sur "Passer son tour"
-passTurnButton.addEventListener('click', (event) => {
-  event.preventDefault();
-  if (gameState === 'playing') {
-    showMessage(
-      `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
-    );
-    updateTurn();
-  }
-});
+if (passTurnButton) {
+  passTurnButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    if (gameState === 'playing') {
+      showMessage(
+        `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+      );
+      updateTurn();
+    }
+  });
+}
 
 // Gérer le clic sur "Rejouer"
-replayButton.addEventListener('click', () => {
-  location.reload();
-});
+if (replayButton) {
+  replayButton.addEventListener('click', () => {
+    location.reload();
+  });
+}
 
 // Gérer le clic sur "Proposer une Nulle"
-drawButton.addEventListener('click', () => {
-  if (gameState === 'playing') {
-    showMessage(
-      'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
-    );
-    gameState = 'drawProposed';
-    updateTurn(); // Change de tour pour que l'adversaire décide
-  }
-});
+if (drawButton) {
+  drawButton.addEventListener('click', () => {
+    if (gameState === 'playing') {
+      showMessage(
+        'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
+      );
+      gameState = 'drawProposed';
+      updateTurn(); // Change de tour pour que l'adversaire décide
+    }
+  });
+}
 
 // Gérer le clic sur "Accepter la Nulle"
-acceptDrawButton.addEventListener('click', () => {
-  if (gameState === 'drawProposed') {
-    showMessage('Partie Nulle par Accord Mutuel !');
-    gameState = 'waiting'; // Change l'état du jeu à "waiting"
-    endGame();
-  }
-});
+if (acceptDrawButton) {
+  acceptDrawButton.addEventListener('click', () => {
+    if (gameState === 'drawProposed') {
+      showMessage('Partie Nulle par Accord Mutuel !');
+      gameState = 'waiting'; // Change l'état du jeu à "waiting"
+      endGame();
+    }
+  });
+}
 
 // Gérer le clic sur "Annuler le dernier coup"
-undoButton.addEventListener('click', () => {
-  if (gameState === 'playing' && moveHistory.length > 0) {
-    const currentTurnMoves = moveHistory[moveHistory.length - 1];
+if (undoButton) {
+  undoButton.addEventListener('click', () => {
+    if (gameState === 'playing' && moveHistory.length > 0) {
+      const currentTurnMoves = moveHistory[moveHistory.length - 1];
 
-    // Annule uniquement si c'est encore le tour actuel
-    if (currentTurnMoves.length > 0) {
-      const lastMove = currentTurnMoves.pop();
-      if (lastMove) {
-        board.movePiece(
-          lastMove.toX,
-          lastMove.toY,
-          lastMove.fromX,
-          lastMove.fromY,
-        );
-        showMessage('Dernier coup annulé !');
-        renderer.drawBoard();
+      // Annule uniquement si c'est encore le tour actuel
+      if (currentTurnMoves.length > 0) {
+        const lastMove = currentTurnMoves.pop();
+        if (lastMove) {
+          board.movePiece(
+            lastMove.toX,
+            lastMove.toY,
+            lastMove.fromX,
+            lastMove.fromY,
+          );
+          showMessage('Dernier coup annulé !');
+          renderer.drawBoard();
+        }
+      }
+
+      // Si le tour n'a plus de mouvements, supprime le tour vide
+      if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
+        moveHistory.pop();
       }
     }
-
-    // Si le tour n'a plus de mouvements, supprime le tour vide
-    if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
-      moveHistory.pop();
-    }
-  }
-});
+  });
+}
