@@ -1,6 +1,6 @@
 // src/queen.ts
-import { Piece, PieceColor, PieceType } from './piece';
-import { Board } from './board';
+import { Piece, PieceColor, PieceType } from '../piece';
+import { Board } from '../board';
 
 export class Queen extends Piece {
   constructor(color: PieceColor) {
