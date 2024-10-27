@@ -48,11 +48,15 @@ renderer.drawBoard();
 whiteTimer.start(); // Démarre le timer pour les blancs au début
 
 // Fonction pour terminer la partie
+// Fonction pour terminer la partie
 function endGame() {
   whiteTimer.stop();
   blackTimer.stop();
   gameState = 'waiting'; // Empêcher les mouvements après la fin du jeu
   showMessage('La partie est terminée !');
+
+  // Assure que le timer reste à 0 si la partie se termine par temps écoulé
+  updateTimerDisplay(0, currentPlayer);
 
   // Afficher le bouton "Rejouer"
   replayButton.style.display = 'block';
@@ -73,20 +77,17 @@ function clearMessage() {
 // Fonction pour mettre à jour le tour et l'affichage
 function updateTurn() {
   clearMessage(); // Efface le message d'erreur au début de chaque tour
-  currentPlayer =
-    currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+  currentPlayer = currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
   hasMoved = false; // Réinitialise l'état de mouvement pour le prochain tour
 
-  // Gérer le changement de timer
+  // Gérer le changement de timer en s'assurant qu'on ne redémarre pas un timer déjà actif
   if (currentPlayer === PieceColor.WHITE) {
-    blackTimer.stop();
-    whiteTimer.reset(60);
-    whiteTimer.start();
+    if (blackTimer.isRunning) blackTimer.stop();
+    whiteTimer.reset(60); // Réinitialise et démarre le timer pour les Blancs
   } else {
-    whiteTimer.stop();
-    blackTimer.reset(60);
-    blackTimer.start();
+    if (whiteTimer.isRunning) whiteTimer.stop();
+    blackTimer.reset(60); // Réinitialise et démarre le timer pour les Noirs
   }
 
   gameState = 'playing'; // Réactive les mouvements pour le prochain joueur
