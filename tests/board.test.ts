@@ -150,14 +150,14 @@ describe('Board', () => {
     board.clearBoard();
     const whiteKing = new King(PieceColor.WHITE);
     const blackKing = new King(PieceColor.BLACK);
-    const blackQueen = new Queen(PieceColor.BLACK);
+    const whiteQueen = new Queen(PieceColor.WHITE);
 
     board.setPiece(0, 0, whiteKing);
     board.setPiece(7, 7, blackKing);
-    board.setPiece(5, 1, blackQueen);
+    board.setPiece(5, 6, whiteQueen);
 
     // Le roi blanc est en pat
-    expect(board.isStalemate(PieceColor.WHITE)).toBe(true);
+    expect(board.isStalemate(PieceColor.BLACK)).toBe(true);
   });
 
   test('should update captured pieces when a piece is captured', () => {
