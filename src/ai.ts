@@ -2,16 +2,16 @@ import { Board } from './board';
 import {
   evaluateBoard,
   centerControlBonus,
-  pieceSquareTables,
+
 } from './evaluator';
 import { PieceColor } from './piece';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
   private transpositionTable: Map<string, number>; // Table de transposition
-  private maxTime: number; // Temps maximum de réflexion en millisecondes
+  private readonly maxTime: number; // Temps maximum de réflexion en millisecondes
   private startTime: number; // Temps de début pour gestion du temps
-  private killerMoves: {
+  private readonly killerMoves: {
     [depth: number]: {
       fromX: number;
       fromY: number;
@@ -27,6 +27,7 @@ export class AI {
     this.transpositionTable = new Map();
     this.maxTime = maxTime;
     this.killerMoves = {};
+    this.startTime = 0;
   }
 
   // Méthode principale pour faire un mouvement
@@ -182,7 +183,7 @@ export class AI {
     if (alpha < standPat) alpha = standPat;
 
     const moves = this.getAllValidMoves(board).filter((move) =>
-      board.isCapture(move),
+      board.isCapture(move.fromX, move.fromY, move.toX, move.toY),
     );
 
     for (const move of moves) {
