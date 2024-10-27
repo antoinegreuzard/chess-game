@@ -9,6 +9,7 @@ export class CanvasRenderer {
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
   private startY: number | null = null;
+  private highlightedMoves: { x: number, y: number }[] = [];
 
   constructor(
     private board: Board,
@@ -34,7 +35,7 @@ export class CanvasRenderer {
   }
 
   // Animation pour déplacer une pièce
-  animateMove(
+  public animateMove(
     fromX: number,
     fromY: number,
     toX: number,
@@ -76,6 +77,19 @@ export class CanvasRenderer {
     };
 
     animate();
+  }
+
+  // Surligne les mouvements valides pour une pièce sélectionnée
+  private highlightValidMoves(moves: { x: number, y: number }[]): void {
+    this.context.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Couleur de surlignage (vert translucide)
+    moves.forEach(move => {
+      this.context.fillRect(
+        move.x * this.tileSize,
+        move.y * this.tileSize,
+        this.tileSize,
+        this.tileSize,
+      );
+    });
   }
 
   // Dessiner l'échiquier et les pièces
@@ -158,6 +172,13 @@ export class CanvasRenderer {
       this.startX = x;
       this.startY = y;
       this.canvas.style.cursor = 'grabbing'; // Change le curseur pendant le drag
+
+      // Obtenez les mouvements légaux pour la pièce sélectionnée
+      this.highlightedMoves = this.board.getValidMoves(x, y);
+
+      // Redessinez le plateau avec les cases surlignées
+      this.drawBoard();
+      this.highlightValidMoves(this.highlightedMoves); // Surligne les mouvements valides
     }
   }
 
@@ -180,6 +201,9 @@ export class CanvasRenderer {
     // Dessiner l'échiquier et les pièces
     this.drawBoard();
 
+    // Assurez-vous que les mouvements valides restent visibles pendant le glissement
+    this.highlightValidMoves(this.highlightedMoves);
+
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
@@ -195,8 +219,7 @@ export class CanvasRenderer {
 
   // Gérer la fin du glissement
   private handleMouseUp(event: MouseEvent): void {
-    if (!this.draggingPiece || this.startX === null || this.startY === null)
-      return;
+    if (!this.draggingPiece || this.startX === null || this.startY === null) return;
 
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
@@ -210,6 +233,9 @@ export class CanvasRenderer {
     this.startX = null;
     this.startY = null;
     this.canvas.style.cursor = 'default'; // Rétablir le curseur par défaut
+
+    // Efface les coups surlignés
+    this.highlightedMoves = [];
 
     // Redessine le plateau après la fin du glissement
     this.drawBoard();
