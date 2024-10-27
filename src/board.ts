@@ -455,4 +455,28 @@ export class Board {
       }
     }
   }
+
+  // Vérifie si un mouvement est valide
+  public isMoveValid(fromRow: number, fromCol: number, toRow: number, toCol: number): boolean {
+    const piece = this.getPiece(fromRow, fromCol);
+
+    // Si aucune pièce n'est présente à l'emplacement source, le mouvement est invalide
+    if (!piece) {
+      return false;
+    }
+
+    // Si la destination est en dehors de l'échiquier, mouvement invalide
+    if (toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8) {
+      return false;
+    }
+
+    // Vérifie si la pièce peut se déplacer à cette destination en utilisant la logique de mouvement de la pièce
+    if (!piece.isValidMove(fromRow, fromCol, toRow, toCol, this)) {
+      return false;
+    }
+
+    // Vérifie s'il y a une pièce à la destination et si elle est de la même couleur
+    const destinationPiece = this.getPiece(toRow, toCol);
+    return !(destinationPiece && destinationPiece.color === piece.color);
+  }
 }

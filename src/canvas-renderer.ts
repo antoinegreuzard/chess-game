@@ -81,7 +81,7 @@ export class CanvasRenderer {
   }
 
   // Surligne les mouvements valides pour une pièce sélectionnée
-  private highlightValidMoves(moves: { x: number; y: number }[]): void {
+  highlightValidMoves(moves: { x: number; y: number }[]): void {
     this.context.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Couleur de surlignage (vert translucide)
     moves.forEach((move) => {
       this.context.fillRect(

@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@types/node": "^22.8.1",
+    "canvas": "^2.11.2",
     "undici": "^6.20.1"
   }
 }
