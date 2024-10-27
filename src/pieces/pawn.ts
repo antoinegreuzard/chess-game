@@ -61,7 +61,6 @@ export class Pawn extends Piece {
 
       // Prise en passant
       if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
-        board.captureEnPassant(fromX, fromY, toX, toY);
         return true;
       }
     }

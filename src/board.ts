@@ -6,6 +6,7 @@ import { Bishop } from './pieces/bishop';
 import { Queen } from './pieces/queen';
 import { King } from './pieces/king';
 import { Pawn } from './pieces/pawn';
+import { updateCapturedPieces } from './utils';
 
 type BoardSquare = Piece | null;
 
@@ -107,6 +108,10 @@ export class Board {
         return false; // Mouvement invalide si la cible est un roi
       }
 
+      if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
+        this.captureEnPassant(fromX, fromY, toX, toY);
+      }
+
       // Sauvegarder l'état actuel pour vérifier l'échec
       const originalPiece = this.getPiece(toX, toY);
       this.grid[toY][toX] = piece;
@@ -201,29 +206,6 @@ export class Board {
     }
   }
 
-  public handleEnPassant(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    updateCapturedCallback: (capturedType: PieceType, capturedColor: PieceColor) => void,
-  ): void {
-    if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
-      const piece = this.getPiece(fromX, fromY);
-      const direction = piece?.color === PieceColor.WHITE ? -1 : 1;
-      const capturedPawnY = toY + direction;
-      const capturedPawn = this.getPiece(toX, capturedPawnY);
-
-      if (capturedPawn && capturedPawn instanceof Pawn) {
-        // Supprime le pion capturé de l'échiquier
-        this.grid[capturedPawnY][toX] = null;
-
-        // Met à jour la liste des pièces capturées après la validation du mouvement
-        updateCapturedCallback(capturedPawn.type, capturedPawn.color);
-      }
-    }
-  }
-
   public updateEnPassantTarget(
     fromX: number,
     fromY: number,
@@ -257,8 +239,9 @@ export class Board {
       const capturedPawn = this.getPiece(toX, capturedPawnY);
 
       // Vérifie si un pion est bien présent à capturer
-      if (capturedPawn && capturedPawn instanceof Pawn) {
+      if (capturedPawn && capturedPawn.type === PieceType.PAWN) {
         this.grid[capturedPawnY][toX] = null;
+        updateCapturedPieces(capturedPawn.type, capturedPawn.color);
       }
 
       // Déplace le pion qui effectue la capture

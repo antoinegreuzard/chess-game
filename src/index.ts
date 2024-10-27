@@ -3,15 +3,13 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
-import { showMessage } from './utils';
+import { showMessage, updateCapturedPieces } from './utils';
 
 const game = new Game();
 const board = game.getBoard();
 const moveHistoryElement = document.getElementById('moveHistory')!;
 const currentTurnElement = document.getElementById('currentTurn')!;
 const timerElement = document.getElementById('timer')!;
-const capturedWhiteElement = document.getElementById('capturedWhite')!;
-const capturedBlackElement = document.getElementById('capturedBlack')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
@@ -22,8 +20,6 @@ const acceptDrawButton = document.getElementById('acceptDrawButton')!;
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' | 'drawProposed' = 'playing'; // Ajout de l'état pour la proposition de nullité
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
-let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
-let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
 let moveHistory: {
   fromX: number;
   fromY: number;
@@ -153,38 +149,6 @@ function addMoveToHistory(
   });
 }
 
-// Fonction pour mettre à jour l'affichage des pièces capturées
-function updateCapturedPieces(piece: PieceType, color: PieceColor) {
-  const pieceSymbol = getPieceSymbol(piece, color);
-  if (color === PieceColor.WHITE) {
-    capturedWhite.push(pieceSymbol);
-    capturedWhiteElement.textContent = capturedWhite.join(' ');
-  } else {
-    capturedBlack.push(pieceSymbol);
-    capturedBlackElement.textContent = capturedBlack.join(' ');
-  }
-}
-
-// Fonction pour obtenir le symbole de la pièce capturée
-function getPieceSymbol(piece: PieceType, color: PieceColor): string {
-  switch (piece) {
-    case 'pawn':
-      return color === PieceColor.WHITE ? '♙' : '♟';
-    case 'rook':
-      return color === PieceColor.WHITE ? '♖' : '♜';
-    case 'knight':
-      return color === PieceColor.WHITE ? '♘' : '♞';
-    case 'bishop':
-      return color === PieceColor.WHITE ? '♗' : '♝';
-    case 'queen':
-      return color === PieceColor.WHITE ? '♕' : '♛';
-    case 'king':
-      return color === PieceColor.WHITE ? '♔' : '♚';
-    default:
-      return '';
-  }
-}
-
 // Fonction pour gérer un mouvement sur le plateau
 export function handleMove(
   fromX: number,
@@ -208,42 +172,12 @@ export function handleMove(
     return false;
   }
 
-  // Préserve les informations de capture en passant
-  let enPassantCapturePiece: { x: number; y: number; type: PieceType; color: PieceColor } | null = null;
-  if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
-    const direction = piece.color === PieceColor.WHITE ? -1 : 1;
-    const capturedPawnY = toY + direction;
-    const capturedPawn = board.getPiece(toX, capturedPawnY);
-
-    if (capturedPawn && capturedPawn instanceof Pawn) {
-      enPassantCapturePiece = {
-        x: toX,
-        y: capturedPawnY,
-        type: capturedPawn.type,
-        color: capturedPawn.color,
-      };
-    }
-  }
-
   // Vérifie si le mouvement est valide pour la pièce et respecte les règles des échecs
   if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
-    // Effectue le mouvement uniquement si valide
+    // Si une pièce normale est capturée, l'ajouter aux pièces capturées
     if (board.movePiece(fromX, fromY, toX, toY)) {
-      // Si une capture en passant a eu lieu, supprime le pion capturé
-      if (enPassantCapturePiece) {
-        board.handleEnPassant(
-          fromX,
-          fromY,
-          toX,
-          toY,
-          (capturedType, capturedColor) => {
-            updateCapturedPieces(capturedType, capturedColor);
-          },
-        );
-      }
 
-      // Si une pièce normale est capturée, l'ajouter aux pièces capturées
-      if (targetPiece && !enPassantCapturePiece) {
+      if (targetPiece) {
         updateCapturedPieces(targetPiece.type, targetPiece.color);
       }
 
@@ -255,9 +189,7 @@ export function handleMove(
 
       // Vérifie si cela met le roi adverse en échec
       const opponentColor =
-        currentPlayer === PieceColor.WHITE
-          ? PieceColor.BLACK
-          : PieceColor.WHITE;
+        currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
       if (board.isKingInCheck(opponentColor)) {
         if (board.isCheckmate(opponentColor)) {
           showMessage(
@@ -275,11 +207,11 @@ export function handleMove(
       updateTurn();
       return true;
     }
-  }
 
-  // Si le mouvement est invalide, retourne faux
-  showMessage('Mouvement invalide !');
-  return false;
+    // Si le mouvement est invalide, retourne faux
+    showMessage('Mouvement invalide !');
+    return false;
+  }
 }
 
 // Gérer le clic sur "Passer son tour"
