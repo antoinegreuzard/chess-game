@@ -128,9 +128,6 @@ export class Board {
         this.handleCastling(toX, toY);
       }
 
-      // Gérer la prise en passant
-      this.handleEnPassant(fromX, fromY, toX, toY);
-
       // Compte les mouvements pour la règle des 50 coups
       if (piece.type === PieceType.PAWN || targetPiece) {
         this.halfMoveCount = 0; // Réinitialise le compteur si un pion bouge ou si une capture a lieu
@@ -204,16 +201,26 @@ export class Board {
     }
   }
 
-  private handleEnPassant(
+  public handleEnPassant(
     fromX: number,
     fromY: number,
     toX: number,
     toY: number,
+    updateCapturedCallback: (capturedType: PieceType, capturedColor: PieceColor) => void,
   ): void {
     if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
-      const direction =
-        this.getPiece(fromX, fromY)?.color === PieceColor.WHITE ? -1 : 1;
-      this.grid[toY - direction][toX] = null; // Capture du pion en passant
+      const piece = this.getPiece(fromX, fromY);
+      const direction = piece?.color === PieceColor.WHITE ? -1 : 1;
+      const capturedPawnY = toY + direction;
+      const capturedPawn = this.getPiece(toX, capturedPawnY);
+
+      if (capturedPawn && capturedPawn instanceof Pawn) {
+        // Supprime le pion capturé de l'échiquier
+        this.grid[capturedPawnY][toX] = null;
+
+        // Met à jour la liste des pièces capturées après la validation du mouvement
+        updateCapturedCallback(capturedPawn.type, capturedPawn.color);
+      }
     }
   }
 
@@ -225,6 +232,7 @@ export class Board {
     piece: Piece,
   ): void {
     if (piece instanceof Pawn && Math.abs(toY - fromY) === 2 && fromX === toX) {
+      // Si le pion avance de deux cases, configure la cible pour la prise en passant
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
       this.enPassantTarget = null;
@@ -243,7 +251,19 @@ export class Board {
     if (this.isEnPassantMove(fromX, fromY, toX, toY) && piece instanceof Pawn) {
       // Détermine la direction pour la capture en passant
       const direction = piece.color === PieceColor.WHITE ? -1 : 1;
-      this.grid[toY - direction][toX] = null; // Enlève le pion capturé
+
+      // Calcul de la position du pion capturé (en passant)
+      const capturedPawnY = toY + direction; // Position Y du pion capturé
+      const capturedPawn = this.getPiece(toX, capturedPawnY);
+
+      // Vérifie si un pion est bien présent à capturer
+      if (capturedPawn && capturedPawn instanceof Pawn) {
+        this.grid[capturedPawnY][toX] = null;
+      }
+
+      // Déplace le pion qui effectue la capture
+      this.grid[toY][toX] = piece;
+      this.grid[fromY][fromX] = null;
     }
   }
 
@@ -254,10 +274,15 @@ export class Board {
     toY: number,
   ): boolean {
     if (!this.enPassantTarget) return false;
+
+    // Vérifie que le mouvement cible la bonne case pour la prise en passant
+    const piece = this.getPiece(fromX, fromY);
     return (
+      piece instanceof Pawn &&
       toX === this.enPassantTarget.x &&
       toY === this.enPassantTarget.y &&
-      this.getPiece(fromX, fromY) instanceof Pawn
+      Math.abs(fromX - toX) === 1 &&
+      Math.abs(fromY - toY) === 1
     );
   }
 
@@ -284,7 +309,9 @@ export class Board {
 
   public isKingInCheck(color: PieceColor): boolean {
     const kingPosition = this.findKing(color);
-    if (!kingPosition) return false;
+    if (!kingPosition) {
+      return false;
+    }
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
@@ -415,5 +442,13 @@ export class Board {
 
   public setPiece(x: number, y: number, piece: Piece | null): void {
     this.grid[y][x] = piece;
+  }
+
+  public clearBoard(): void {
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        this.grid[y][x] = null;
+      }
+    }
   }
 }

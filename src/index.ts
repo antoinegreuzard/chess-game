@@ -208,15 +208,42 @@ export function handleMove(
     return false;
   }
 
+  // Préserve les informations de capture en passant
+  let enPassantCapturePiece: { x: number; y: number; type: PieceType; color: PieceColor } | null = null;
+  if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
+    const direction = piece.color === PieceColor.WHITE ? -1 : 1;
+    const capturedPawnY = toY + direction;
+    const capturedPawn = board.getPiece(toX, capturedPawnY);
+
+    if (capturedPawn && capturedPawn instanceof Pawn) {
+      enPassantCapturePiece = {
+        x: toX,
+        y: capturedPawnY,
+        type: capturedPawn.type,
+        color: capturedPawn.color,
+      };
+    }
+  }
+
   // Vérifie si le mouvement est valide pour la pièce et respecte les règles des échecs
   if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
     // Effectue le mouvement uniquement si valide
     if (board.movePiece(fromX, fromY, toX, toY)) {
-      // Marquer que le joueur a effectué son coup
-      hasMoved = true;
+      // Si une capture en passant a eu lieu, supprime le pion capturé
+      if (enPassantCapturePiece) {
+        board.handleEnPassant(
+          fromX,
+          fromY,
+          toX,
+          toY,
+          (capturedType, capturedColor) => {
+            updateCapturedPieces(capturedType, capturedColor);
+          },
+        );
+      }
 
-      // Si une pièce est capturée, l'ajouter aux pièces capturées
-      if (targetPiece) {
+      // Si une pièce normale est capturée, l'ajouter aux pièces capturées
+      if (targetPiece && !enPassantCapturePiece) {
         updateCapturedPieces(targetPiece.type, targetPiece.color);
       }
 
@@ -275,7 +302,7 @@ replayButton.addEventListener('click', () => {
 drawButton.addEventListener('click', () => {
   if (gameState === 'playing') {
     showMessage(
-      "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
+      'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
     );
     gameState = 'drawProposed';
     updateTurn(); // Change de tour pour que l'adversaire décide
