@@ -107,9 +107,10 @@ export class Board {
     if (
       toY < 0 ||
       toY >= this.grid.length ||
-      ['__proto__', 'constructor', 'prototype'].includes(toY.toString())
+      ['__proto__', 'constructor', 'prototype'].includes(toY.toString()) ||
+      ['__proto__', 'constructor', 'prototype'].includes(fromY.toString())
     ) {
-      return false; // Invalid move if toY is out of bounds or a special property name
+      return false; // Invalid move if toY or fromY is out of bounds or a special property name
     }
     const piece = this.getPiece(fromX, fromY);
 
