@@ -77,6 +77,15 @@ export class Board {
     return validMoves;
   }
 
+  public getKingInCheck(): { x: number, y: number } | null {
+    if (this.isKingInCheck(PieceColor.WHITE)) {
+      return this.findKing(PieceColor.WHITE);
+    } else if (this.isKingInCheck(PieceColor.BLACK)) {
+      return this.findKing(PieceColor.BLACK);
+    }
+    return null;
+  }
+
   public movePiece(
     fromX: number,
     fromY: number,

@@ -10,6 +10,7 @@ export class CanvasRenderer {
   private startX: number | null = null;
   private startY: number | null = null;
   private highlightedMoves: { x: number, y: number }[] = [];
+  private kingInCheckPosition: { x: number, y: number } | null = null;
 
   constructor(
     private board: Board,
@@ -94,6 +95,11 @@ export class CanvasRenderer {
 
   // Dessiner l'échiquier et les pièces
   public drawBoard(): void {
+    // Obtenir la position du roi en échec si elle existe
+    const kingInCheck = this.board.getKingInCheck();
+    this.kingInCheckPosition = kingInCheck ? { x: kingInCheck.x, y: kingInCheck.y } : null;
+
+    // Dessiner le plateau
     this.drawTiles();
     this.drawPieces();
   }
@@ -103,7 +109,14 @@ export class CanvasRenderer {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const isDarkTile = (x + y) % 2 === 1;
-        this.context.fillStyle = isDarkTile ? '#769656' : '#eeeed2';
+        let tileColor = isDarkTile ? '#769656' : '#eeeed2';
+
+        // Si la case contient le roi en échec, change la couleur
+        if (this.kingInCheckPosition && this.kingInCheckPosition.x === x && this.kingInCheckPosition.y === y) {
+          tileColor = '#ff6347'; // Par exemple, une couleur rouge pour indiquer l'échec
+        }
+
+        this.context.fillStyle = tileColor;
         this.context.fillRect(
           x * this.tileSize,
           y * this.tileSize,
