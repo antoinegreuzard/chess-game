@@ -57,6 +57,14 @@
         border: none;
         cursor: pointer;
       }
+      #acceptDrawButton {
+        display: none;
+        padding: 5px 10px;
+        background-color: #ff9800;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -81,8 +89,11 @@ margin-bottom: 20px;
         <h4>Historique des Mouvements</h4>
         <ul id="moveHistory"></ul>
         <button id="passTurnButton">Passer son tour</button>
+        <button id="undoButton">Annuler le dernier coup</button>
         <!-- Ajout du bouton pour proposer une nullité -->
         <button id="drawButton">Proposer une Nulle</button>
+        <!-- Bouton pour accepter la proposition de nullité -->
+        <button id="acceptDrawButton" style=" display: none;">Accepter la Nulle</button>
       </div>
       <canvas id="chessBoard" width="640" height="640"></canvas>
       <div id="capturedSidebar">

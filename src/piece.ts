@@ -1,4 +1,3 @@
-// src/piece.ts
 import { Board } from './board';
 
 export enum PieceColor {
@@ -57,6 +56,6 @@ export abstract class Piece {
   // Vérifie si une pièce peut capturer une autre
   protected canCapture(toX: number, toY: number, board: Board): boolean {
     const targetPiece = board.getPiece(toX, toY);
-    return targetPiece !== null && targetPiece.color !== this.color;
+    return targetPiece === null || targetPiece.color !== this.color;
   }
 }

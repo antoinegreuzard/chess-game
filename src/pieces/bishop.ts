@@ -1,4 +1,3 @@
-// src/pieces/bishop.ts
 import { Piece, PieceColor, PieceType } from '../piece';
 import { Board } from '../board';
 
@@ -14,9 +13,15 @@ export class Bishop extends Piece {
     toY: number,
     board: Board,
   ): boolean {
+    // Le fou se déplace en diagonale
     if (Math.abs(toX - fromX) === Math.abs(toY - fromY)) {
-      return this.isPathClear(fromX, fromY, toX, toY, board);
+      // Vérifie que la trajectoire est dégagée
+      if (this.isPathClear(fromX, fromY, toX, toY, board)) {
+        // Vérifie si la cible est vide ou contient une pièce ennemie
+        return this.canCapture(toX, toY, board);
+      }
     }
+
     return false;
   }
 }
