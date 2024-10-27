@@ -58,7 +58,7 @@ export class Board {
   }
 
   // Méthode générale pour vérifier les limites
-  private isWithinBounds(x: number, y: number): boolean {
+  public isWithinBounds(x: number, y: number): boolean {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
   }
 
