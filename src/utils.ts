@@ -34,7 +34,7 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
 
   let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
   let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
-  
+
   const pieceSymbol = getPieceSymbol(piece, color);
   if (color === PieceColor.WHITE) {
     capturedWhite.push(pieceSymbol);
