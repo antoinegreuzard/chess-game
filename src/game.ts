@@ -3,7 +3,7 @@ import { AI } from './ai';
 import { PieceColor } from './piece';
 
 export class Game {
-  private readonly board: Board;
+  private board: Board;
   private readonly ai: AI | null;
 
   constructor() {
@@ -18,6 +18,13 @@ export class Game {
 
   public getBoard(): Board {
     return this.board;
+  }
+
+  // Réinitialise le jeu
+  public reset(): void {
+    this.board = new Board(); // Crée un nouveau plateau
+    this.board.setupInitialPosition(); // Réinitialise les positions initiales des pièces
+    console.log('Partie réinitialisée !');
   }
 
   // Méthode pour faire jouer l'IA

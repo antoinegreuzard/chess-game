@@ -19,7 +19,7 @@ export class Board {
     this.grid = this.initializeBoard();
   }
 
-  private initializeBoard(): BoardSquare[][] {
+  public initializeBoard(): BoardSquare[][] {
     const board: BoardSquare[][] = Array(8)
       .fill(null)
       .map(() => Array(8).fill(null));
@@ -55,6 +55,119 @@ export class Board {
       .map(() => new Pawn(PieceColor.BLACK));
 
     return board;
+  }
+
+  public setupInitialPosition(): void {
+    this.clearBoard();
+
+    // Ajouter les pièces blanches
+    this.grid[0] = [
+      new Rook(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Queen(PieceColor.WHITE),
+      new King(PieceColor.WHITE),
+      new Bishop(PieceColor.WHITE),
+      new Knight(PieceColor.WHITE),
+      new Rook(PieceColor.WHITE),
+    ];
+    this.grid[1] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.WHITE));
+
+    // Ajouter les pièces noires
+    this.grid[7] = [
+      new Rook(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Queen(PieceColor.BLACK),
+      new King(PieceColor.BLACK),
+      new Bishop(PieceColor.BLACK),
+      new Knight(PieceColor.BLACK),
+      new Rook(PieceColor.BLACK),
+    ];
+    this.grid[6] = Array(8)
+      .fill(null)
+      .map(() => new Pawn(PieceColor.BLACK));
+  }
+
+  public setupCheckmate(): void {
+    this.clearBoard();
+
+    // Exemple simple pour un échec et mat
+    this.setPiece(0, 0, new King(PieceColor.WHITE));
+    this.setPiece(1, 1, new Queen(PieceColor.BLACK));
+    this.setPiece(2, 2, new King(PieceColor.BLACK));
+  }
+
+  public setupStalemate(): void {
+    this.clearBoard();
+
+    // Exemple simple pour un pat
+    this.setPiece(0, 0, new King(PieceColor.WHITE));
+    this.setPiece(7, 7, new King(PieceColor.BLACK));
+    this.setPiece(6, 5, new Queen(PieceColor.WHITE));
+  }
+
+  public canCastle(
+    color: PieceColor,
+    side: 'king-side' | 'queen-side',
+  ): boolean {
+    const kingRow = color === PieceColor.WHITE ? 0 : 7;
+    const king = this.getPiece(4, kingRow);
+
+    if (!(king instanceof King) || king.hasMoved) {
+      return false;
+    }
+
+    if (side === 'king-side') {
+      const rook = this.getPiece(7, kingRow);
+      if (!(rook instanceof Rook) || rook.hasMoved) {
+        return false;
+      }
+
+      // Vérifie que les cases entre le roi et la tour sont libres
+      return (
+        !this.getPiece(5, kingRow) &&
+        !this.getPiece(6, kingRow) &&
+        !this.isSquareUnderAttack(4, kingRow, color) &&
+        !this.isSquareUnderAttack(5, kingRow, color) &&
+        !this.isSquareUnderAttack(6, kingRow, color)
+      );
+    } else if (side === 'queen-side') {
+      const rook = this.getPiece(0, kingRow);
+      if (!(rook instanceof Rook) || rook.hasMoved) {
+        return false;
+      }
+
+      // Vérifie que les cases entre le roi et la tour sont libres
+      return (
+        !this.getPiece(1, kingRow) &&
+        !this.getPiece(2, kingRow) &&
+        !this.getPiece(3, kingRow) &&
+        !this.isSquareUnderAttack(4, kingRow, color) &&
+        !this.isSquareUnderAttack(3, kingRow, color) &&
+        !this.isSquareUnderAttack(2, kingRow, color)
+      );
+    }
+
+    return false;
+  }
+
+  // Récupère toutes les pièces présentes sur le plateau avec leurs positions
+  public getPieces(): { piece: Piece; x: number; y: number }[] {
+    const pieces: { piece: Piece; x: number; y: number }[] = [];
+
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece) {
+          pieces.push({ piece, x, y });
+        }
+      }
+    }
+
+    return pieces;
   }
 
   // Méthode générale pour vérifier les limites
@@ -488,10 +601,18 @@ export class Board {
     toX: number,
     toY: number,
   ): boolean {
-    const piece = this.getPiece(fromX, fromY);
-    const targetPiece = this.getPiece(toX, toY);
+    const piece = this.isWithinBounds(fromX, fromY)
+      ? this.getPiece(fromX, fromY)
+      : null;
+    const targetPiece = this.isWithinBounds(toX, toY)
+      ? this.getPiece(toX, toY)
+      : null;
 
     // Vérifie qu'il y a une pièce à la position cible et qu'elle est d'une couleur opposée
-    return piece && targetPiece && piece.color !== targetPiece.color;
+    return (
+      piece !== null &&
+      targetPiece !== null &&
+      piece.color !== targetPiece.color
+    );
   }
 }
