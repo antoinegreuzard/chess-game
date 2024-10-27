@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./public/dist",
+    "outDir": "./dist",
     "target": "ESNext",
     "module": "ESNext",
     "strict": true,
