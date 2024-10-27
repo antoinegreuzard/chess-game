@@ -14,19 +14,33 @@ const pieceValues: { [key in PieceType]: number } = {
 
 // Bonus pour le contrôle du centre du plateau (cases centrales plus précieuses)
 export const centerControlBonus: { [key: string]: number } = {
-  '3,3': 0.5, '3,4': 0.5, '4,3': 0.5, '4,4': 0.5, // Cases centrales
-  '2,3': 0.25, '2,4': 0.25, '3,2': 0.25, '4,2': 0.25, '4,5': 0.25, '3,5': 0.25, '5,3': 0.25, '5,4': 0.25, // Cases autour
+  '3,3': 0.5,
+  '3,4': 0.5,
+  '4,3': 0.5,
+  '4,4': 0.5, // Cases centrales
+  '2,3': 0.25,
+  '2,4': 0.25,
+  '3,2': 0.25,
+  '4,2': 0.25,
+  '4,5': 0.25,
+  '3,5': 0.25,
+  '5,3': 0.25,
+  '5,4': 0.25, // Cases autour
 };
 
 // Bonus pour la sécurité du roi (roi en sécurité dans un coin)
 const kingSafetyBonus: { [key in PieceColor]: { [key: string]: number } } = {
   [PieceColor.WHITE]: {
-    '0,6': 0.5, '0,7': 0.5, // Roi blanc roqué sur l'aile roi
-    '0,1': 0.5, '0,0': 0.5, // Roi blanc roqué sur l'aile dame
+    '0,6': 0.5,
+    '0,7': 0.5, // Roi blanc roqué sur l'aile roi
+    '0,1': 0.5,
+    '0,0': 0.5, // Roi blanc roqué sur l'aile dame
   },
   [PieceColor.BLACK]: {
-    '7,6': 0.5, '7,7': 0.5, // Roi noir roqué sur l'aile roi
-    '7,1': 0.5, '7,0': 0.5, // Roi noir roqué sur l'aile dame
+    '7,6': 0.5,
+    '7,7': 0.5, // Roi noir roqué sur l'aile roi
+    '7,1': 0.5,
+    '7,0': 0.5, // Roi noir roqué sur l'aile dame
   },
 };
 
@@ -48,7 +62,10 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
         }
 
         // Bonus pour la sécurité du roi
-        if (piece.type === PieceType.KING && kingSafetyBonus[piece.color][positionKey]) {
+        if (
+          piece.type === PieceType.KING &&
+          kingSafetyBonus[piece.color][positionKey]
+        ) {
           pieceScore += kingSafetyBonus[piece.color][positionKey];
         }
 

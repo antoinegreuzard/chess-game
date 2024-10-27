@@ -211,7 +211,7 @@ export function handleMove(
         game.makeAIMove();
         updateTurn(); // Change de tour après que l'IA a joué
       }
-      
+
       return true;
     }
 
@@ -249,7 +249,7 @@ if (drawButton) {
   drawButton.addEventListener('click', () => {
     if (gameState === 'playing') {
       showMessage(
-        'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
+        "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
       );
       gameState = 'drawProposed';
       updateTurn(); // Change de tour pour que l'adversaire décide

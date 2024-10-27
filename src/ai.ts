@@ -12,7 +12,9 @@ export class AI {
   }
 
   // Méthode principale pour faire un mouvement
-  public makeMove(board: Board): { fromX: number; fromY: number; toX: number; toY: number } | null {
+  public makeMove(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     let bestMove = null;
     let bestValue = -Infinity;
 
@@ -29,7 +31,13 @@ export class AI {
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
       // Appelle la recherche Minimax avec Alpha-Beta Pruning
-      const boardValue = this.minimax(board, maxDepth - 1, -Infinity, Infinity, false);
+      const boardValue = this.minimax(
+        board,
+        maxDepth - 1,
+        -Infinity,
+        Infinity,
+        false,
+      );
 
       // Annule le mouvement temporaire
       board.setPiece(move.fromX, move.fromY, piece);
@@ -45,7 +53,13 @@ export class AI {
   }
 
   // Fonction Minimax avec Alpha-Beta Pruning et table de transposition
-  private minimax(board: Board, depth: number, alpha: number, beta: number, isMaximizing: boolean): number {
+  private minimax(
+    board: Board,
+    depth: number,
+    alpha: number,
+    beta: number,
+    isMaximizing: boolean,
+  ): number {
     const boardKey = board.toString(); // Représentation unique du plateau pour la table de transposition
 
     // Vérifie si la position est déjà calculée
@@ -53,13 +67,19 @@ export class AI {
       return this.transpositionTable.get(boardKey)!;
     }
 
-    if (depth === 0 || board.isCheckmate(this.color) || board.isCheckmate(this.getOpponentColor())) {
+    if (
+      depth === 0 ||
+      board.isCheckmate(this.color) ||
+      board.isCheckmate(this.getOpponentColor())
+    ) {
       const evaluation = evaluateBoard(board, this.color);
       this.transpositionTable.set(boardKey, evaluation); // Stocke l'évaluation dans la table
       return evaluation;
     }
 
-    console.log(`Simulation: ${isMaximizing ? 'Maximizing' : 'Minimizing'}, Depth: ${depth}, Alpha: ${alpha}, Beta: ${beta}`);
+    console.log(
+      `Simulation: ${isMaximizing ? 'Maximizing' : 'Minimizing'}, Depth: ${depth}, Alpha: ${alpha}, Beta: ${beta}`,
+    );
 
     if (isMaximizing) {
       let maxEval = -Infinity;
@@ -124,11 +144,15 @@ export class AI {
 
   // Fonction utilitaire pour obtenir la couleur adverse
   private getOpponentColor(): PieceColor {
-    return this.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+    return this.color === PieceColor.WHITE
+      ? PieceColor.BLACK
+      : PieceColor.WHITE;
   }
 
   // Fonction pour obtenir tous les mouvements valides pour l'IA
-  private getAllValidMoves(board: Board): { fromX: number; fromY: number; toX: number; toY: number }[] {
+  private getAllValidMoves(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number }[] {
     const validMoves = [];
 
     for (let y = 0; y < 8; y++) {
@@ -152,11 +176,14 @@ export class AI {
   }
 
   // Fonction pour trier les mouvements afin d'optimiser la recherche
-  private sortMoves(moves: { fromX: number; fromY: number; toX: number; toY: number }[], board: Board): {
+  private sortMoves(
+    moves: { fromX: number; fromY: number; toX: number; toY: number }[],
+    board: Board,
+  ): {
     fromX: number;
     fromY: number;
     toX: number;
-    toY: number
+    toY: number;
   }[] {
     return moves.sort((a, b) => {
       const pieceA = board.getPiece(a.toX, a.toY);

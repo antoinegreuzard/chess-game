@@ -139,7 +139,8 @@ export class Board {
 
       // Sauvegarder l'état actuel pour vérifier l'échec
       let originalPiece = null;
-      if (this.isWithinBounds(toX, toY)) originalPiece = this.getPiece(toX, toY);
+      if (this.isWithinBounds(toX, toY))
+        originalPiece = this.getPiece(toX, toY);
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
 
