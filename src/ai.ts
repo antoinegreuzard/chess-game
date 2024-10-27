@@ -1,9 +1,5 @@
 import { Board } from './board';
-import {
-  evaluateBoard,
-  centerControlBonus,
-
-} from './evaluator';
+import { evaluateBoard, centerControlBonus } from './evaluator';
 import { PieceColor } from './piece';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table

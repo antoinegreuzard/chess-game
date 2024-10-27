@@ -482,7 +482,12 @@ export class Board {
     return !(destinationPiece && destinationPiece.color === piece.color);
   }
 
-  public isCapture(fromX: number, fromY: number, toX: number, toY: number): boolean {
+  public isCapture(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
     const piece = this.getPiece(fromX, fromY);
     const targetPiece = this.getPiece(toX, toY);
 
