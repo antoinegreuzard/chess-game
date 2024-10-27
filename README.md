@@ -7,9 +7,12 @@ movements, and rules enforcement.
 
 - **Turn-based system** where players take turns playing as White or Black.
 - **Animation** for piece movements.
+- **Legal move highlights**: When a piece is selected, all legal moves are highlighted.
+- **Check indicator**: The board highlights when the King is in check.
 - Enforced **Chess rules** for piece movements.
 - **Timer** for each turn.
-- **Capture of pieces** and implementation of **Castling** will be included.
+- **Capture of pieces** with visual updates.
+- **Castling**, **En Passant**, and **Pawn Promotion** supported.
 - **Stalemate** and **Checkmate** detection.
 - Possibility of declaring the game a **draw by mutual agreement**.
 
@@ -17,7 +20,7 @@ movements, and rules enforcement.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (version 14 or higher)
+- [Node.js](https://nodejs.org/en/) (version 16 or higher)
 - npm (comes with Node.js)
 
 ### Installation
@@ -82,6 +85,7 @@ To implement castling:
 - **Stalemate**: The game correctly identifies situations of stalemate, leading to a draw.
 - **50-Move Rule**: The game can end in a draw if 50 moves are made without a pawn move or a capture.
 - **Draw by Agreement**: Players can agree to a draw using the "Proposer une Nulle" button in the interface.
+- **Check Indicator**: When the King is in check, the board visually highlights the King’s position.
 
 ### Scripts
 
