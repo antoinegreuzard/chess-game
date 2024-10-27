@@ -22,7 +22,10 @@ export class Pawn extends Piece {
     if (distanceX === 0 && distanceY === 1) {
       if (!board.getPiece(toX, toY)) {
         // Promotion si le pion atteint la dernière rangée
-        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+        if (
+          (this.color === PieceColor.WHITE && toY === 7) ||
+          (this.color === PieceColor.BLACK && toY === 0)
+        ) {
           this.handlePromotion(toX, toY, board);
         }
         return true;
@@ -44,7 +47,10 @@ export class Pawn extends Piece {
     if (distanceX === 1 && distanceY === 1) {
       if (this.canCapture(toX, toY, board)) {
         // Promotion si le pion atteint la dernière rangée
-        if ((this.color === PieceColor.WHITE && toY === 7) || (this.color === PieceColor.BLACK && toY === 0)) {
+        if (
+          (this.color === PieceColor.WHITE && toY === 7) ||
+          (this.color === PieceColor.BLACK && toY === 0)
+        ) {
           this.handlePromotion(toX, toY, board);
         }
         return true;

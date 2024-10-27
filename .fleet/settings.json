@@ -2,6 +2,6 @@
   "nodejs.typescript.rebuildOnChanges": true,
   "prettier.mode": "Enabled",
   "nodejs.editor.formatOnSave.eslint.mode": "Enabled",
-  "prettier.applicableFilesGlob": "{src/*,*}.{js,ts,html,css}",
-  "nodejs.editor.formatOnSave.eslint.glob": "{src/*,*}.{js,ts}"
+  "prettier.applicableFilesGlob": "{src/**/*,*}.{js,ts,html,css}",
+  "nodejs.editor.formatOnSave.eslint.glob": "{src/**/*,*}.{js,ts}"
 }
