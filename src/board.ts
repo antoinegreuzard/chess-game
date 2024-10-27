@@ -111,6 +111,8 @@ export class Board {
       ['__proto__', 'constructor', 'prototype'].includes(fromY.toString()) ||
       ['__proto__', 'constructor', 'prototype'].includes(toX.toString()) ||
       ['__proto__', 'constructor', 'prototype'].includes(fromX.toString())
+      fromY < 0 ||
+      fromY >= this.grid.length
     ) {
       return false; // Invalid move if any coordinate is out of bounds or a special property name
     }
