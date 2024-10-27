@@ -30,7 +30,7 @@ let moveHistory: {
   toX: number;
   toY: number;
   pieceType: PieceType;
-}[] = []; // Historique des mouvements
+}[][] = [[]]; // Historique des mouvements par tour
 let isGameEnded = false;
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
@@ -125,6 +125,9 @@ function updateTurn() {
   if (gameState === 'playing') {
     gameState = 'playing';
   }
+
+  // Crée un nouveau tour dans l'historique des mouvements
+  moveHistory.push([]);
 }
 
 // Ajouter un mouvement à l'historique
@@ -140,7 +143,14 @@ function addMoveToHistory(
   listItem.textContent = moveText;
   moveHistoryElement.appendChild(listItem);
 
-  moveHistory.push({ fromX, fromY, toX, toY, pieceType });
+  // Ajoutez le mouvement au tour actuel
+  moveHistory[moveHistory.length - 1].push({
+    fromX,
+    fromY,
+    toX,
+    toY,
+    pieceType,
+  });
 }
 
 // Fonction pour mettre à jour l'affichage des pièces capturées
@@ -265,7 +275,7 @@ replayButton.addEventListener('click', () => {
 drawButton.addEventListener('click', () => {
   if (gameState === 'playing') {
     showMessage(
-      'Proposition de nullité faite. Attente de la réponse de l\'adversaire.',
+      "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
     );
     gameState = 'drawProposed';
     updateTurn(); // Change de tour pour que l'adversaire décide
@@ -283,17 +293,27 @@ acceptDrawButton.addEventListener('click', () => {
 
 // Gérer le clic sur "Annuler le dernier coup"
 undoButton.addEventListener('click', () => {
-  if (moveHistory.length > 0 && gameState === 'playing') {
-    const lastMove = moveHistory.pop();
-    if (lastMove) {
-      board.movePiece(
-        lastMove.toX,
-        lastMove.toY,
-        lastMove.fromX,
-        lastMove.fromY,
-      );
-      showMessage('Dernier coup annulé !');
-      renderer.drawBoard();
+  if (gameState === 'playing' && moveHistory.length > 0) {
+    const currentTurnMoves = moveHistory[moveHistory.length - 1];
+
+    // Annule uniquement si c'est encore le tour actuel
+    if (currentTurnMoves.length > 0) {
+      const lastMove = currentTurnMoves.pop();
+      if (lastMove) {
+        board.movePiece(
+          lastMove.toX,
+          lastMove.toY,
+          lastMove.fromX,
+          lastMove.fromY,
+        );
+        showMessage('Dernier coup annulé !');
+        renderer.drawBoard();
+      }
+    }
+
+    // Si le tour n'a plus de mouvements, supprime le tour vide
+    if (currentTurnMoves.length === 0 && moveHistory.length > 1) {
+      moveHistory.pop();
     }
   }
 });

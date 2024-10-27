@@ -9,8 +9,8 @@ export class CanvasRenderer {
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
   private startY: number | null = null;
-  private highlightedMoves: { x: number, y: number }[] = [];
-  private kingInCheckPosition: { x: number, y: number } | null = null;
+  private highlightedMoves: { x: number; y: number }[] = [];
+  private kingInCheckPosition: { x: number; y: number } | null = null;
 
   constructor(
     private board: Board,
@@ -81,9 +81,9 @@ export class CanvasRenderer {
   }
 
   // Surligne les mouvements valides pour une pièce sélectionnée
-  private highlightValidMoves(moves: { x: number, y: number }[]): void {
+  private highlightValidMoves(moves: { x: number; y: number }[]): void {
     this.context.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Couleur de surlignage (vert translucide)
-    moves.forEach(move => {
+    moves.forEach((move) => {
       this.context.fillRect(
         move.x * this.tileSize,
         move.y * this.tileSize,
@@ -97,7 +97,9 @@ export class CanvasRenderer {
   public drawBoard(): void {
     // Obtenir la position du roi en échec si elle existe
     const kingInCheck = this.board.getKingInCheck();
-    this.kingInCheckPosition = kingInCheck ? { x: kingInCheck.x, y: kingInCheck.y } : null;
+    this.kingInCheckPosition = kingInCheck
+      ? { x: kingInCheck.x, y: kingInCheck.y }
+      : null;
 
     // Dessiner le plateau
     this.drawTiles();
@@ -112,7 +114,11 @@ export class CanvasRenderer {
         let tileColor = isDarkTile ? '#769656' : '#eeeed2';
 
         // Si la case contient le roi en échec, change la couleur
-        if (this.kingInCheckPosition && this.kingInCheckPosition.x === x && this.kingInCheckPosition.y === y) {
+        if (
+          this.kingInCheckPosition &&
+          this.kingInCheckPosition.x === x &&
+          this.kingInCheckPosition.y === y
+        ) {
           tileColor = '#ff6347'; // Par exemple, une couleur rouge pour indiquer l'échec
         }
 
@@ -232,7 +238,8 @@ export class CanvasRenderer {
 
   // Gérer la fin du glissement
   private handleMouseUp(event: MouseEvent): void {
-    if (!this.draggingPiece || this.startX === null || this.startY === null) return;
+    if (!this.draggingPiece || this.startX === null || this.startY === null)
+      return;
 
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
