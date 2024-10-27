@@ -344,10 +344,6 @@ export class Board {
 
                 const kingSafe = !this.isKingInCheck(color);
 
-                console.log(
-                  `Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`,
-                );
-
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
