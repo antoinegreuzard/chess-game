@@ -1,14 +1,32 @@
-// src/ai.ts
 import { Board } from './board';
-import { evaluateBoard, centerControlBonus } from './evaluator';
+import {
+  evaluateBoard,
+  centerControlBonus,
+  pieceSquareTables,
+} from './evaluator';
 import { PieceColor } from './piece';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
   private transpositionTable: Map<string, number>; // Table de transposition
+  private maxTime: number; // Temps maximum de réflexion en millisecondes
+  private startTime: number; // Temps de début pour gestion du temps
+  private killerMoves: {
+    [depth: number]: {
+      fromX: number;
+      fromY: number;
+      toX: number;
+      toY: number;
+    } | null;
+  }; // Heuristic des coups efficaces
 
-  constructor(private color: PieceColor) {
+  constructor(
+    private color: PieceColor,
+    maxTime: number = 5000,
+  ) {
     this.transpositionTable = new Map();
+    this.maxTime = maxTime;
+    this.killerMoves = {};
   }
 
   // Méthode principale pour faire un mouvement
@@ -17,35 +35,48 @@ export class AI {
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     let bestMove = null;
     let bestValue = -Infinity;
+    const maxDepth = 5; // Profondeur maximale de recherche
+    this.startTime = Date.now();
 
-    const maxDepth = 3; // Profondeur maximale de recherche
-    let moves = this.getAllValidMoves(board);
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      let moves = this.getAllValidMoves(board);
 
-    // Trie les mouvements pour optimiser la recherche
-    moves = this.sortMoves(moves, board);
+      // Trie les mouvements pour optimiser la recherche
+      moves = this.sortMoves(moves, board, depth);
 
-    for (const move of moves) {
-      // Effectue le mouvement sur le plateau temporairement
-      const piece = board.getPiece(move.fromX, move.fromY);
-      const originalPiece = board.getPiece(move.toX, move.toY);
-      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+      for (const move of moves) {
+        // Effectue le mouvement sur le plateau temporairement
+        const piece = board.getPiece(move.fromX, move.fromY);
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      // Appelle la recherche Minimax avec Alpha-Beta Pruning
-      const boardValue = this.minimax(
-        board,
-        maxDepth - 1,
-        -Infinity,
-        Infinity,
-        false,
-      );
+        // Appelle la recherche Minimax avec Alpha-Beta Pruning
+        const boardValue = this.minimax(
+          board,
+          depth - 1,
+          -Infinity,
+          Infinity,
+          false,
+        );
 
-      // Annule le mouvement temporaire
-      board.setPiece(move.fromX, move.fromY, piece);
-      board.setPiece(move.toX, move.toY, originalPiece);
+        // Annule le mouvement temporaire
+        board.setPiece(move.fromX, move.fromY, piece);
+        board.setPiece(move.toX, move.toY, originalPiece);
 
-      if (boardValue > bestValue) {
-        bestValue = boardValue;
-        bestMove = move;
+        if (boardValue > bestValue) {
+          bestValue = boardValue;
+          bestMove = move;
+        }
+
+        // Limite le temps de réflexion
+        if (Date.now() - this.startTime > this.maxTime) {
+          break;
+        }
+      }
+
+      // Limite le temps de réflexion
+      if (Date.now() - this.startTime > this.maxTime) {
+        break;
       }
     }
 
@@ -70,23 +101,18 @@ export class AI {
     if (
       depth === 0 ||
       board.isCheckmate(this.color) ||
-      board.isCheckmate(this.getOpponentColor())
+      board.isCheckmate(this.getOpponentColor()) ||
+      Date.now() - this.startTime > this.maxTime
     ) {
-      const evaluation = evaluateBoard(board, this.color);
+      const evaluation = this.quiescenceSearch(board, alpha, beta);
       this.transpositionTable.set(boardKey, evaluation); // Stocke l'évaluation dans la table
       return evaluation;
     }
 
-    console.log(
-      `Simulation: ${isMaximizing ? 'Maximizing' : 'Minimizing'}, Depth: ${depth}, Alpha: ${alpha}, Beta: ${beta}`,
-    );
-
     if (isMaximizing) {
       let maxEval = -Infinity;
       let moves = this.getAllValidMoves(board);
-
-      // Trie les mouvements pour optimiser la recherche
-      moves = this.sortMoves(moves, board);
+      moves = this.sortMoves(moves, board, depth);
 
       for (const move of moves) {
         // Enregistre l'état actuel avant de déplacer la pièce
@@ -105,7 +131,11 @@ export class AI {
 
         maxEval = Math.max(maxEval, evaluation);
         alpha = Math.max(alpha, evaluation);
-        if (beta <= alpha) break; // Coupure Alpha-Beta
+        if (beta <= alpha) {
+          // Enregistre les coups efficaces (Killer Move)
+          this.killerMoves[depth] = move;
+          break; // Coupure Alpha-Beta
+        }
       }
 
       this.transpositionTable.set(boardKey, maxEval); // Stocke l'évaluation dans la table
@@ -113,9 +143,7 @@ export class AI {
     } else {
       let minEval = Infinity;
       let moves = this.getAllValidMoves(board);
-
-      // Trie les mouvements pour optimiser la recherche
-      moves = this.sortMoves(moves, board);
+      moves = this.sortMoves(moves, board, depth);
 
       for (const move of moves) {
         // Enregistre l'état actuel avant de déplacer la pièce
@@ -134,12 +162,49 @@ export class AI {
 
         minEval = Math.min(minEval, evaluation);
         beta = Math.min(beta, evaluation);
-        if (beta <= alpha) break; // Coupure Alpha-Beta
+        if (beta <= alpha) {
+          // Enregistre les coups efficaces (Killer Move)
+          this.killerMoves[depth] = move;
+          break; // Coupure Alpha-Beta
+        }
       }
 
       this.transpositionTable.set(boardKey, minEval); // Stocke l'évaluation dans la table
       return minEval;
     }
+  }
+
+  // Recherche de quiescence pour améliorer l'évaluation des positions
+  private quiescenceSearch(board: Board, alpha: number, beta: number): number {
+    const standPat = evaluateBoard(board, this.color);
+
+    if (standPat >= beta) return beta;
+    if (alpha < standPat) alpha = standPat;
+
+    const moves = this.getAllValidMoves(board).filter((move) =>
+      board.isCapture(move),
+    );
+
+    for (const move of moves) {
+      // Enregistre l'état actuel avant de déplacer la pièce
+      const fromPiece = board.getPiece(move.fromX, move.fromY);
+      const toPiece = board.getPiece(move.toX, move.toY);
+
+      // Effectue le mouvement temporairement
+      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+
+      // Évaluation de la capture
+      const score = -this.quiescenceSearch(board, -beta, -alpha);
+
+      // Annule le mouvement temporaire
+      board.setPiece(move.fromX, move.fromY, fromPiece);
+      board.setPiece(move.toX, move.toY, toPiece);
+
+      if (score >= beta) return beta;
+      if (score > alpha) alpha = score;
+    }
+
+    return alpha;
   }
 
   // Fonction utilitaire pour obtenir la couleur adverse
@@ -179,6 +244,7 @@ export class AI {
   private sortMoves(
     moves: { fromX: number; fromY: number; toX: number; toY: number }[],
     board: Board,
+    depth: number,
   ): {
     fromX: number;
     fromY: number;
@@ -186,6 +252,10 @@ export class AI {
     toY: number;
   }[] {
     return moves.sort((a, b) => {
+      // Préfère les Killer Moves
+      if (this.killerMoves[depth] && a === this.killerMoves[depth]) return -1;
+      if (this.killerMoves[depth] && b === this.killerMoves[depth]) return 1;
+
       const pieceA = board.getPiece(a.toX, a.toY);
       const pieceB = board.getPiece(b.toX, b.toY);
 

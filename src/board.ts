@@ -481,4 +481,20 @@ export class Board {
     const destinationPiece = this.getPiece(toRow, toCol);
     return !(destinationPiece && destinationPiece.color === piece.color);
   }
+
+  public isCapture(
+    board: Board,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
+    let piece = null;
+    if (this.isWithinBounds(fromX, fromY)) piece = this.getPiece(fromX, fromY);
+    let targetPiece = null;
+    if (this.isWithinBounds(toX, toY)) targetPiece = this.getPiece(toX, toY);
+
+    // Vérifie qu'il y a une pièce à la position cible et qu'elle est d'une couleur opposée
+    return !!(piece && targetPiece && piece.color !== targetPiece.color);
+  }
 }
