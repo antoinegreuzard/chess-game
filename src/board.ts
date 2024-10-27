@@ -64,14 +64,10 @@ export class Board {
 
   public getPiece(x: number, y: number): BoardSquare {
     if (!this.isWithinBounds(x, y)) {
-      if (x > 7)
-        x = 7;
-      if (x < 0)
-        x = 0;
-      if (y > 7)
-        x = 7;
-      if (y < 0)
-        x = 0;
+      if (x > 7) x = 7;
+      if (x < 0) x = 0;
+      if (y > 7) x = 7;
+      if (y < 0) x = 0;
     }
     return this.grid[y][x];
   }
@@ -224,7 +220,6 @@ export class Board {
     }
   }
 
-
   public updateEnPassantTarget(
     fromX: number,
     fromY: number,
@@ -346,7 +341,9 @@ export class Board {
 
                 const kingSafe = !this.isKingInCheck(color);
 
-                console.log(`Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`);
+                console.log(
+                  `Test move ${piece.type} from (${x}, ${y}) to (${toX}, ${toY}) - King Safe: ${kingSafe}`,
+                );
 
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
@@ -457,7 +454,12 @@ export class Board {
   }
 
   // Vérifie si un mouvement est valide
-  public isMoveValid(fromRow: number, fromCol: number, toRow: number, toCol: number): boolean {
+  public isMoveValid(
+    fromRow: number,
+    fromCol: number,
+    toRow: number,
+    toCol: number,
+  ): boolean {
     const piece = this.getPiece(fromRow, fromCol);
 
     // Si aucune pièce n'est présente à l'emplacement source, le mouvement est invalide
