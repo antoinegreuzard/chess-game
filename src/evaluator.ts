@@ -1,5 +1,5 @@
 import { Board } from './board';
-import { PieceColor, PieceType } from './piece';
+import { Piece, PieceColor, PieceType } from './piece';
 
 // Valeurs des pièces (évaluation de base)
 const pieceValues: { [key in PieceType]: number } = {
@@ -8,11 +8,11 @@ const pieceValues: { [key in PieceType]: number } = {
   [PieceType.BISHOP]: 3.25,
   [PieceType.ROOK]: 5,
   [PieceType.QUEEN]: 9,
-  [PieceType.KING]: 0, // Le roi est infiniment précieux, sa perte signifie la fin de la partie
+  [PieceType.KING]: 0,
 };
 
 // Tables de positions pour améliorer l'évaluation
-export const pieceSquareTables: { [key in PieceType]: number[][] } = {
+const pieceSquareTables: { [key in PieceType]: number[][] } = {
   [PieceType.PAWN]: [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -91,59 +91,161 @@ export const centerControlBonus: { [key: string]: number } = {
   '5,4': 0.25, // Cases autour
 };
 
-// Bonus pour la sécurité du roi (roi en sécurité dans un coin)
-const kingSafetyBonus: { [key in PieceColor]: { [key: string]: number } } = {
-  [PieceColor.WHITE]: {
-    '0,6': 0.5,
-    '0,7': 0.5, // Roi blanc roqué sur l'aile roi
-    '0,1': 0.5,
-    '0,0': 0.5, // Roi blanc roqué sur l'aile dame
-  },
-  [PieceColor.BLACK]: {
-    '7,6': 0.5,
-    '7,7': 0.5, // Roi noir roqué sur l'aile roi
-    '7,1': 0.5,
-    '7,0': 0.5, // Roi noir roqué sur l'aile dame
-  },
-};
-
 // Fonction d'évaluation principale
 export function evaluateBoard(board: Board, color: PieceColor): number {
   let score = 0;
 
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
-      let piece = null;
-      if (board.isWithinBounds(x, y)) piece = board.getPiece(x, y);
+      const piece = board.getPiece(x, y);
       if (piece) {
-        // Calcul de la valeur de la pièce
         let pieceScore = pieceValues[piece.type];
 
-        // Ajuste la valeur selon la position de la pièce
         const pieceTable = pieceSquareTables[piece.type];
         if (pieceTable) {
           pieceScore += pieceTable[y][x];
         }
 
-        // Contrôle du centre
         const positionKey = `${x},${y}`;
         if (centerControlBonus[positionKey]) {
           pieceScore += centerControlBonus[positionKey];
         }
 
-        // Bonus pour la sécurité du roi
-        if (
-          piece.type === PieceType.KING &&
-          kingSafetyBonus[piece.color][positionKey]
-        ) {
-          pieceScore += kingSafetyBonus[piece.color][positionKey];
+        if (piece.type === PieceType.PAWN) {
+          pieceScore += evaluatePawnStructure(board, x, y, piece.color);
         }
 
-        // Ajoute la valeur de la pièce au score total, en tenant compte de la couleur
+        if (
+          piece.type === PieceType.BISHOP &&
+          hasBishopPair(board, piece.color)
+        ) {
+          pieceScore += 0.5;
+        }
+
+        if (isKingExposed(board, x, y, piece.color)) {
+          pieceScore -= 0.5;
+        }
+
         score += piece.color === color ? pieceScore : -pieceScore;
       }
     }
   }
 
   return score;
+}
+
+// Évaluer la structure des pions
+function evaluatePawnStructure(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  let score = 0;
+
+  // Vérifier les pions doublés et isolés
+  score -= checkDoubledPawns(board, x, y, color);
+  score -= checkIsolatedPawns(board, x, y, color);
+
+  return score;
+}
+
+function checkDoubledPawns(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  for (let i = 0; i < 8; i++) {
+    if (
+      i !== y &&
+      board.getPiece(x, i)?.type === PieceType.PAWN &&
+      board.getPiece(x, i)?.color === color
+    ) {
+      return 0.5;
+    }
+  }
+  return 0;
+}
+
+function checkIsolatedPawns(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  const leftColumn = x - 1 >= 0 ? board.getPiece(x - 1, y) : null;
+  const rightColumn = x + 1 < 8 ? board.getPiece(x + 1, y) : null;
+
+  if (
+    (!leftColumn ||
+      leftColumn.type !== PieceType.PAWN ||
+      leftColumn.color !== color) &&
+    (!rightColumn ||
+      rightColumn.type !== PieceType.PAWN ||
+      rightColumn.color !== color)
+  ) {
+    return 0.5;
+  }
+
+  return 0;
+}
+
+function hasBishopPair(board: Board, color: PieceColor): boolean {
+  const bishops = getPieces(board, color).filter(
+    (piece) => piece.type === PieceType.BISHOP,
+  );
+  return bishops.length === 2;
+}
+
+function isKingExposed(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): boolean {
+  const piece = board.getPiece(x, y);
+  if (piece && piece.type === PieceType.KING) {
+    const surroundingSquares = [
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 },
+      { dx: 0, dy: -1 },
+      { dx: 0, dy: 1 },
+    ];
+
+    return surroundingSquares.some(({ dx, dy }) => {
+      const newX = x + dx;
+      const newY = y + dy;
+
+      // Utilise `isWithinBounds` pour vérifier que les coordonnées sont valides avant d'accéder à la pièce
+      if (board.isWithinBounds(newX, newY)) {
+        const adjPiece = board.getPiece(newX, newY);
+        return (
+          !adjPiece ||
+          adjPiece.color !== color ||
+          adjPiece.type === PieceType.KING
+        );
+      }
+
+      // Si la case est hors des limites, considère que le roi est exposé
+      return true;
+    });
+  }
+  return false;
+}
+
+// Nouvelle méthode pour obtenir toutes les pièces d'une certaine couleur sur le plateau
+export function getPieces(board: Board, color: PieceColor): Piece[] {
+  const pieces: Piece[] = [];
+
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      const piece = board.getPiece(x, y);
+      if (piece && piece.color === color) {
+        pieces.push(piece);
+      }
+    }
+  }
+
+  return pieces;
 }
