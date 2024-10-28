@@ -1,7 +1,8 @@
 import { Board } from './board';
 import { AI } from './ai';
 import { PieceColor } from './piece';
-import { updateCapturedPieces } from './utils';
+import { showMessage, updateCapturedPieces } from './utils';
+import { endGame } from '.';
 
 export class Game {
   private readonly board: Board;
@@ -34,10 +35,23 @@ export class Game {
         // Effectuer le mouvement de l'IA sur le plateau
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       } else {
-        endGame();
-        showMessage(
-          `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
-        );
+        let currentPlayer: PieceColor = PieceColor.WHITE;
+        const opponentColor =
+          currentPlayer === PieceColor.WHITE
+            ? PieceColor.BLACK
+            : PieceColor.WHITE;
+        if (this.board.isKingInCheck(opponentColor)) {
+          if (this.board.isCheckmate(opponentColor)) {
+            endGame();
+            showMessage(
+              `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
+            );
+          } else {
+            showMessage(
+              `Échec au ${opponentColor === PieceColor.WHITE ? 'Blanc' : 'Noir'} !`,
+            );
+          }
+        }
       }
     }
   }
