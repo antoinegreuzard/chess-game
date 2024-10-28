@@ -121,6 +121,7 @@ function updateTurn() {
   // Si c'est au tour de l'IA, faire jouer l'IA automatiquement
   if (currentPlayer === PieceColor.BLACK) {
     game.makeAIMove();
+    renderer.drawBoard();
     updateTurn(); // Change de tour après que l'IA a joué
   }
 }
@@ -205,12 +206,6 @@ export function handleMove(
 
       // Change de tour après un mouvement valide
       updateTurn();
-
-      // Appeler l'IA après le tour des Blancs
-      if (currentPlayer === PieceColor.BLACK) {
-        game.makeAIMove();
-        updateTurn(); // Change de tour après que l'IA a joué
-      }
 
       return true;
     }

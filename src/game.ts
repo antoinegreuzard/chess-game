@@ -13,7 +13,7 @@ export class Game {
   }
 
   public start(): void {
-    console.log("Nouvelle partie d'échecs démarrée !");
+    console.log('Nouvelle partie d\'échecs démarrée !');
   }
 
   public getBoard(): Board {
@@ -29,13 +29,15 @@ export class Game {
 
   // Méthode pour faire jouer l'IA
   public makeAIMove(): void {
+    console.log(this);
     if (this.ai) {
       const move = this.ai.makeMove(this.board);
 
+      console.log(move);
       if (move) {
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       } else {
-        console.log("Aucun mouvement valide pour l'IA.");
+        console.log('Aucun mouvement valide pour l\'IA.');
       }
     }
   }
