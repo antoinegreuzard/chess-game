@@ -12,19 +12,8 @@ export class Game {
     this.ai = new AI(PieceColor.BLACK);
   }
 
-  public start(): void {
-    console.log("Nouvelle partie d'échecs démarrée !");
-  }
-
   public getBoard(): Board {
     return this.board;
-  }
-
-  // Réinitialise le jeu
-  public reset(): void {
-    this.board = new Board(); // Crée un nouveau plateau
-    this.board.setupInitialPosition(); // Réinitialise les positions initiales des pièces
-    console.log('Partie réinitialisée !');
   }
 
   // Méthode pour faire jouer l'IA
