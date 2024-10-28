@@ -48,6 +48,7 @@ export class Timer {
   public reset(time: number): void {
     this.stop();
     this.currentTime = time;
+    this.onTimeUpdate(this.currentTime); // Appel immédiat pour la mise à jour du temps
     this.start();
   }
 }

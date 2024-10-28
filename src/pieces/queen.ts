@@ -1,6 +1,5 @@
 // src/pieces/queen.ts
-import { Piece, PieceColor, PieceType } from '../piece';
-import { Board } from '../board';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class Queen extends Piece {
   constructor(color: PieceColor) {
@@ -12,7 +11,7 @@ export class Queen extends Piece {
     fromY: number,
     toX: number,
     toY: number,
-    board: Board,
+    board: BoardInterface,
   ): boolean {
     // La reine peut se déplacer en ligne droite ou en diagonale
     if (

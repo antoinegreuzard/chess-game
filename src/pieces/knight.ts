@@ -1,6 +1,5 @@
 // src/pieces/knight.ts
-import { Piece, PieceColor, PieceType } from '../piece';
-import { Board } from '../board';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class Knight extends Piece {
   constructor(color: PieceColor) {
@@ -12,7 +11,7 @@ export class Knight extends Piece {
     fromY: number,
     toX: number,
     toY: number,
-    board: Board,
+    board: BoardInterface,
   ): boolean {
     // Le Cavalier se déplace en L : 2 cases dans une direction puis 1 case perpendiculairement
     const dx = Math.abs(toX - fromX);

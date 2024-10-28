@@ -3,53 +3,66 @@ import { Timer } from '../src/timer';
 
 describe('Timer', () => {
   jest.useFakeTimers();
-
-  let mockOnTimeUpdate: jest.Mock;
+  let onTimeUpdate: jest.Mock;
   let timer: Timer;
 
   beforeEach(() => {
-    mockOnTimeUpdate = jest.fn();
-    timer = new Timer(5, mockOnTimeUpdate);
+    onTimeUpdate = jest.fn();
+    timer = new Timer(10, onTimeUpdate); // initialiser le minuteur avec 10 secondes
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
+    timer.stop(); // Arrêter le minuteur pour éviter les conflits entre les tests
   });
 
-  test('should start the timer and call onTimeUpdate', () => {
+  it('should start the timer and call onTimeUpdate every second', () => {
     timer.start();
-    expect(timer.isRunning).toBe(true);
 
+    // Avancer le temps de 3 secondes
     jest.advanceTimersByTime(3000);
-    expect(mockOnTimeUpdate).toHaveBeenCalledTimes(3);
-    expect(mockOnTimeUpdate).toHaveBeenCalledWith(2); // Le temps restant après 3 secondes
+
+    // Vérifier que la fonction onTimeUpdate a été appelée 3 fois avec le temps mis à jour
+    expect(onTimeUpdate).toHaveBeenCalledTimes(3);
+    expect(onTimeUpdate).toHaveBeenCalledWith(9); // 1 sec écoulée (10-1)
+    expect(onTimeUpdate).toHaveBeenCalledWith(8); // 2 sec écoulées (10-2)
+    expect(onTimeUpdate).toHaveBeenCalledWith(7); // 3 sec écoulées (10-3)
   });
 
-  test('should stop the timer', () => {
+  it('should stop the timer when stop is called', () => {
     timer.start();
+    jest.advanceTimersByTime(3000);
     timer.stop();
-    expect(timer.isRunning).toBe(false);
 
+    // Avancer le temps de 3 secondes de plus
     jest.advanceTimersByTime(3000);
-    expect(mockOnTimeUpdate).toHaveBeenCalledTimes(0);
+
+    // Vérifier que la fonction onTimeUpdate n'a pas été appelée après l'arrêt
+    expect(onTimeUpdate).toHaveBeenCalledTimes(3);
   });
 
-  test('should reset the timer', () => {
+  it('should reset the timer to a new time and start immediately', () => {
     timer.start();
     jest.advanceTimersByTime(2000);
+    timer.reset(5); // Réinitialiser le timer à 5 secondes
 
-    timer.reset(10);
-    expect(timer.isRunning).toBe(true);
+    // Vérifier immédiatement l'appel initial avec la nouvelle valeur réinitialisée
+    expect(onTimeUpdate).toHaveBeenCalledWith(5);
 
-    jest.advanceTimersByTime(3000);
-    expect(mockOnTimeUpdate).toHaveBeenCalledWith(7); // Le temps restant après le reset et 3 secondes
+    // Continuer à avancer le temps
+    jest.advanceTimersByTime(5000);
+
+    // Vérifier que le timer a atteint 0
+    expect(onTimeUpdate).toHaveBeenCalledWith(0);
   });
 
-  test('should call onTimeUpdate when time is up', () => {
+  it('should stop the timer when the time reaches 0', () => {
     timer.start();
-    jest.advanceTimersByTime(5000); // Le temps initial est de 5
 
-    expect(mockOnTimeUpdate).toHaveBeenLastCalledWith(0);
+    // Avancer le temps de 10 secondes pour que le timer atteigne 0
+    jest.advanceTimersByTime(10000);
+
+    // Vérifier que le timer s'est arrêté et appelle onTimeUpdate avec 0
+    expect(onTimeUpdate).toHaveBeenCalledWith(0);
     expect(timer.isRunning).toBe(false);
   });
 });

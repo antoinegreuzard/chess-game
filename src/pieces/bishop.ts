@@ -1,8 +1,8 @@
 // src/pieces/bishop.ts
-import { Piece, PieceColor, PieceType } from '../piece';
-import { Board } from '../board';
+import { PieceColor, PieceType } from '../piece';
+import { BoardInterface } from '../piece';
 
-export class Bishop extends Piece {
+export class Bishop extends (await import('../piece')).Piece {
   constructor(color: PieceColor) {
     super(color, PieceType.BISHOP);
   }
@@ -12,7 +12,7 @@ export class Bishop extends Piece {
     fromY: number,
     toX: number,
     toY: number,
-    board: Board,
+    board: BoardInterface,
   ): boolean {
     // Le fou se déplace en diagonale
     if (Math.abs(toX - fromX) === Math.abs(toY - fromY)) {
@@ -22,7 +22,6 @@ export class Bishop extends Piece {
         return this.canCapture(toX, toY, board);
       }
     }
-
     return false;
   }
 }

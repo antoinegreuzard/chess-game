@@ -1,6 +1,6 @@
 // src/pieces/rook.ts
-import { Piece, PieceColor, PieceType } from '../piece';
-import { Board } from '../board';
+
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class Rook extends Piece {
   public hasMoved: boolean = false;
@@ -14,21 +14,32 @@ export class Rook extends Piece {
     fromY: number,
     toX: number,
     toY: number,
-    board: Board,
+    board: BoardInterface,
   ): boolean {
-    // Vérifie si le mouvement est en ligne droite
     const isStraightMove = fromX === toX || fromY === toY;
     if (!isStraightMove) {
       return false;
     }
 
-    // Vérifie que le chemin est dégagé
     const isPathClear = this.isPathClear(fromX, fromY, toX, toY, board);
     if (!isPathClear) {
       return false;
     }
 
-    // Vérifie si la tour peut capturer la pièce cible
     return this.canCapture(toX, toY, board);
+  }
+
+  public toData(): any {
+    return {
+      ...super.toData(),
+      hasMoved: this.hasMoved,
+    };
+  }
+
+  // Ajuste le type de retour pour inclure Promise<Rook>
+  static async fromData(data: any): Promise<Rook> {
+    const rook = new Rook(data.color);
+    rook.hasMoved = data.hasMoved;
+    return rook;
   }
 }

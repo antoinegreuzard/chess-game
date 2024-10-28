@@ -52,19 +52,12 @@ const renderer = new CanvasRenderer(board, 'chessBoard', handleMove);
 renderer.drawBoard();
 whiteTimer.start();
 
-// Fonction pour terminer la partie
-export function endGame() {
-  // Empêche l'appel multiple d'endGame
-  if (isGameEnded) return;
+export function endGame(message: string) {
+  showMessage(message);
   isGameEnded = true;
-
-  // Stoppez les timers seulement si ce n'est pas déjà fait
+  replayButton.style.display = 'block';
   if (whiteTimer.isRunning) whiteTimer.stop();
   if (blackTimer.isRunning) blackTimer.stop();
-
-  gameState = 'waiting';
-  showMessage('La partie est terminée !');
-  replayButton.style.display = 'block';
 }
 
 // Fonction pour effacer le message d'erreur
@@ -91,6 +84,21 @@ function updateTurn() {
   } else {
     if (whiteTimer.isRunning) whiteTimer.stop();
     blackTimer.reset(60);
+  }
+
+  if (
+    board.isKingInCheck(PieceColor.BLACK) ||
+    board.isKingInCheck(PieceColor.WHITE)
+  ) {
+    if (board.isCheckmate(PieceColor.BLACK)) {
+      endGame();
+      showMessage('Échec et Mat ! Blanc gagne !');
+    }
+
+    if (board.isCheckmate(PieceColor.WHITE)) {
+      endGame();
+      showMessage('Échec et Mat ! Noir gagne !');
+    }
   }
 
   // Vérifie les conditions de nullité
@@ -155,15 +163,14 @@ export function handleMove(
   toX: number,
   toY: number,
 ): boolean {
-  if (gameState === 'waiting' || hasMoved) {
+  if (gameState === 'waiting' || hasMoved || isGameEnded) {
     showMessage('Veuillez attendre le prochain tour !');
     return false;
   }
 
   const piece = board.getPiece(fromX, fromY);
-  const targetPiece = board.getPiece(toX, toY);
+  const targetPiece = board.getPiece(toX, toY); // Ajout pour vérifier la cible
 
-  // Vérifie que c'est bien le tour du joueur qui joue
   if (!piece || piece.color !== currentPlayer) {
     showMessage(
       `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
@@ -171,50 +178,22 @@ export function handleMove(
     return false;
   }
 
-  // Vérifie si le mouvement est valide pour la pièce et respecte les règles des échecs
   if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
-    // Si une pièce normale est capturée, l'ajouter aux pièces capturées
     if (board.movePiece(fromX, fromY, toX, toY)) {
+      hasMoved = true; // Empêche les actions supplémentaires
+
+      // Enregistrement de la capture si une pièce est prise
       if (targetPiece) {
         updateCapturedPieces(targetPiece.type, targetPiece.color);
       }
 
-      // Ajoute le mouvement à l'historique
       addMoveToHistory(fromX, fromY, toX, toY, piece.type);
-
-      // Utilise l'animation pour le déplacement
       renderer.animateMove(fromX, fromY, toX, toY, piece);
-
-      // Vérifie si cela met le roi adverse en échec
-      const opponentColor =
-        currentPlayer === PieceColor.WHITE
-          ? PieceColor.BLACK
-          : PieceColor.WHITE;
-      if (board.isKingInCheck(opponentColor)) {
-        if (board.isCheckmate(opponentColor)) {
-          endGame();
-          showMessage(
-            `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
-          );
-        } else {
-          showMessage(
-            `Échec au ${opponentColor === PieceColor.WHITE ? 'Blanc' : 'Noir'} !`,
-          );
-        }
-      }
-
-      // Change de tour après un mouvement valide
       updateTurn();
-
       return true;
     }
-
-    // Si le mouvement est invalide, retourne faux
     showMessage('Mouvement invalide !');
-    return false;
   }
-
-  // Ajoute un return false par défaut si aucune condition n'est remplie
   return false;
 }
 

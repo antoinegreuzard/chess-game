@@ -6,7 +6,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     minify: 'esbuild',
+    target: 'esnext',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        format: 'es',
+      },
+    },
+  },
+  worker: {
+    format: 'es',
   },
   resolve: {
     alias: {

@@ -2,7 +2,7 @@
 
 import { PieceColor, PieceType } from './piece';
 
-export let capturedWhite: string[] = []; // Exportation pour les tests
+export let capturedWhite: string[] = [];
 export let capturedBlack: string[] = [];
 
 export function showMessage(message: string) {
@@ -31,15 +31,25 @@ function getPieceSymbol(piece: PieceType, color: PieceColor): string {
 }
 
 export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
-  const capturedWhiteElement = document.getElementById('capturedWhite')!;
-  const capturedBlackElement = document.getElementById('capturedBlack')!;
-
   const pieceSymbol = getPieceSymbol(piece, color);
+
   if (color === PieceColor.WHITE) {
     capturedWhite.push(pieceSymbol);
-    capturedWhiteElement.textContent = capturedWhite.join(' ');
   } else {
     capturedBlack.push(pieceSymbol);
+  }
+
+  updateCapturedPiecesDOM();
+}
+
+export function updateCapturedPiecesDOM() {
+  const capturedWhiteElement = document.getElementById('capturedWhite');
+  const capturedBlackElement = document.getElementById('capturedBlack');
+
+  if (capturedWhiteElement) {
+    capturedWhiteElement.textContent = capturedWhite.join(' ');
+  }
+  if (capturedBlackElement) {
     capturedBlackElement.textContent = capturedBlack.join(' ');
   }
 }
