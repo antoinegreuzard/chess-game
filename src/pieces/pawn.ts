@@ -20,8 +20,9 @@ export class Pawn extends Piece {
 
     if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
       if (
-        (this.color === PieceColor.WHITE && toY === 7) ||
-        (this.color === PieceColor.BLACK && toY === 0)
+        ((this.color === PieceColor.WHITE && toY === 7) ||
+          (this.color === PieceColor.BLACK && toY === 0)) &&
+        board.getPiece(toX, toY)?.type === PieceType.PAWN
       ) {
         this.handlePromotion(toX, toY, board);
       }
@@ -43,7 +44,9 @@ export class Pawn extends Piece {
       if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
         if (
           (this.color === PieceColor.WHITE && toY === 7) ||
-          (this.color === PieceColor.BLACK && toY === 0)
+          (this.color === PieceColor.BLACK &&
+            toY === 0 &&
+            board.getPiece(toX, toY)?.type === PieceType.PAWN)
         ) {
           this.handlePromotion(toX, toY, board);
         }
