@@ -135,6 +135,7 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
 }
 
 // Évaluer la structure des pions
+// Évaluer la structure des pions
 function evaluatePawnStructure(
   board: Board,
   x: number,
@@ -143,9 +144,9 @@ function evaluatePawnStructure(
 ): number {
   let score = 0;
 
-  // Vérifier les pions doublés et isolés
-  score -= checkDoubledPawns(board, x, y, color);
-  score -= checkIsolatedPawns(board, x, y, color);
+  // Vérifier les pions doublés et isolés avec une pénalité plus importante
+  score -= checkDoubledPawns(board, x, y, color) * 1.5; // Pénalité augmentée pour les pions doublés
+  score -= checkIsolatedPawns(board, x, y, color) * 1.5; // Pénalité augmentée pour les pions isolés
 
   return score;
 }
@@ -185,7 +186,7 @@ function checkIsolatedPawns(
       rightColumn.type !== PieceType.PAWN ||
       rightColumn.color !== color)
   ) {
-    return 0.5;
+    return 1.5; // Augmentation de la pénalité pour les pions isolés
   }
 
   return 0;

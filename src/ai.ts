@@ -132,6 +132,7 @@ export class AI {
 
         maxEval = Math.max(maxEval, evaluation);
         alpha = Math.max(alpha, evaluation);
+
         if (beta <= alpha) {
           this.addKillerMove(depth, move);
           break;
@@ -158,6 +159,7 @@ export class AI {
 
         minEval = Math.min(minEval, evaluation);
         beta = Math.min(beta, evaluation);
+
         if (beta <= alpha) {
           this.addKillerMove(depth, move);
           break;
