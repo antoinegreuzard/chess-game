@@ -19,8 +19,7 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {
-  }
+  ) {}
 
   // Mise à jour pour inclure le paramètre 'board'
   abstract isValidMove(

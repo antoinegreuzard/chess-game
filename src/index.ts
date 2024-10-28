@@ -13,11 +13,9 @@ const timerElement = document.getElementById('timer')!;
 const passTurnButton = document.getElementById('passTurnButton')!;
 const gameMessageElement = document.getElementById('gameMessage')!;
 const replayButton = document.getElementById('replayButton')!;
-const drawButton = document.getElementById('drawButton')!;
-const acceptDrawButton = document.getElementById('acceptDrawButton')!;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
-let gameState: 'playing' | 'waiting' | 'drawProposed' = 'playing'; // Ajout de l'état pour la proposition de nullité
+let gameState: 'playing' | 'waiting' = 'playing'; // Ajout de l'état pour la proposition de nullité
 let hasMoved: boolean = false; // Indique si un mouvement a déjà été effectué dans ce tour
 let moveHistory: {
   fromX: number;
@@ -107,13 +105,6 @@ function updateTurn() {
   if (board.isFiftyMoveRule()) {
     showMessage('Règle des 50 coups, partie nulle !');
     endGame();
-  }
-
-  // Gestion de la proposition de nullité
-  if (gameState === 'drawProposed') {
-    acceptDrawButton.style.display = 'block';
-  } else {
-    acceptDrawButton.style.display = 'none';
   }
 
   // Seul "playing" permet de jouer
@@ -241,29 +232,5 @@ if (passTurnButton) {
 if (replayButton) {
   replayButton.addEventListener('click', () => {
     location.reload();
-  });
-}
-
-// Gérer le clic sur "Proposer une Nulle"
-if (drawButton) {
-  drawButton.addEventListener('click', () => {
-    if (gameState === 'playing') {
-      showMessage(
-        "Proposition de nullité faite. Attente de la réponse de l'adversaire.",
-      );
-      gameState = 'drawProposed';
-      updateTurn(); // Change de tour pour que l'adversaire décide
-    }
-  });
-}
-
-// Gérer le clic sur "Accepter la Nulle"
-if (acceptDrawButton) {
-  acceptDrawButton.addEventListener('click', () => {
-    if (gameState === 'drawProposed') {
-      showMessage('Partie Nulle par Accord Mutuel !');
-      gameState = 'waiting'; // Change l'état du jeu à "waiting"
-      endGame();
-    }
   });
 }

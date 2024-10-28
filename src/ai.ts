@@ -113,11 +113,13 @@ export class AI {
     }
 
     // Vérification spéciale si l'IA est en échec et qu'il n'y a pas de mouvements valides
-    if (board.isKingInCheck(this.color) && this.getAllValidMoves(board).length === 0) {
+    if (
+      board.isKingInCheck(this.color) &&
+      this.getAllValidMoves(board).length === 0
+    ) {
       // Retourne une valeur très basse pour signaler l'échec et mat
       return -Infinity;
     }
-
 
     if (isMaximizing) {
       let maxEval = -Infinity;
@@ -253,7 +255,12 @@ export class AI {
               board.setPiece(move.x, move.y, originalPiece);
 
               if (kingSafe) {
-                validMoves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+                validMoves.push({
+                  fromX: x,
+                  fromY: y,
+                  toX: move.x,
+                  toY: move.y,
+                });
               }
             }
           }
