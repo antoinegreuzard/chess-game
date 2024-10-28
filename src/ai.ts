@@ -106,6 +106,13 @@ export class AI {
       return evaluation;
     }
 
+    // Vérification spéciale si l'IA est en échec et qu'il n'y a pas de mouvements valides
+    if (board.isKingInCheck(this.color) && this.getAllValidMoves(board).length === 0) {
+      // Retourne une valeur très basse pour signaler l'échec et mat
+      return -Infinity;
+    }
+
+
     if (isMaximizing) {
       let maxEval = -Infinity;
       let moves = this.getAllValidMoves(board);
@@ -227,7 +234,21 @@ export class AI {
           // Vérifie que chaque mouvement est valide avant de l'ajouter
           for (const move of moves) {
             if (board.isMoveValid(x, y, move.x, move.y)) {
-              validMoves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+              // Vérifie que le mouvement ne laisse pas le roi en échec
+              const originalPiece = board.getPiece(move.x, move.y);
+              board.setPiece(move.x, move.y, piece);
+              board.setPiece(x, y, null);
+
+              // Vérifie si le roi est en sécurité après ce mouvement
+              const kingSafe = !board.isKingInCheck(this.color);
+
+              // Annule le mouvement temporaire
+              board.setPiece(x, y, piece);
+              board.setPiece(move.x, move.y, originalPiece);
+
+              if (kingSafe) {
+                validMoves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+              }
             }
           }
         }
