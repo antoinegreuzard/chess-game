@@ -215,28 +215,20 @@ export class Board {
   ): boolean {
     const direction = toX > fromX ? 1 : -1;
     const rookX = toX > fromX ? 7 : 0;
-    let rook = null;
-    if (this.isWithinBounds(rookX, fromY)) rook = this.getPiece(rookX, fromY);
+    const rook = this.getPiece(rookX, fromY);
 
-    if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) {
-      return false;
-    }
+    if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) return false;
 
-    // Vérifie que les cases entre le roi et la tour sont libres
-    for (let x = fromX + direction; x !== rookX; x += direction) {
-      if (this.getPiece(x, fromY)) {
+    for (let x = fromX + direction; x !== toX; x += direction) {
+      if (
+        this.getPiece(x, fromY) ||
+        this.isSquareUnderAttack(x, fromY, king.color)
+      ) {
         return false;
       }
     }
 
-    // Assure que le roi ne passe pas par une case attaquée
-    for (let x = fromX; x !== toX + direction; x += direction) {
-      if (this.isSquareUnderAttack(x, fromY, king.color)) {
-        return false;
-      }
-    }
-
-    return true;
+    return !this.isSquareUnderAttack(toX, fromY, king.color); // vérifier la case de destination
   }
 
   private handleCastling(kingX: number, kingY: number): void {
@@ -394,9 +386,8 @@ export class Board {
   }
 
   public isStalemate(color: PieceColor): boolean {
-    if (this.isKingInCheck(color)) {
-      return false;
-    }
+    // Pat uniquement si le roi n'est pas en échec et qu'il n'y a aucun coup légal disponible
+    if (this.isKingInCheck(color)) return false;
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
@@ -405,26 +396,25 @@ export class Board {
           for (let toY = 0; toY < 8; toY++) {
             for (let toX = 0; toX < 8; toX++) {
               if (piece.isValidMove(x, y, toX, toY, this)) {
+                // Simuler le mouvement pour vérifier l'échec potentiel
                 const originalPiece = this.getPiece(toX, toY);
                 this.grid[toY][toX] = piece;
                 this.grid[y][x] = null;
 
-                const kingSafe = !this.isKingInCheck(color);
+                const isKingSafe = !this.isKingInCheck(color);
 
+                // Annuler le mouvement simulé
                 this.grid[y][x] = piece;
                 this.grid[toY][toX] = originalPiece;
 
-                if (kingSafe) {
-                  return false;
-                }
+                if (isKingSafe) return false; // Mouvement valide trouvé, pas de pat
               }
             }
           }
         }
       }
     }
-
-    return true;
+    return true; // Aucun coup légal trouvé, pat détecté
   }
 
   private findKing(color: PieceColor): { x: number; y: number } | null {

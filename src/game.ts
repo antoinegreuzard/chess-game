@@ -48,4 +48,22 @@ export class Game {
       }
     }
   }
+
+  private handlePawnPromotion(x: number, y: number): void {
+    const promotionDialog = document.getElementById('promotionDialog');
+    if (promotionDialog) {
+      promotionDialog.style.display = 'block';
+      window.promote = (pieceType: string) => {
+        promotionDialog.style.display = 'none';
+        this.board.promotePawn(x, y, pieceType);
+        this.renderer.drawBoard();
+      };
+    } else {
+      // Utilise un prompt comme alternative
+      const pieceType = prompt(
+        "Promotion: tapez 'queen', 'rook', 'bishop' ou 'knight'",
+      );
+      if (pieceType) this.board.promotePawn(x, y, pieceType.toLowerCase());
+    }
+  }
 }

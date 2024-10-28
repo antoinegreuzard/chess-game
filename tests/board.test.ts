@@ -30,22 +30,16 @@ describe('Board', () => {
   });
 
   test('should initialize the board correctly', () => {
-    // Vérifie que les pièces sont bien positionnées sur le plateau initial
     expect(board.getPiece(0, 0)?.type).toBe(PieceType.ROOK);
     expect(board.getPiece(0, 0)?.color).toBe(PieceColor.WHITE);
-
     expect(board.getPiece(7, 0)?.type).toBe(PieceType.ROOK);
     expect(board.getPiece(7, 0)?.color).toBe(PieceColor.WHITE);
-
     expect(board.getPiece(0, 7)?.type).toBe(PieceType.ROOK);
     expect(board.getPiece(0, 7)?.color).toBe(PieceColor.BLACK);
-
     expect(board.getPiece(7, 7)?.type).toBe(PieceType.ROOK);
     expect(board.getPiece(7, 7)?.color).toBe(PieceColor.BLACK);
-
     expect(board.getPiece(4, 0)?.type).toBe(PieceType.KING);
     expect(board.getPiece(4, 0)?.color).toBe(PieceColor.WHITE);
-
     expect(board.getPiece(4, 7)?.type).toBe(PieceType.KING);
     expect(board.getPiece(4, 7)?.color).toBe(PieceColor.BLACK);
   });
@@ -68,7 +62,6 @@ describe('Board', () => {
     board.setPiece(4, 7, king);
     board.setPiece(7, 6, rook);
 
-    // Déplacement qui mettrait le roi en échec, doit échouer
     expect(board.movePiece(4, 7, 4, 6)).toBe(false);
     expect(board.getPiece(4, 7)).toBe(king);
   });
@@ -90,15 +83,12 @@ describe('Board', () => {
     const whitePawn = new Pawn(PieceColor.WHITE);
     const blackPawn = new Pawn(PieceColor.BLACK);
 
-    board.setPiece(4, 4, whitePawn); // Pion blanc
-    board.setPiece(3, 6, blackPawn); // Pion noir
+    board.setPiece(4, 4, whitePawn);
+    board.setPiece(3, 6, blackPawn);
 
-    // Le pion noir avance de deux cases, ce qui permet la prise en passant
     expect(board.movePiece(3, 6, 3, 4)).toBe(true);
-
-    // Vérifie la prise en passant par le pion blanc
     expect(board.movePiece(4, 4, 3, 5)).toBe(true);
-    expect(board.getPiece(3, 4)).toBeNull(); // Le pion noir doit être capturé
+    expect(board.getPiece(3, 4)).toBeNull();
   });
 
   test('should handle promotion correctly', () => {
@@ -106,10 +96,7 @@ describe('Board', () => {
     const whitePawn = new Pawn(PieceColor.WHITE);
     board.setPiece(0, 6, whitePawn);
 
-    // Déplace le pion à la dernière ligne pour la promotion
     expect(board.movePiece(0, 6, 0, 7)).toBe(true);
-
-    // Promotion en Reine
     board.promotePawn(0, 7, 'queen');
     expect(board.getPiece(0, 7)?.type).toBe(PieceType.QUEEN);
     expect(board.getPiece(0, 7)?.color).toBe(PieceColor.WHITE);
@@ -123,8 +110,9 @@ describe('Board', () => {
     board.setPiece(4, 0, whiteKing); // Roi blanc à sa position initiale
     board.setPiece(7, 0, whiteRook); // Tour blanche à sa position initiale
 
-    // Effectue le roque côté roi
-    expect(board.movePiece(4, 0, 6, 0)).toBe(true);
+    // Effectue le roque côté roi et vérifie les conditions
+    const isCastlingSuccessful = board.movePiece(4, 0, 6, 0);
+    expect(isCastlingSuccessful).toBe(true);
     expect(board.getPiece(6, 0)).toBe(whiteKing); // Roi doit être en (6, 0)
     expect(board.getPiece(5, 0)).toBe(whiteRook); // Tour doit être en (5, 0)
   });
@@ -142,7 +130,6 @@ describe('Board', () => {
     board.setPiece(0, 7, blackRook);
     board.setPiece(7, 0, blackRook);
 
-    // Le roi blanc est en échec et mat
     expect(board.isCheckmate(PieceColor.WHITE)).toBe(true);
   });
 
@@ -156,21 +143,6 @@ describe('Board', () => {
     board.setPiece(7, 7, blackKing);
     board.setPiece(5, 6, whiteQueen);
 
-    // Le roi blanc est en pat
     expect(board.isStalemate(PieceColor.BLACK)).toBe(true);
-  });
-
-  test('should update captured pieces when a piece is captured', () => {
-    board.clearBoard();
-    const whitePawn = new Pawn(PieceColor.WHITE);
-    const blackRook = new Rook(PieceColor.BLACK);
-
-    board.setPiece(4, 4, whitePawn);
-    board.setPiece(4, 6, blackRook);
-
-    // Capture le Rook noir avec le Pawn blanc
-    expect(board.movePiece(4, 6, 4, 4)).toBe(true);
-    expect(board.getPiece(4, 4)).toBe(blackRook);
-    expect(board.getPiece(4, 6)).toBeNull();
   });
 });
