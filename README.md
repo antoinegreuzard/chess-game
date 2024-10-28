@@ -14,7 +14,6 @@ movements, and rules enforcement.
 - **Capture of pieces** with visual updates.
 - **Castling**, **En Passant**, and **Pawn Promotion** supported.
 - **Stalemate** and **Checkmate** detection.
-- Possibility of declaring the game a **draw by mutual agreement**.
 
 ## Setup Instructions
 
@@ -84,7 +83,6 @@ To implement castling:
   default, with options to choose another piece).
 - **Stalemate**: The game correctly identifies situations of stalemate, leading to a draw.
 - **50-Move Rule**: The game can end in a draw if 50 moves are made without a pawn move or a capture.
-- **Draw by Agreement**: Players can agree to a draw using the "Proposer une Nulle" button in the interface.
 - **Check Indicator**: When the King is in check, the board visually highlights the King’s position.
 
 ### Scripts
