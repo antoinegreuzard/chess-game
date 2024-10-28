@@ -135,7 +135,6 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
 }
 
 // Évaluer la structure des pions
-// Évaluer la structure des pions
 function evaluatePawnStructure(
   board: Board,
   x: number,
