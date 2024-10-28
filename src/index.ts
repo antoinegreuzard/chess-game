@@ -39,10 +39,10 @@ function updateTimerDisplay(timeLeft: number, color: PieceColor) {
   if (color === currentPlayer) {
     timerElement.textContent = `Temps restant: ${timeLeft}s`;
     if (timeLeft <= 0 && !isGameEnded) {
+      endGame();
       showMessage(
         `${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par temps écoulé !`,
       );
-      endGame();
     }
   }
 }
@@ -53,7 +53,6 @@ renderer.drawBoard();
 whiteTimer.start();
 
 // Fonction pour terminer la partie
-
 function endGame() {
   // Empêche l'appel multiple d'endGame
   if (isGameEnded) return;
@@ -96,18 +95,18 @@ function updateTurn() {
 
   // Vérifie les conditions de nullité
   if (board.isStalemate(currentPlayer)) {
-    showMessage('Pat ! La partie est nulle.');
     endGame();
+    showMessage('Pat ! La partie est nulle.');
   }
 
   if (board.isInsufficientMaterial()) {
-    showMessage('Matériel insuffisant pour continuer, partie nulle !');
     endGame();
+    showMessage('Matériel insuffisant pour continuer, partie nulle !');
   }
 
   if (board.isFiftyMoveRule()) {
-    showMessage('Règle des 50 coups, partie nulle !');
     endGame();
+    showMessage('Règle des 50 coups, partie nulle !');
   }
 
   // Seul "playing" permet de jouer
@@ -193,10 +192,10 @@ export function handleMove(
           : PieceColor.WHITE;
       if (board.isKingInCheck(opponentColor)) {
         if (board.isCheckmate(opponentColor)) {
+          endGame();
           showMessage(
             `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
           );
-          endGame();
         } else {
           showMessage(
             `Échec au ${opponentColor === PieceColor.WHITE ? 'Blanc' : 'Noir'} !`,
