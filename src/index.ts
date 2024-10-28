@@ -82,6 +82,9 @@ function updateTurn() {
   currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
   hasMoved = false;
 
+  // Gestion du bouton "Passer son tour"
+  passTurnButton.disabled = currentPlayer === PieceColor.BLACK;
+
   // Gestion des timers
   if (currentPlayer === PieceColor.WHITE) {
     if (blackTimer.isRunning) blackTimer.stop();
@@ -114,6 +117,12 @@ function updateTurn() {
 
   // Crée un nouveau tour dans l'historique des mouvements
   moveHistory.push([]);
+
+  // Si c'est au tour de l'IA, faire jouer l'IA automatiquement
+  if (currentPlayer === PieceColor.BLACK) {
+    game.makeAIMove();
+    updateTurn(); // Change de tour après que l'IA a joué
+  }
 }
 
 // Ajouter un mouvement à l'historique
@@ -219,7 +228,7 @@ export function handleMove(
 if (passTurnButton) {
   passTurnButton.addEventListener('click', (event) => {
     event.preventDefault();
-    if (gameState === 'playing') {
+    if (gameState === 'playing' && currentPlayer === PieceColor.WHITE) {
       showMessage(
         `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
       );
