@@ -1,5 +1,5 @@
 // src/board.ts
-import { Piece, PieceColor, PieceType } from './piece';
+import { BoardInterface, Piece, PieceColor, PieceType } from './piece';
 import { Rook } from './pieces/rook';
 import { Knight } from './pieces/knight';
 import { Bishop } from './pieces/bishop';
@@ -10,8 +10,8 @@ import { updateCapturedPieces } from './utils';
 
 type BoardSquare = Piece | null;
 
-export class Board {
-  private readonly grid: BoardSquare[][];
+export class Board implements BoardInterface {
+  private grid: BoardSquare[][];
   private enPassantTarget: { x: number; y: number } | null = null;
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
 
@@ -55,40 +55,6 @@ export class Board {
       .map(() => new Pawn(PieceColor.BLACK));
 
     return board;
-  }
-
-  public setupInitialPosition(): void {
-    this.clearBoard();
-
-    // Ajouter les pièces blanches
-    this.grid[0] = [
-      new Rook(PieceColor.WHITE),
-      new Knight(PieceColor.WHITE),
-      new Bishop(PieceColor.WHITE),
-      new Queen(PieceColor.WHITE),
-      new King(PieceColor.WHITE),
-      new Bishop(PieceColor.WHITE),
-      new Knight(PieceColor.WHITE),
-      new Rook(PieceColor.WHITE),
-    ];
-    this.grid[1] = Array(8)
-      .fill(null)
-      .map(() => new Pawn(PieceColor.WHITE));
-
-    // Ajouter les pièces noires
-    this.grid[7] = [
-      new Rook(PieceColor.BLACK),
-      new Knight(PieceColor.BLACK),
-      new Bishop(PieceColor.BLACK),
-      new Queen(PieceColor.BLACK),
-      new King(PieceColor.BLACK),
-      new Bishop(PieceColor.BLACK),
-      new Knight(PieceColor.BLACK),
-      new Rook(PieceColor.BLACK),
-    ];
-    this.grid[6] = Array(8)
-      .fill(null)
-      .map(() => new Pawn(PieceColor.BLACK));
   }
 
   // Méthode générale pour vérifier les limites
@@ -268,28 +234,39 @@ export class Board {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {
+  ): { capturedWhite: PieceType[]; capturedBlack: PieceType[] } | null {
     const piece = this.getPiece(fromX, fromY);
 
-    // Vérifie que le mouvement est une prise en passant valide
     if (this.isEnPassantMove(fromX, fromY, toX, toY) && piece instanceof Pawn) {
-      // Détermine la direction pour la capture en passant
       const direction = piece.color === PieceColor.WHITE ? -1 : 1;
-
-      // Calcul de la position du pion capturé (en passant)
-      const capturedPawnY = toY + direction; // Position Y du pion capturé
+      const capturedPawnY = toY + direction;
       const capturedPawn = this.getPiece(toX, capturedPawnY);
 
-      // Vérifie si un pion est bien présent à capturer
       if (capturedPawn && capturedPawn.type === PieceType.PAWN) {
         this.grid[capturedPawnY][toX] = null;
-        updateCapturedPieces(capturedPawn.type, capturedPawn.color);
-      }
 
-      // Déplace le pion qui effectue la capture
-      this.grid[toY][toX] = piece;
-      this.grid[fromY][fromX] = null;
+        // Déclare explicitement le type de captureData pour éviter l'erreur
+        const captureData: {
+          capturedWhite: PieceType[];
+          capturedBlack: PieceType[];
+        } = {
+          capturedWhite: [],
+          capturedBlack: [],
+        };
+
+        if (capturedPawn.color === PieceColor.WHITE) {
+          captureData.capturedWhite.push(capturedPawn.type);
+        } else {
+          captureData.capturedBlack.push(capturedPawn.type);
+        }
+
+        // Appelle updateCapturedPieces pour mettre à jour le DOM
+        updateCapturedPieces(capturedPawn.type, capturedPawn.color);
+
+        return captureData;
+      }
     }
+    return null;
   }
 
   public isEnPassantMove(
@@ -523,5 +500,27 @@ export class Board {
       targetPiece !== null &&
       piece.color !== targetPiece.color
     );
+  }
+
+  public static async fromData(data: any): Promise<Board> {
+    const board = new Board();
+    board.grid = await Promise.all(
+      data.grid.map(async (row: any[]) =>
+        Promise.all(
+          row.map(async (pieceData) =>
+            pieceData ? await Piece.fromData(pieceData) : null,
+          ),
+        ),
+      ),
+    );
+    return board;
+  }
+
+  public toData(): any {
+    return {
+      grid: this.grid.map((row) =>
+        row.map((piece) => (piece ? piece.toData() : null)),
+      ),
+    };
   }
 }

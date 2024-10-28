@@ -1,5 +1,4 @@
-import { Piece, PieceColor, PieceType } from '../piece';
-import { Board } from '../board';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 import { Rook } from './rook';
 
 export class King extends Piece {
@@ -14,7 +13,7 @@ export class King extends Piece {
     fromY: number,
     toX: number,
     toY: number,
-    board: Board,
+    board: BoardInterface,
   ): boolean {
     const dx = Math.abs(toX - fromX);
     const dy = Math.abs(toY - fromY);
