@@ -35,22 +35,15 @@ export class Game {
         // Effectuer le mouvement de l'IA sur le plateau
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       } else {
-        let currentPlayer: PieceColor = PieceColor.WHITE;
-        const opponentColor =
-          currentPlayer === PieceColor.WHITE
-            ? PieceColor.BLACK
-            : PieceColor.WHITE;
-        if (this.board.isKingInCheck(opponentColor)) {
-          if (this.board.isCheckmate(opponentColor)) {
+        if (this.board.isKingInCheck(PieceColor.BLACK)) {
+          if (this.board.isCheckmate(PieceColor.BLACK)) {
             endGame();
-            showMessage(
-              `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
-            );
+            showMessage(`Échec et Mat ! Blanc gagne !`);
           } else {
-            showMessage(
-              `Échec au ${opponentColor === PieceColor.WHITE ? 'Blanc' : 'Noir'} !`,
-            );
+            showMessage(`Échec au Noir !`);
           }
+        } else {
+          endGame();
         }
       }
     }
