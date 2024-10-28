@@ -1,6 +1,7 @@
-// src/utils.ts
-
 import { PieceColor, PieceType } from './piece';
+
+let capturedWhite: string[] = []; // Liste persistante des pièces capturées par les Blancs
+let capturedBlack: string[] = []; // Liste persistante des pièces capturées par les Noirs
 
 export function showMessage(message: string) {
   const gameMessageElement = document.getElementById('gameMessage')!;
@@ -32,15 +33,14 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
   const capturedWhiteElement = document.getElementById('capturedWhite')!;
   const capturedBlackElement = document.getElementById('capturedBlack')!;
 
-  let capturedWhite: string[] = []; // Liste des pièces capturées par les Blancs
-  let capturedBlack: string[] = []; // Liste des pièces capturées par les Noirs
-
   const pieceSymbol = getPieceSymbol(piece, color);
   if (color === PieceColor.WHITE) {
-    capturedWhite.push(pieceSymbol);
-    capturedWhiteElement.textContent = capturedWhite.join(' ');
-  } else {
+    // Ajouter la pièce capturée à la liste persistante
     capturedBlack.push(pieceSymbol);
     capturedBlackElement.textContent = capturedBlack.join(' ');
+  } else {
+    // Ajouter la pièce capturée à la liste persistante
+    capturedWhite.push(pieceSymbol);
+    capturedWhiteElement.textContent = capturedWhite.join(' ');
   }
 }
