@@ -161,12 +161,10 @@ export class Board {
 
       // Vérifie si c'est un mouvement de roque pour le roi
       if (piece instanceof King && Math.abs(toX - fromX) === 2) {
-        console.log('King');
         if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
           return false; // Roque invalide
         }
 
-        console.log(true);
         // Effectue le roque
         this.handleCastling(toX, fromY);
       }

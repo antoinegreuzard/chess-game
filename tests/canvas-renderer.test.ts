@@ -104,9 +104,6 @@ describe('CanvasRenderer', () => {
     });
     canvasElement.dispatchEvent(mouseUpEvent);
 
-    // Ajout de console.log pour voir les arguments de moveHandlerMock
-    console.log('Arguments moveHandlerMock:', moveHandlerMock.mock.calls);
-
     // Vérifie que la fonction moveHandler a été appelée avec les bonnes coordonnées
     expect(moveHandlerMock).toHaveBeenCalledWith(0, 0, 2, 6);
   });

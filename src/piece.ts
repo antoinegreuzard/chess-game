@@ -46,8 +46,9 @@ export abstract class Piece {
     let y = fromY + dy;
 
     while (x !== toX || y !== toY) {
-      // Vérifie s'il y a une pièce sur le chemin
-      if (board.isWithinBounds(x, y) && board.getPiece(x, y)) return false;
+      if (board.getPiece(x, y) !== null) {
+        return false; // Le chemin est bloqué
+      }
 
       // Avance dans la direction
       x += dx;
@@ -60,6 +61,7 @@ export abstract class Piece {
   // Vérifie si une pièce peut capturer une autre
   canCapture(toX: number, toY: number, board: Board): boolean {
     const targetPiece = board.getPiece(toX, toY);
+    // La capture est valide si la case est vide ou si la pièce est d'une couleur opposée
     return !targetPiece || targetPiece.color !== this.color;
   }
 }
