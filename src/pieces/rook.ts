@@ -25,16 +25,10 @@ export class Rook extends Piece {
     // Vérifie que le chemin est dégagé
     const isPathClear = this.isPathClear(fromX, fromY, toX, toY, board);
     if (!isPathClear) {
-      console.log('Chemin bloqué');
       return false;
     }
 
     // Vérifie si la tour peut capturer la pièce cible
-    const canCapture = this.canCapture(toX, toY, board);
-    if (!canCapture) {
-      console.log('Capture impossible');
-    }
-
-    return canCapture;
+    return this.canCapture(toX, toY, board);
   }
 }

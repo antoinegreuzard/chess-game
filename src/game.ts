@@ -29,9 +29,11 @@ export class Game {
 
   // Méthode pour faire jouer l'IA
   public makeAIMove(): void {
+    console.log(this);
     if (this.ai) {
       const move = this.ai.makeMove(this.board);
 
+      console.log(move);
       if (move) {
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       } else {
