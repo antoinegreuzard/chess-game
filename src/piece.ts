@@ -40,7 +40,8 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   abstract isValidMove(
     fromX: number,
