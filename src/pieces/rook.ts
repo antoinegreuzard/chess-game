@@ -16,14 +16,25 @@ export class Rook extends Piece {
     toY: number,
     board: Board,
   ): boolean {
-    // Vérifie si le mouvement est en ligne droite et que le chemin est dégagé
+    // Vérifie si le mouvement est en ligne droite
     const isStraightMove = fromX === toX || fromY === toY;
-    const isPathClear = this.isPathClear(fromX, fromY, toX, toY, board);
-    const canCapture = this.canCapture(toX, toY, board);
-
-    if (isStraightMove && isPathClear) {
-      return canCapture;
+    if (!isStraightMove) {
+      return false;
     }
-    return false;
+
+    // Vérifie que le chemin est dégagé
+    const isPathClear = this.isPathClear(fromX, fromY, toX, toY, board);
+    if (!isPathClear) {
+      console.log('Chemin bloqué');
+      return false;
+    }
+
+    // Vérifie si la tour peut capturer la pièce cible
+    const canCapture = this.canCapture(toX, toY, board);
+    if (!canCapture) {
+      console.log('Capture impossible');
+    }
+
+    return canCapture;
   }
 }

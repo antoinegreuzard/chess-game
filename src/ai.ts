@@ -90,6 +90,12 @@ export class AI {
   ): number {
     const boardKey = board.toString(); // Représentation unique du plateau pour la table de transposition
 
+    // Ajout d'une limite de temps
+    if (Date.now() - this.startTime > this.maxTime) {
+      // Retourne l'évaluation actuelle si le temps est écoulé
+      return evaluateBoard(board, this.color);
+    }
+
     // Vérifie si la position est déjà calculée
     if (this.transpositionTable.has(boardKey)) {
       return this.transpositionTable.get(boardKey)!;
