@@ -53,7 +53,7 @@ renderer.drawBoard();
 whiteTimer.start();
 
 // Fonction pour terminer la partie
-function endGame() {
+export function endGame() {
   // Empêche l'appel multiple d'endGame
   if (isGameEnded) return;
   isGameEnded = true;
