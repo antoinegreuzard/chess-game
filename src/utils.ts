@@ -1,7 +1,9 @@
+// src/utils.ts
+
 import { PieceColor, PieceType } from './piece';
 
-let capturedWhite: string[] = []; // Liste persistante des pièces capturées par les Blancs
-let capturedBlack: string[] = []; // Liste persistante des pièces capturées par les Noirs
+export let capturedWhite: string[] = []; // Exportation pour les tests
+export let capturedBlack: string[] = [];
 
 export function showMessage(message: string) {
   const gameMessageElement = document.getElementById('gameMessage')!;
@@ -9,20 +11,19 @@ export function showMessage(message: string) {
   gameMessageElement.style.display = 'block'; // Afficher le message
 }
 
-// Fonction pour obtenir le symbole de la pièce capturée
 function getPieceSymbol(piece: PieceType, color: PieceColor): string {
   switch (piece) {
-    case 'pawn':
+    case PieceType.PAWN:
       return color === PieceColor.WHITE ? '♙' : '♟';
-    case 'rook':
+    case PieceType.ROOK:
       return color === PieceColor.WHITE ? '♖' : '♜';
-    case 'knight':
+    case PieceType.KNIGHT:
       return color === PieceColor.WHITE ? '♘' : '♞';
-    case 'bishop':
+    case PieceType.BISHOP:
       return color === PieceColor.WHITE ? '♗' : '♝';
-    case 'queen':
+    case PieceType.QUEEN:
       return color === PieceColor.WHITE ? '♕' : '♛';
-    case 'king':
+    case PieceType.KING:
       return color === PieceColor.WHITE ? '♔' : '♚';
     default:
       return '';
@@ -35,12 +36,10 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
 
   const pieceSymbol = getPieceSymbol(piece, color);
   if (color === PieceColor.WHITE) {
-    // Ajouter la pièce capturée à la liste persistante
-    capturedBlack.push(pieceSymbol);
-    capturedBlackElement.textContent = capturedBlack.join(' ');
-  } else {
-    // Ajouter la pièce capturée à la liste persistante
     capturedWhite.push(pieceSymbol);
     capturedWhiteElement.textContent = capturedWhite.join(' ');
+  } else {
+    capturedBlack.push(pieceSymbol);
+    capturedBlackElement.textContent = capturedBlack.join(' ');
   }
 }
