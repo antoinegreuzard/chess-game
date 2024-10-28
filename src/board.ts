@@ -99,78 +99,69 @@ export class Board implements BoardInterface {
     toX: number,
     toY: number,
   ): boolean {
-    if (
-      toY < 0 ||
-      toY >= this.grid.length ||
-      fromY < 0 ||
-      fromY >= this.grid.length ||
-      ['__proto__', 'constructor', 'prototype'].includes(toY.toString()) ||
-      ['__proto__', 'constructor', 'prototype'].includes(fromY.toString())
-    ) {
-      return false; // Invalid move if fromY or toY is out of bounds or a special property name
+    if (!this.isWithinBounds(fromX, fromY) || !this.isWithinBounds(toX, toY)) {
+      return false; // Mouvement invalide en dehors des limites
     }
 
-    let piece = null;
-    if (this.isWithinBounds(fromX, fromY)) piece = this.getPiece(fromX, fromY);
-
+    const piece = this.getPiece(fromX, fromY);
     if (piece && piece.isValidMove(fromX, fromY, toX, toY, this)) {
-      let targetPiece = null;
-      if (this.isWithinBounds(toX, toY)) targetPiece = this.getPiece(toX, toY);
+      const targetPiece = this.getPiece(toX, toY);
 
+      // Empêche de capturer le roi ennemi
       if (targetPiece && targetPiece.type === PieceType.KING) {
-        return false; // Mouvement invalide si la cible est un roi
-      }
-
-      if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
-        this.captureEnPassant(fromX, fromY, toX, toY);
-      }
-
-      // Vérifie si c'est un mouvement de roque pour le roi
-      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
-        if (!this.isCastlingValid(piece, fromX, fromY, toX)) {
-          return false; // Roque invalide
-        }
-
-        // Effectue le roque
-        this.handleCastling(toX, fromY);
-      }
-
-      // Sauvegarder l'état actuel pour vérifier l'échec
-      let originalPiece = null;
-      if (this.isWithinBounds(toX, toY))
-        originalPiece = this.getPiece(toX, toY);
-      this.grid[toY][toX] = piece;
-      this.grid[fromY][fromX] = null;
-
-      // Vérification de l'échec après le mouvement
-      if (this.isKingInCheck(piece.color)) {
-        // Annuler le mouvement
-        this.grid[fromY][fromX] = piece;
-        this.grid[toY][toX] = originalPiece;
         return false;
       }
 
-      // Compte les mouvements pour la règle des 50 coups
-      if (piece.type === PieceType.PAWN || targetPiece) {
-        this.halfMoveCount = 0; // Réinitialise le compteur si un pion bouge ou si une capture a lieu
-      } else {
-        this.halfMoveCount++;
+      // Gestion du roque
+      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
+        if (this.isCastlingValid(piece, fromX, fromY, toX)) {
+          this.handleCastling(toX, fromY); // Appelle handleCastling pour déplacer la tour
+        } else {
+          return false; // Roque invalide
+        }
       }
 
-      // Déplace la pièce
+      // Gestion de la prise en passant
+      if (
+        piece instanceof Pawn &&
+        this.isEnPassantMove(fromX, fromY, toX, toY)
+      ) {
+        this.captureEnPassant(fromX, fromY, toX, toY); // Capture le pion en passant
+      }
+
+      // Sauvegarde l'état avant de simuler le mouvement
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
 
-      // Met à jour l'état du roi et des tours pour le roque
-      if (piece instanceof King) {
-        piece.hasMoved = true;
-      } else if (piece instanceof Rook) {
-        piece.hasMoved = true;
+      // Vérifie si le mouvement met le roi du joueur en échec
+      if (this.isKingInCheck(piece.color)) {
+        // Annule le mouvement si le roi est en échec
+        this.grid[fromY][fromX] = piece;
+        this.grid[toY][toX] = targetPiece;
+        return false;
+      }
+
+      // Mise à jour de l'état après un mouvement valide
+      piece.hasMoved = true;
+      this.updateEnPassantTarget(fromX, fromY, toX, toY, piece);
+
+      // Réinitialise le compteur pour la règle des 50 coups si un pion bouge ou une capture a lieu
+      this.halfMoveCount =
+        piece.type === PieceType.PAWN || targetPiece
+          ? 0
+          : this.halfMoveCount + 1;
+
+      // Vérifie si le mouvement met l'adversaire en échec et mat
+      const opponentColor =
+        piece.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+      if (this.isCheckmate(opponentColor)) {
+        return true; // Partie terminée
       }
 
       return true;
     }
-    return false;
+
+    return false; // Mouvement invalide
   }
 
   private isCastlingValid(
@@ -330,36 +321,37 @@ export class Board implements BoardInterface {
 
   public isCheckmate(color: PieceColor): boolean {
     if (!this.isKingInCheck(color)) {
-      return false;
+      return false; // Pas de mat si le roi n'est pas en échec
     }
 
+    // Parcourt chaque pièce de la couleur donnée pour trouver un mouvement légal
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
         if (piece && piece.color === color) {
-          for (let toY = 0; toY < 8; toY++) {
-            for (let toX = 0; toX < 8; toX++) {
-              if (piece.isValidMove(x, y, toX, toY, this)) {
-                const originalPiece = this.getPiece(toX, toY);
-                this.grid[toY][toX] = piece;
-                this.grid[y][x] = null;
+          const moves = this.getValidMoves(x, y);
 
-                const kingSafe = !this.isKingInCheck(color);
+          for (const move of moves) {
+            // Simule le mouvement
+            const originalPiece = this.getPiece(move.x, move.y);
+            this.grid[move.y][move.x] = piece;
+            this.grid[y][x] = null;
 
-                this.grid[y][x] = piece;
-                this.grid[toY][toX] = originalPiece;
+            const kingSafe = !this.isKingInCheck(color);
 
-                if (kingSafe) {
-                  return false;
-                }
-              }
+            // Annule le mouvement simulé
+            this.grid[y][x] = piece;
+            this.grid[move.y][move.x] = originalPiece;
+
+            if (kingSafe) {
+              return false; // Un mouvement légal existe pour sortir de l'échec
             }
           }
         }
       }
     }
 
-    return true;
+    return true; // Aucun mouvement possible, échec et mat
   }
 
   public isStalemate(color: PieceColor): boolean {
@@ -442,14 +434,6 @@ export class Board implements BoardInterface {
 
   public setPiece(x: number, y: number, piece: Piece | null): void {
     this.grid[y][x] = piece;
-  }
-
-  public clearBoard(): void {
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        this.grid[y][x] = null;
-      }
-    }
   }
 
   // Vérifie si un mouvement est valide

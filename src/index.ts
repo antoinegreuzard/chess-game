@@ -86,6 +86,21 @@ function updateTurn() {
     blackTimer.reset(60);
   }
 
+  if (
+    board.isKingInCheck(PieceColor.BLACK) ||
+    board.isKingInCheck(PieceColor.WHITE)
+  ) {
+    if (board.isCheckmate(PieceColor.BLACK)) {
+      endGame();
+      showMessage('Échec et Mat ! Blanc gagne !');
+    }
+
+    if (board.isCheckmate(PieceColor.WHITE)) {
+      endGame();
+      showMessage('Échec et Mat ! Noir gagne !');
+    }
+  }
+
   // Vérifie les conditions de nullité
   if (board.isStalemate(currentPlayer)) {
     endGame();
