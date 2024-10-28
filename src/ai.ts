@@ -183,7 +183,12 @@ export class AI {
   }
 
   // Recherche de quiescence pour améliorer l'évaluation des positions
-  private quiescenceSearch(board: Board, alpha: number, beta: number, depth: number = 0): number {
+  private quiescenceSearch(
+    board: Board,
+    alpha: number,
+    beta: number,
+    depth: number = 0,
+  ): number {
     const maxQuiescenceDepth = 10; // Définissez une profondeur maximale pour la recherche de quiescence
 
     // Condition de sortie basée sur la profondeur maximale
