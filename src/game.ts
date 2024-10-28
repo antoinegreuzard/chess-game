@@ -34,7 +34,10 @@ export class Game {
         // Effectuer le mouvement de l'IA sur le plateau
         this.board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       } else {
-        console.log("Aucun mouvement valide pour l'IA.");
+        endGame();
+        showMessage(
+          `Échec et Mat ! ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'} gagne !`,
+        );
       }
     }
   }
