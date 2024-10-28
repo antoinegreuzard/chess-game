@@ -183,7 +183,14 @@ export class AI {
   }
 
   // Recherche de quiescence pour améliorer l'évaluation des positions
-  private quiescenceSearch(board: Board, alpha: number, beta: number): number {
+  private quiescenceSearch(board: Board, alpha: number, beta: number, depth: number = 0): number {
+    const maxQuiescenceDepth = 10; // Définissez une profondeur maximale pour la recherche de quiescence
+
+    // Condition de sortie basée sur la profondeur maximale
+    if (depth >= maxQuiescenceDepth) {
+      return evaluateBoard(board, this.color);
+    }
+
     const standPat = evaluateBoard(board, this.color);
 
     if (standPat >= beta) return beta;
@@ -199,13 +206,21 @@ export class AI {
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      const score = -this.quiescenceSearch(board, -beta, -alpha);
+      // Vérifiez si le roi est en sécurité après le mouvement
+      const kingSafe = !board.isKingInCheck(this.color);
+      if (kingSafe) {
+        const score = -this.quiescenceSearch(board, -beta, -alpha, depth + 1);
 
-      board.setPiece(move.fromX, move.fromY, fromPiece);
-      board.setPiece(move.toX, move.toY, toPiece);
+        board.setPiece(move.fromX, move.fromY, fromPiece);
+        board.setPiece(move.toX, move.toY, toPiece);
 
-      if (score >= beta) return beta;
-      if (score > alpha) alpha = score;
+        if (score >= beta) return beta;
+        if (score > alpha) alpha = score;
+      } else {
+        // Annuler le mouvement si le roi est en échec
+        board.setPiece(move.fromX, move.fromY, fromPiece);
+        board.setPiece(move.toX, move.toY, toPiece);
+      }
     }
 
     return alpha;
