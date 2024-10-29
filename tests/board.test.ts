@@ -16,13 +16,15 @@ describe('Board', () => {
     }
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     board = new Board();
+    await board.init();
     clearBoard(); // Vider le plateau avant chaque test
   });
 
-  it('should initialize the board with pieces in the correct positions', () => {
+  it('should initialize the board with pieces in the correct positions', async () => {
     board = new Board(); // Réinitialiser le board pour tester l'initialisation
+    await board.init();
     expect(board.getPiece(0, 0)).toBeInstanceOf(Rook);
     expect(board.getPiece(4, 0)).toBeInstanceOf(King);
     expect(board.getPiece(0, 1)).toBeInstanceOf(Pawn);

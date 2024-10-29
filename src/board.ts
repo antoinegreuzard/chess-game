@@ -1,58 +1,62 @@
 // src/board.ts
 import { BoardInterface, Piece, PieceColor, PieceType } from './piece';
-import { Rook } from './pieces/rook';
-import { Knight } from './pieces/knight';
-import { Bishop } from './pieces/bishop';
-import { Queen } from './pieces/queen';
 import { King } from './pieces/king';
-import { Pawn } from './pieces/pawn';
 import { updateCapturedPieces } from './utils/utils';
+import { createPiece } from './utils/pieceFactory';
 
 type BoardSquare = Piece | null;
 
 export class Board implements BoardInterface {
-  private grid: BoardSquare[][];
+  private grid: (Piece | null)[][];
   private enPassantTarget: { x: number; y: number } | null = null;
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
 
   constructor() {
-    this.grid = this.initializeBoard();
+    this.grid = [];
   }
 
-  public initializeBoard(): BoardSquare[][] {
-    const board: BoardSquare[][] = Array(8)
+  public async init(): Promise<void> {
+    this.grid = await this.initializeBoard();
+  }
+
+  private async initializeBoard(): Promise<(Piece | null)[][]> {
+    const board: (Piece | null)[][] = Array(8)
       .fill(null)
       .map(() => Array(8).fill(null));
 
     // Ajouter les pièces blanches
     board[0] = [
-      new Rook(PieceColor.WHITE),
-      new Knight(PieceColor.WHITE),
-      new Bishop(PieceColor.WHITE),
-      new Queen(PieceColor.WHITE),
-      new King(PieceColor.WHITE),
-      new Bishop(PieceColor.WHITE),
-      new Knight(PieceColor.WHITE),
-      new Rook(PieceColor.WHITE),
+      await createPiece(PieceType.ROOK, PieceColor.WHITE),
+      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
+      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
+      await createPiece(PieceType.QUEEN, PieceColor.WHITE),
+      await createPiece(PieceType.KING, PieceColor.WHITE),
+      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
+      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
+      await createPiece(PieceType.ROOK, PieceColor.WHITE),
     ];
-    board[1] = Array(8)
-      .fill(null)
-      .map(() => new Pawn(PieceColor.WHITE));
+    board[1] = await Promise.all(
+      Array(8)
+        .fill(null)
+        .map(() => createPiece(PieceType.PAWN, PieceColor.WHITE)),
+    );
 
     // Ajouter les pièces noires
     board[7] = [
-      new Rook(PieceColor.BLACK),
-      new Knight(PieceColor.BLACK),
-      new Bishop(PieceColor.BLACK),
-      new Queen(PieceColor.BLACK),
-      new King(PieceColor.BLACK),
-      new Bishop(PieceColor.BLACK),
-      new Knight(PieceColor.BLACK),
-      new Rook(PieceColor.BLACK),
+      await createPiece(PieceType.ROOK, PieceColor.BLACK),
+      await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
+      await createPiece(PieceType.BISHOP, PieceColor.BLACK),
+      await createPiece(PieceType.QUEEN, PieceColor.BLACK),
+      await createPiece(PieceType.KING, PieceColor.BLACK),
+      await createPiece(PieceType.BISHOP, PieceColor.BLACK),
+      await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
+      await createPiece(PieceType.ROOK, PieceColor.BLACK),
     ];
-    board[6] = Array(8)
-      .fill(null)
-      .map(() => new Pawn(PieceColor.BLACK));
+    board[6] = await Promise.all(
+      Array(8)
+        .fill(null)
+        .map(() => createPiece(PieceType.PAWN, PieceColor.BLACK)),
+    );
 
     return board;
   }
@@ -118,7 +122,7 @@ export class Board implements BoardInterface {
       }
 
       // Gestion du roque
-      if (piece instanceof King && Math.abs(toX - fromX) === 2) {
+      if (Piece.isKing(piece) && Math.abs(toX - fromX) === 2) {
         if (this.isCastlingValid(piece, fromX, fromY, toX)) {
           this.handleCastling(toX, fromY);
           return true;
@@ -129,7 +133,7 @@ export class Board implements BoardInterface {
 
       // Gestion de la prise en passant
       if (
-        piece instanceof Pawn &&
+        piece?.type === PieceType.PAWN &&
         this.isEnPassantMove(fromX, fromY, toX, toY)
       ) {
         this.captureEnPassant(fromX, fromY, toX, toY); // Capture le pion en passant
@@ -182,7 +186,8 @@ export class Board implements BoardInterface {
     const rookX = toX > fromX ? 7 : 0;
     const rook = this.getPiece(rookX, fromY);
 
-    if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) return false;
+    if (!(rook?.type === PieceType.ROOK) || rook.hasMoved || king.hasMoved)
+      return false;
 
     // Vérifie que les cases entre le roi et la tour sont libres
     for (let x = fromX + direction; x !== toX; x += direction) {
@@ -204,14 +209,14 @@ export class Board implements BoardInterface {
     // Déplacement pour le petit roque (roi se déplace vers la droite)
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
-      if (rook instanceof Rook) {
+      if (rook?.type === PieceType.ROOK) {
         this.movePiece(7, kingY, 5, kingY);
       }
     }
     // Déplacement pour le grand roque (roi se déplace vers la gauche)
     else if (kingX === 2) {
       const rook = this.getPiece(0, kingY);
-      if (rook instanceof Rook) {
+      if (rook?.type === PieceType.ROOK) {
         this.movePiece(0, kingY, 3, kingY);
       }
     }
@@ -224,7 +229,11 @@ export class Board implements BoardInterface {
     toY: number,
     piece: Piece,
   ): void {
-    if (piece instanceof Pawn && Math.abs(toY - fromY) === 2 && fromX === toX) {
+    if (
+      piece?.type === PieceType.PAWN &&
+      Math.abs(toY - fromY) === 2 &&
+      fromX === toX
+    ) {
       // Si le pion avance de deux cases, configure la cible pour la prise en passant
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
@@ -240,7 +249,10 @@ export class Board implements BoardInterface {
   ): { capturedWhite: PieceType[]; capturedBlack: PieceType[] } | null {
     const piece = this.getPiece(fromX, fromY);
 
-    if (this.isEnPassantMove(fromX, fromY, toX, toY) && piece instanceof Pawn) {
+    if (
+      this.isEnPassantMove(fromX, fromY, toX, toY) &&
+      piece?.type === PieceType.PAWN
+    ) {
       const direction = piece.color === PieceColor.WHITE ? -1 : 1;
       const capturedPawnY = toY + direction;
       const capturedPawn = this.getPiece(toX, capturedPawnY);
@@ -283,7 +295,7 @@ export class Board implements BoardInterface {
     // Vérifie que le mouvement cible la bonne case pour la prise en passant
     const piece = this.getPiece(fromX, fromY);
     return (
-      piece instanceof Pawn &&
+      piece?.type === PieceType.PAWN &&
       toX === this.enPassantTarget.x &&
       toY === this.enPassantTarget.y &&
       Math.abs(fromX - toX) === 1 &&
@@ -291,23 +303,27 @@ export class Board implements BoardInterface {
     );
   }
 
-  public promotePawn(x: number, y: number, pieceType: string): void {
+  public async promotePawn(
+    x: number,
+    y: number,
+    pieceType: string,
+  ): Promise<void> {
     const color = this.getPiece(x, y)?.color;
 
     if (!color) return;
 
     switch (pieceType) {
       case 'queen':
-        this.grid[y][x] = new Queen(color);
+        this.grid[y][x] = await createPiece(PieceType.QUEEN, color);
         break;
       case 'rook':
-        this.grid[y][x] = new Rook(color);
+        this.grid[y][x] = await createPiece(PieceType.ROOK, color);
         break;
       case 'bishop':
-        this.grid[y][x] = new Bishop(color);
+        this.grid[y][x] = await createPiece(PieceType.BISHOP, color);
         break;
       case 'knight':
-        this.grid[y][x] = new Knight(color);
+        this.grid[y][x] = await createPiece(PieceType.KNIGHT, color);
         break;
     }
   }
@@ -402,7 +418,7 @@ export class Board implements BoardInterface {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
-        if (piece && piece instanceof King && piece.color === color) {
+        if (piece && piece?.type === PieceType.KING && piece.color === color) {
           return { x, y };
         }
       }
@@ -412,7 +428,7 @@ export class Board implements BoardInterface {
 
   public isKing(x: number, y: number): boolean {
     const piece = this.getPiece(x, y);
-    return piece instanceof King;
+    return piece?.type === PieceType.KING;
   }
 
   public isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean {
@@ -505,6 +521,7 @@ export class Board implements BoardInterface {
 
   public static async fromData(data: any): Promise<Board> {
     const board = new Board();
+    await board.init();
     board.grid = await Promise.all(
       data.grid.map(async (row: any[]) =>
         Promise.all(
@@ -545,7 +562,7 @@ export class Board implements BoardInterface {
       const nx = x + dx;
       const ny = y + dy;
       const piece = this.isWithinBounds(nx, ny) ? this.getPiece(nx, ny) : null;
-      if (piece instanceof King && piece.color !== color) {
+      if (piece?.type === PieceType.KING && piece.color !== color) {
         return true;
       }
     }

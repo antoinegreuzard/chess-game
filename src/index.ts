@@ -10,7 +10,7 @@ import {
 } from './utils/utils';
 
 const game = new Game();
-const board = game.getBoard();
+const board = await game.getBoard();
 const moveHistoryElement = document.getElementById(
   'moveHistory',
 ) as HTMLUListElement;

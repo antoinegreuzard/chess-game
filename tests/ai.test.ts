@@ -20,8 +20,9 @@ describe('AI', () => {
     }
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     board = new Board();
+    await board.init();
     ai = new AI(PieceColor.BLACK);
     clearBoard();
   });

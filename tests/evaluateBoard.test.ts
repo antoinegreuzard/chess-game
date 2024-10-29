@@ -12,8 +12,9 @@ import { evaluateBoard } from '../src/evaluator';
 describe('evaluateBoard', () => {
   let board: Board;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     board = new Board();
+    await board.init();
     clearBoard();
   });
 

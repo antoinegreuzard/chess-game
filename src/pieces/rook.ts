@@ -1,8 +1,10 @@
 // src/pieces/rook.ts
 
 import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
+import { createPiece } from '../utils/pieceFactory';
 
 export class Rook extends Piece {
+  public readonly type: PieceType = PieceType.ROOK;
   public hasMoved: boolean = false;
 
   constructor(color: PieceColor) {
@@ -38,7 +40,7 @@ export class Rook extends Piece {
 
   // Ajuste le type de retour pour inclure Promise<Rook>
   static async fromData(data: any): Promise<Rook> {
-    const rook = new Rook(data.color);
+    const rook = await createPiece(PieceType.ROOK, data.color);
     rook.hasMoved = data.hasMoved;
     return rook;
   }

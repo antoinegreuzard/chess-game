@@ -1,8 +1,8 @@
 import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
-import { Rook } from './rook';
 
 export class King extends Piece {
   public hasMoved: boolean = false;
+  public readonly type: PieceType = PieceType.KING;
 
   constructor(color: PieceColor) {
     super(color, PieceType.KING);
@@ -32,7 +32,7 @@ export class King extends Piece {
       const rookX = toX > fromX ? 7 : 0;
       const rook = board.getPiece(rookX, fromY);
 
-      if (rook && rook instanceof Rook && !rook.hasMoved) {
+      if (rook && rook?.type === PieceType.ROOK && !rook.hasMoved) {
         for (let x = fromX + direction; x !== toX; x += direction) {
           if (
             board.getPiece(x, fromY) ||
