@@ -1,3 +1,4 @@
+// src/ai.ts
 import { Board } from './board';
 import { PieceColor } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';

@@ -1,5 +1,6 @@
+// src/evaluator.ts
 import { Board } from './board';
-import { Piece, PieceColor, PieceType } from './piece';
+import { PieceColor, PieceType } from './piece';
 
 // Valeurs des pièces (évaluation de base)
 const pieceValues: { [key in PieceType]: number } = {
