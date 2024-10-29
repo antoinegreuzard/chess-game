@@ -68,9 +68,14 @@ export class Pawn extends Piece {
     toY: number,
     board: BoardInterface,
   ): void {
-    const promotionDialog = document.getElementById('promotionDialog');
+    const promotionDialog = document.getElementById(
+      'promotionDialog',
+    ) as HTMLDivElement;
+
     if (promotionDialog) {
       promotionDialog.style.display = 'block';
+
+      // Définir la fonction de promotion en capturant le contexte (x, y)
       window.promote = (pieceType: string) => {
         promotionDialog.style.display = 'none';
         board.promotePawn(toX, toY, pieceType);

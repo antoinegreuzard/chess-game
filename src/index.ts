@@ -3,23 +3,27 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
-import { showMessage, updateCapturedPieces } from './utils/utils';
+import {
+  getPieceSymbol,
+  showMessage,
+  updateCapturedPieces,
+} from './utils/utils';
 
 const game = new Game();
 const board = game.getBoard();
 const moveHistoryElement = document.getElementById(
   'moveHistory',
-) as HTMLButtonElement;
+) as HTMLUListElement;
 const currentTurnElement = document.getElementById(
   'currentTurn',
-) as HTMLButtonElement;
-const timerElement = document.getElementById('timer') as HTMLButtonElement;
+) as HTMLDivElement;
+const timerElement = document.getElementById('timer') as HTMLDivElement;
 const passTurnButton = document.getElementById(
   'passTurnButton',
 ) as HTMLButtonElement;
 const gameMessageElement = document.getElementById(
   'gameMessage',
-) as HTMLButtonElement;
+) as HTMLDivElement;
 const replayButton = document.getElementById(
   'replayButton',
 ) as HTMLButtonElement;
@@ -35,6 +39,7 @@ let moveHistory: {
   pieceType: PieceType;
 }[][] = [[]]; // Historique des mouvements par tour
 let isGameEnded = false;
+let isAITurn = false;
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
 let whiteTimer = new Timer(60, (timeLeft) =>
@@ -76,7 +81,7 @@ function clearMessage() {
 }
 
 // Fonction pour mettre à jour le tour et l'affichage
-function updateTurn() {
+async function updateTurn() {
   clearMessage();
   currentPlayer =
     currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
@@ -131,10 +136,16 @@ function updateTurn() {
 
   // Si c'est au tour de l'IA, faire jouer l'IA automatiquement
   if (currentPlayer === PieceColor.BLACK) {
-    game.makeAIMove();
-    renderer.drawBoard();
-    updateTurn(); // Change de tour après que l'IA a joué
+    await triggerAIMove();
   }
+}
+
+async function triggerAIMove() {
+  isAITurn = true;
+  await game.makeAIMove();
+  renderer.drawBoard();
+  isAITurn = false;
+  await updateTurn(); // Revenir au tour du joueur après le coup de l'IA
 }
 
 // Ajouter un mouvement à l'historique
@@ -145,7 +156,7 @@ function addMoveToHistory(
   toY: number,
   pieceType: PieceType,
 ) {
-  const moveText = `${pieceType} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
+  const moveText = `${getPieceSymbol(pieceType, PieceColor.WHITE)} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
   const listItem = document.createElement('li');
   listItem.textContent = moveText;
   moveHistoryElement.appendChild(listItem);
@@ -176,9 +187,12 @@ export function handleMove(
   const targetPiece = board.getPiece(toX, toY); // Ajout pour vérifier la cible
 
   if (!piece || piece.color !== currentPlayer) {
-    showMessage(
-      `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
-    );
+    if (!isAITurn) {
+      // Affiche le message uniquement si ce n'est pas le tour de l'IA
+      showMessage(
+        `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+      );
+    }
     return false;
   }
 
@@ -203,7 +217,7 @@ export function handleMove(
 
 // Gérer le clic sur "Passer son tour"
 if (passTurnButton) {
-  passTurnButton.addEventListener('click', (event) => {
+  passTurnButton.addEventListener('click', async (event) => {
     event.preventDefault();
     if (
       gameState === 'playing' &&
@@ -213,7 +227,7 @@ if (passTurnButton) {
       showMessage(
         `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
       );
-      updateTurn();
+      await updateTurn();
     }
   });
 }
