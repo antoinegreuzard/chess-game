@@ -13,14 +13,13 @@ export class AI {
   private transpositionTable: Map<string, number>; // Table de transposition
   private readonly maxTime: number; // Temps maximum de réflexion en millisecondes
   private startTime: number; // Temps de début pour gestion du temps
-  private readonly killerMoves: {
-    [depth: number]: {
-      fromX: number;
-      fromY: number;
-      toX: number;
-      toY: number;
-    }[];
-  }; // Heuristic des coups efficaces
+  private readonly killerMoves: Map<
+    number,
+    {
+      move: { fromX: number; fromY: number; toX: number; toY: number };
+      score: number;
+    }[]
+  >; // Heuristic des coups efficaces
 
   constructor(
     private color: PieceColor,
@@ -28,7 +27,7 @@ export class AI {
   ) {
     this.transpositionTable = new Map();
     this.maxTime = maxTime;
-    this.killerMoves = {};
+    this.killerMoves = new Map();
     this.startTime = 0;
   }
 
@@ -249,10 +248,23 @@ export class AI {
     depth: number,
     move: { fromX: number; fromY: number; toX: number; toY: number },
   ) {
-    if (!this.killerMoves[depth]) {
-      this.killerMoves[depth] = [];
+    const killers = this.killerMoves.get(depth) || [];
+    const existingMove = killers.find(
+      (k) =>
+        k.move.fromX === move.fromX &&
+        k.move.fromY === move.fromY &&
+        k.move.toX === move.toX &&
+        k.move.toY === move.toY,
+    );
+
+    if (existingMove) {
+      existingMove.score += 1;
+    } else {
+      killers.push({ move, score: 1 });
     }
-    this.killerMoves[depth].push(move);
+
+    killers.sort((a, b) => b.score - a.score);
+    this.killerMoves.set(depth, killers);
   }
 
   // Recherche de quiescence pour améliorer l'évaluation des positions
@@ -262,15 +274,13 @@ export class AI {
     beta: number,
     depth: number = 0,
   ): number {
-    const maxQuiescenceDepth = 10; // Définissez une profondeur maximale pour la recherche de quiescence
+    const maxQuiescenceDepth = 10;
 
-    // Condition de sortie basée sur la profondeur maximale
     if (depth >= maxQuiescenceDepth) {
       return evaluateBoard(board, this.color);
     }
 
     const standPat = evaluateBoard(board, this.color);
-
     if (standPat >= beta) return beta;
     if (alpha < standPat) alpha = standPat;
 
@@ -283,19 +293,16 @@ export class AI {
       const toPiece = board.getPiece(move.toX, move.toY);
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-
-      // Vérifiez si le roi est en sécurité après le mouvement
       const kingSafe = !board.isKingInCheck(this.color);
+
       if (kingSafe) {
         const score = -this.quiescenceSearch(board, -beta, -alpha, depth + 1);
-
         board.setPiece(move.fromX, move.fromY, fromPiece);
         board.setPiece(move.toX, move.toY, toPiece);
 
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
       } else {
-        // Annuler le mouvement si le roi est en échec
         board.setPiece(move.fromX, move.fromY, fromPiece);
         board.setPiece(move.toX, move.toY, toPiece);
       }
@@ -354,20 +361,20 @@ export class AI {
     moves: { fromX: number; fromY: number; toX: number; toY: number }[],
     board: Board,
     depth: number,
-  ): {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-  }[] {
+  ): { fromX: number; fromY: number; toX: number; toY: number }[] {
     return moves.sort((a, b) => {
+      const killerMovesAtDepth = this.killerMoves.get(depth);
+
       if (
-        this.killerMoves[depth] &&
-        this.killerMoves[depth].some(
-          (move) => move.fromX === a.fromX && move.fromY === a.fromY,
+        killerMovesAtDepth &&
+        killerMovesAtDepth.some(
+          (move: {
+            move: { fromX: number; fromY: number; toX: number; toY: number };
+          }) => move.move.fromX === a.fromX && move.move.fromY === a.fromY,
         )
-      )
+      ) {
         return -1;
+      }
 
       const pieceA = board.getPiece(a.toX, a.toY);
       const pieceB = board.getPiece(b.toX, b.toY);
