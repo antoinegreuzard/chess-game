@@ -624,4 +624,8 @@ export class Board implements BoardInterface {
 
     return null; // Retourne null si le jeu n'est pas encore terminé
   }
+
+  public getPieces(): Piece[] {
+    return this.grid.flat().filter((piece): piece is Piece => piece !== null);
+  }
 }

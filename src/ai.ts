@@ -2,6 +2,7 @@
 import { Board } from './board';
 import { PieceColor, PieceType } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';
+import { getEndgameMove } from './endgameTablebase'; // Ajoute un module de tablebases
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
@@ -31,6 +32,12 @@ export class AI {
   public makeMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    // Vérifie si on peut utiliser une table de fin de partie
+    const endgameMove = this.useEndgameTablebase(board);
+    if (endgameMove) {
+      return endgameMove;
+    }
+
     // Détermine si MCTS est pertinent pour la position actuelle
     if (this.shouldUseMCTS(board)) {
       return this.mcts(board); // Utilise MCTS pour les positions complexes ou de fin de partie
@@ -468,5 +475,16 @@ export class AI {
   // Détermine quand utiliser MCTS
   private shouldUseMCTS(board: Board): boolean {
     return board.getPieceCount() <= 10; // Par exemple, utilise MCTS pour la fin de partie
+  }
+
+  // Fonction de détection et d'application des tables de fin de partie
+  private useEndgameTablebase(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    if (board.getPieceCount() <= 4) {
+      // Condition pour appliquer les tables de fin de partie
+      return getEndgameMove(board, this.color); // Utilise une table de fin de partie externe
+    }
+    return null;
   }
 }
