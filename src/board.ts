@@ -551,4 +551,81 @@ export class Board implements BoardInterface {
     }
     return false;
   }
+
+  public clone(): Board {
+    const clonedBoard = new Board();
+    clonedBoard.grid = this.grid.map((row) =>
+      row.map((piece) =>
+        piece
+          ? Object.create(
+              Object.getPrototypeOf(piece),
+              Object.getOwnPropertyDescriptors(piece),
+            )
+          : null,
+      ),
+    );
+    clonedBoard.enPassantTarget = this.enPassantTarget
+      ? { ...this.enPassantTarget }
+      : null;
+    clonedBoard.halfMoveCount = this.halfMoveCount;
+    return clonedBoard;
+  }
+
+  public getPieceCount(): number {
+    return this.grid.flat().filter((piece) => piece !== null).length;
+  }
+
+  public isGameOver(): boolean {
+    // Vérifie l'échec et mat pour chaque couleur
+    if (
+      this.isCheckmate(PieceColor.WHITE) ||
+      this.isCheckmate(PieceColor.BLACK)
+    ) {
+      return true;
+    }
+
+    // Vérifie le pat pour chaque couleur
+    if (
+      this.isStalemate(PieceColor.WHITE) ||
+      this.isStalemate(PieceColor.BLACK)
+    ) {
+      return true;
+    }
+
+    // Vérifie le matériel insuffisant pour chaque couleur
+    if (this.isInsufficientMaterial()) {
+      return true;
+    }
+
+    // Vérifie si la règle des 50 coups est atteinte
+    return this.isFiftyMoveRule();
+  }
+
+  public getWinner(): PieceColor | null {
+    // Si c'est un échec et mat pour les Noirs, Blancs gagnent
+    if (this.isCheckmate(PieceColor.BLACK)) {
+      return PieceColor.WHITE;
+    }
+
+    // Si c'est un échec et mat pour les Blancs, Noirs gagnent
+    if (this.isCheckmate(PieceColor.WHITE)) {
+      return PieceColor.BLACK;
+    }
+
+    // Si c'est un pat, une égalité par matériel insuffisant, ou la règle des 50 coups, la partie est nulle
+    if (
+      this.isStalemate(PieceColor.WHITE) ||
+      this.isStalemate(PieceColor.BLACK) ||
+      this.isInsufficientMaterial() ||
+      this.isFiftyMoveRule()
+    ) {
+      return null;
+    }
+
+    return null; // Retourne null si le jeu n'est pas encore terminé
+  }
+
+  public getPieces(): Piece[] {
+    return this.grid.flat().filter((piece): piece is Piece => piece !== null);
+  }
 }

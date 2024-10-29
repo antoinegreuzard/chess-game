@@ -24,7 +24,7 @@ export class Pawn extends Piece {
       if (
         ((this.color === PieceColor.WHITE && toY === 7) ||
           (this.color === PieceColor.BLACK && toY === 0)) &&
-        board.getPiece(toX, toY)?.type === PieceType.PAWN
+        board.getPiece(fromX, fromY)?.type === PieceType.PAWN
       ) {
         this.handlePromotion(toX, toY, board);
       }
@@ -48,7 +48,7 @@ export class Pawn extends Piece {
           (this.color === PieceColor.WHITE && toY === 7) ||
           (this.color === PieceColor.BLACK &&
             toY === 0 &&
-            board.getPiece(toX, toY)?.type === PieceType.PAWN)
+            board.getPiece(fromX, fromY)?.type === PieceType.PAWN)
         ) {
           this.handlePromotion(toX, toY, board);
         }
@@ -63,11 +63,7 @@ export class Pawn extends Piece {
     return false;
   }
 
-  private handlePromotion(
-    toX: number,
-    toY: number,
-    board: BoardInterface,
-  ): void {
+  handlePromotion(toX: number, toY: number, board: BoardInterface): void {
     const promotionDialog = document.getElementById(
       'promotionDialog',
     ) as HTMLDivElement;

@@ -92,4 +92,9 @@ export abstract class Piece {
   static async fromData(data: any): Promise<Piece> {
     return await createPiece(data.type, data.color);
   }
+
+  // Méthode clone pour créer une nouvelle instance identique
+  public async clone(): Promise<Piece> {
+    return await createPiece(this.type, this.color);
+  }
 }
