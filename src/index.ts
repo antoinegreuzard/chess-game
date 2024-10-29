@@ -39,6 +39,7 @@ let moveHistory: {
   pieceType: PieceType;
 }[][] = [[]]; // Historique des mouvements par tour
 let isGameEnded = false;
+let isAITurn = false;
 
 // Initialiser le timer avec 60 secondes pour chaque joueur
 let whiteTimer = new Timer(60, (timeLeft) =>
@@ -80,7 +81,7 @@ function clearMessage() {
 }
 
 // Fonction pour mettre à jour le tour et l'affichage
-function updateTurn() {
+async function updateTurn() {
   clearMessage();
   currentPlayer =
     currentPlayer === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
@@ -135,10 +136,16 @@ function updateTurn() {
 
   // Si c'est au tour de l'IA, faire jouer l'IA automatiquement
   if (currentPlayer === PieceColor.BLACK) {
-    game.makeAIMove();
-    renderer.drawBoard();
-    updateTurn(); // Change de tour après que l'IA a joué
+    await triggerAIMove();
   }
+}
+
+async function triggerAIMove() {
+  isAITurn = true;
+  await game.makeAIMove();
+  renderer.drawBoard();
+  isAITurn = false;
+  await updateTurn(); // Revenir au tour du joueur après le coup de l'IA
 }
 
 // Ajouter un mouvement à l'historique
@@ -180,9 +187,12 @@ export function handleMove(
   const targetPiece = board.getPiece(toX, toY); // Ajout pour vérifier la cible
 
   if (!piece || piece.color !== currentPlayer) {
-    showMessage(
-      `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
-    );
+    if (!isAITurn) {
+      // Affiche le message uniquement si ce n'est pas le tour de l'IA
+      showMessage(
+        `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+      );
+    }
     return false;
   }
 
@@ -207,7 +217,7 @@ export function handleMove(
 
 // Gérer le clic sur "Passer son tour"
 if (passTurnButton) {
-  passTurnButton.addEventListener('click', (event) => {
+  passTurnButton.addEventListener('click', async (event) => {
     event.preventDefault();
     if (
       gameState === 'playing' &&
@@ -217,7 +227,7 @@ if (passTurnButton) {
       showMessage(
         `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
       );
-      updateTurn();
+      await updateTurn();
     }
   });
 }
