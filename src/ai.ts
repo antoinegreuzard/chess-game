@@ -31,6 +31,12 @@ export class AI {
   public makeMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    // Détermine si MCTS est pertinent pour la position actuelle
+    if (this.shouldUseMCTS(board)) {
+      return this.mcts(board); // Utilise MCTS pour les positions complexes ou de fin de partie
+    }
+
+    // Si MCTS n'est pas utilisé, continue avec Minimax
     let bestMove = null;
     let bestValue = -Infinity;
     const maxDepth = 7; // Augmentation de la profondeur maximale de recherche
@@ -352,5 +358,115 @@ export class AI {
 
       return centerControlB - centerControlA;
     });
+  }
+
+  // Algorithme MCTS pour évaluer des positions complexes ou de fin de partie
+  private mcts(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const iterations = 1000; // Nombre de simulations
+    const moveScores: Map<string, number> = new Map();
+    const validMoves = this.getAllValidMoves(board);
+
+    for (let i = 0; i < iterations; i++) {
+      const move = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+      // Vérifie que toutes les propriétés de move sont bien définies
+      if (
+        !move ||
+        move.fromX === undefined ||
+        move.fromY === undefined ||
+        move.toX === undefined ||
+        move.toY === undefined
+      ) {
+        continue;
+      }
+
+      const simulationResult = this.simulateRandomGame(board, move);
+
+      const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
+      moveScores.set(
+        moveKey,
+        (moveScores.get(moveKey) || 0) + simulationResult,
+      );
+    }
+
+    // Vérifie si moveScores est vide avant d'utiliser reduce
+    if (moveScores.size === 0) {
+      return null; // Aucun mouvement valide trouvé
+    }
+
+    // Sélectionne le mouvement avec la meilleure note moyenne
+    const bestMoveKey = Array.from(moveScores.entries()).reduce(
+      (best, current) => {
+        return current[1] > best[1] ? current : best;
+      },
+    )[0];
+
+    const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);
+    return { fromX, fromY, toX, toY };
+  }
+
+  // Simule une partie aléatoire pour obtenir une estimation du résultat
+  private simulateRandomGame(
+    board: Board,
+    move: { fromX: number; fromY: number; toX: number; toY: number },
+  ): number {
+    // Vérifie que toutes les propriétés de move sont définies
+    if (
+      !move ||
+      move.fromX === undefined ||
+      move.fromY === undefined ||
+      move.toX === undefined ||
+      move.toY === undefined
+    ) {
+      console.error('Invalid move:', move);
+      return 0; // Retourne 0 ou une autre valeur par défaut si le mouvement est invalide
+    }
+
+    const tempBoard = board.clone();
+    tempBoard.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+    let currentPlayer = this.color;
+    let moves = this.getAllValidMoves(tempBoard);
+
+    while (!tempBoard.isGameOver() && moves.length > 0) {
+      const randomMove = moves[Math.floor(Math.random() * moves.length)];
+
+      // Vérifie que le mouvement aléatoire est valide
+      if (
+        !randomMove ||
+        randomMove.fromX === undefined ||
+        randomMove.fromY === undefined ||
+        randomMove.toX === undefined ||
+        randomMove.toY === undefined
+      ) {
+        console.error('Invalid random move:', randomMove);
+        break;
+      }
+
+      tempBoard.movePiece(
+        randomMove.fromX,
+        randomMove.fromY,
+        randomMove.toX,
+        randomMove.toY,
+      );
+      currentPlayer =
+        currentPlayer === PieceColor.WHITE
+          ? PieceColor.BLACK
+          : PieceColor.WHITE;
+      moves = this.getAllValidMoves(tempBoard);
+    }
+
+    // Retourne un score basé sur le résultat de la partie simulée
+    return tempBoard.getWinner() === this.color
+      ? 1
+      : tempBoard.getWinner() === null
+        ? 0.5
+        : 0;
+  }
+
+  // Détermine quand utiliser MCTS
+  private shouldUseMCTS(board: Board): boolean {
+    return board.getPieceCount() <= 10; // Par exemple, utilise MCTS pour la fin de partie
   }
 }

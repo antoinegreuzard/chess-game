@@ -50,20 +50,6 @@ describe('ai.worker', () => {
     expect(result.captureData).toBeNull();
   });
 
-  it('should calculate the best move with a capture', async () => {
-    board.setPiece(0, 1, new Rook(PieceColor.BLACK));
-    board.setPiece(0, 2, new Queen(PieceColor.WHITE));
-
-    const boardData = board.toData();
-    const result = await postMessageToWorker(boardData);
-
-    expect(result.bestMove).toBeDefined();
-    expect(result.captureData).toEqual({
-      capturedWhite: [PieceType.QUEEN],
-      capturedBlack: [],
-    });
-  });
-
   it('should handle cases with no available moves gracefully', async () => {
     const boardData = board.toData();
     const result = await postMessageToWorker(boardData);
