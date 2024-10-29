@@ -11,12 +11,22 @@ import {
 
 const game = new Game();
 const board = game.getBoard();
-const moveHistoryElement = document.getElementById('moveHistory') as HTMLUListElement;
-const currentTurnElement = document.getElementById('currentTurn') as HTMLDivElement;
+const moveHistoryElement = document.getElementById(
+  'moveHistory',
+) as HTMLUListElement;
+const currentTurnElement = document.getElementById(
+  'currentTurn',
+) as HTMLDivElement;
 const timerElement = document.getElementById('timer') as HTMLDivElement;
-const passTurnButton = document.getElementById('passTurnButton') as HTMLButtonElement;
-const gameMessageElement = document.getElementById('gameMessage') as HTMLDivElement;
-const replayButton = document.getElementById('replayButton') as HTMLButtonElement;
+const passTurnButton = document.getElementById(
+  'passTurnButton',
+) as HTMLButtonElement;
+const gameMessageElement = document.getElementById(
+  'gameMessage',
+) as HTMLDivElement;
+const replayButton = document.getElementById(
+  'replayButton',
+) as HTMLButtonElement;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Ajout de l'état pour la proposition de nullité
