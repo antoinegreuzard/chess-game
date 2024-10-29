@@ -99,8 +99,13 @@ export class Board implements BoardInterface {
     toX: number,
     toY: number,
   ): boolean {
-    if (!this.isWithinBounds(fromX, fromY) || !this.isWithinBounds(toX, toY)) {
-      return false; // Mouvement invalide en dehors des limites
+    if (
+      !this.isWithinBounds(fromX, fromY) ||
+      !this.isWithinBounds(toX, toY) ||
+      ['__proto__', 'constructor', 'prototype'].includes(fromY.toString()) ||
+      ['__proto__', 'constructor', 'prototype'].includes(toY.toString())
+    ) {
+      return false; // Mouvement invalide en dehors des limites ou clé interdite
     }
 
     const piece = this.getPiece(fromX, fromY);
