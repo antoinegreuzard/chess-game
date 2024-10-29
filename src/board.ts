@@ -100,7 +100,7 @@ export class Board implements BoardInterface {
     toY: number,
   ): boolean {
     if (
-      !this.isWithinBounds(fromX, fromY) || 
+      !this.isWithinBounds(fromX, fromY) ||
       !this.isWithinBounds(toX, toY) ||
       ['__proto__', 'constructor', 'prototype'].includes(fromY.toString()) ||
       ['__proto__', 'constructor', 'prototype'].includes(toY.toString())
