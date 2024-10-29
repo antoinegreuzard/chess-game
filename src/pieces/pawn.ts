@@ -2,6 +2,8 @@
 import { Piece, PieceColor, PieceType, BoardInterface } from '../piece';
 
 export class Pawn extends Piece {
+  public hasMoved: boolean = false;
+
   constructor(color: PieceColor) {
     super(color, PieceType.PAWN);
   }

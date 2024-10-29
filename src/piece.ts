@@ -34,6 +34,12 @@ export interface BoardInterface {
   ): boolean;
 
   promotePawn(x: number, y: number, pieceType: string): void;
+
+  isSquareUnderAttack(x: number, y: number, color: string): boolean;
+
+  isKing(x: number, y: number): boolean;
+
+  isAdjacentToAnotherKing(x: number, y: number, color: PieceColor): boolean;
 }
 
 export abstract class Piece {
@@ -70,7 +76,6 @@ export abstract class Piece {
     return true;
   }
 
-  // src/piece.ts
   public canCapture(toX: number, toY: number, board: BoardInterface): boolean {
     const targetPiece = board.getPiece(toX, toY);
     return !targetPiece || targetPiece.color !== this.color;

@@ -6,7 +6,7 @@ import { Bishop } from './pieces/bishop';
 import { Queen } from './pieces/queen';
 import { King } from './pieces/king';
 import { Pawn } from './pieces/pawn';
-import { updateCapturedPieces } from './utils';
+import { updateCapturedPieces } from './utils/utils';
 
 type BoardSquare = Piece | null;
 
@@ -115,9 +115,10 @@ export class Board implements BoardInterface {
       // Gestion du roque
       if (piece instanceof King && Math.abs(toX - fromX) === 2) {
         if (this.isCastlingValid(piece, fromX, fromY, toX)) {
-          this.handleCastling(toX, fromY); // Appelle handleCastling pour déplacer la tour
+          this.handleCastling(toX, fromY);
+          return true;
         } else {
-          return false; // Roque invalide
+          return false;
         }
       }
 
@@ -142,7 +143,9 @@ export class Board implements BoardInterface {
       }
 
       // Mise à jour de l'état après un mouvement valide
-      piece.hasMoved = true;
+      if ('hasMoved' in piece) {
+        (piece as any).hasMoved = true;
+      }
       this.updateEnPassantTarget(fromX, fromY, toX, toY, piece);
 
       // Réinitialise le compteur pour la règle des 50 coups si un pion bouge ou une capture a lieu
@@ -176,6 +179,7 @@ export class Board implements BoardInterface {
 
     if (!(rook instanceof Rook) || rook.hasMoved || king.hasMoved) return false;
 
+    // Vérifie que les cases entre le roi et la tour sont libres
     for (let x = fromX + direction; x !== toX; x += direction) {
       if (
         this.getPiece(x, fromY) ||
@@ -185,7 +189,10 @@ export class Board implements BoardInterface {
       }
     }
 
-    return !this.isSquareUnderAttack(toX, fromY, king.color); // vérifier la case de destination
+    return (
+      !this.isSquareUnderAttack(fromX, fromY, king.color) &&
+      !this.isSquareUnderAttack(toX, fromY, king.color)
+    );
   }
 
   private handleCastling(kingX: number, kingY: number): void {
@@ -398,6 +405,11 @@ export class Board implements BoardInterface {
     return null;
   }
 
+  public isKing(x: number, y: number): boolean {
+    const piece = this.getPiece(x, y);
+    return piece instanceof King;
+  }
+
   public isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean {
     for (let fromY = 0; fromY < 8; fromY++) {
       for (let fromX = 0; fromX < 8; fromX++) {
@@ -506,5 +518,32 @@ export class Board implements BoardInterface {
         row.map((piece) => (piece ? piece.toData() : null)),
       ),
     };
+  }
+
+  public isAdjacentToAnotherKing(
+    x: number,
+    y: number,
+    color: PieceColor,
+  ): boolean {
+    const kingPositions = [
+      { dx: -1, dy: -1 },
+      { dx: -1, dy: 0 },
+      { dx: -1, dy: 1 },
+      { dx: 0, dy: -1 },
+      { dx: 0, dy: 1 },
+      { dx: 1, dy: -1 },
+      { dx: 1, dy: 0 },
+      { dx: 1, dy: 1 },
+    ];
+
+    for (const { dx, dy } of kingPositions) {
+      const nx = x + dx;
+      const ny = y + dy;
+      const piece = this.isWithinBounds(nx, ny) ? this.getPiece(nx, ny) : null;
+      if (piece instanceof King && piece.color !== color) {
+        return true;
+      }
+    }
+    return false;
   }
 }

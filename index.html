@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Jeu d'échecs en TypeScript</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
         display: flex;
         flex-direction: column;
@@ -12,49 +15,57 @@
         margin: 0;
         padding: 0;
         font-family: Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
       }
       header {
         margin: 20px 0;
-        font-size: 24px;
+        font-size: 28px;
         font-weight: bold;
+        color: #4caf50;
       }
       .container {
         display: flex;
         justify-content: center;
         align-items: flex-start;
+        max-width: 1200px;
+        width: 100%;
       }
-      #sidebar {
-        width: 200px;
+      #sidebar, #capturedSidebar {
+        width: 220px;
         padding: 20px;
-        background-color: #f4f4f4;
-        min-height: 604px;
-        overflow-y: auto;
-        margin-right: 20px;
-      }
-      #capturedSidebar {
-        width: 200px;
-        padding: 20px;
-        background-color: #f4f4f4;
-        min-height: 604px;
-        overflow-y: auto;
-        margin-left: 20px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin: 0 15px;
+        font-size: 16px;
       }
       canvas {
-        border: 2px solid black;
+        border: 2px solid #333;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
       button {
-        margin-top: 20px;
-        padding: 10px 15px;
+        padding: 12px 20px;
         font-size: 16px;
+        border-radius: 5px;
         cursor: pointer;
+        border: none;
+        transition: background-color 0.2s ease;
+        margin: 10px 0;
+        color: #ffffff;
+      }
+      button:hover {
+        opacity: 0.9;
       }
       #replayButton {
         display: none;
-        padding: 10px;
         background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
+      }
+      #passTurnButton {
+        background-color: #ffa726;
+        width: 100%;
       }
       #promotionDialog {
         display: none;
@@ -63,13 +74,52 @@
         left: 50%;
         transform: translate(-50%, -50%);
         padding: 20px;
-        background-color: #fff;
-        border: 2px solid #000;
-        z-index: 1000;
+        background-color: #ffffff;
+        border: 2px solid #4caf50;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         text-align: center;
+        z-index: 1000;
       }
       #promotionDialog button {
+        background-color: #4caf50;
         margin: 5px;
+        color: #fff;
+      }
+      #gameMessage {
+        display: none;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+        margin-bottom: 20px;
+        width: 300px;
+        text-align: center;
+      }
+      #moveHistory {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border-top: 1px solid #ddd;
+      }
+      #moveHistory li {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+      }
+      #capturedSidebar h4 {
+        margin-bottom: 5px;
+      }
+      #capturedWhite, #capturedBlack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      #currentTurn, #timer {
+        margin: 10px 0;
+        font-weight: bold;
       }
     </style>
   </head>
@@ -77,17 +127,7 @@
     <header>Jeu d'échecs en TypeScript</header>
 
     <!-- Zone de message pour les messages de jeu -->
-    <div
-      id="gameMessage"
-      style="  
-display: none;
-background-color: #f8d7da;
-color: #721c24;
-padding: 10px;
-border: 1px solid #f5c6cb;
-margin-bottom: 20px;
-      "
-    ></div>
+    <div id="gameMessage"></div>
 
     <!-- Bouton Rejouer, visible uniquement en fin de partie -->
     <button id="replayButton">Rejouer</button>

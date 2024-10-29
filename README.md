@@ -5,7 +5,7 @@ movements, and rules enforcement.
 
 ## Features
 
-- **Turn-based system** where players take turns playing as White or Black.
+- **Turn-based system** where players take turns playing as White.
 - **Animation** for piece movements.
 - **Legal move highlights**: When a piece is selected, all legal moves are highlighted.
 - **Check indicator**: The board highlights when the King is in check.
@@ -49,15 +49,25 @@ movements, and rules enforcement.
 
 3. Open your browser and navigate to `http://localhost:5173` to play the game.
 
-### Project Structure
+# Project Structure
 
 - **src/**: Contains the TypeScript source code.
-   - **index.ts**: Entry point of the application. Contains game logic and initialization.
-   - **canvas-renderer.ts**: Handles the drawing of the board and pieces, and user interactions.
-   - **piece.ts**: Defines different chess pieces and their movement rules.
+   - **index.ts**: The main entry point of the application. Includes game logic and initialization.
+   - **canvas-renderer.ts**: Manages the rendering of the board and pieces, as well as user interactions.
+   - **piece.ts**: Defines the base class for different chess pieces and their movement rules.
    - **board.ts**: Contains the board setup and logic for move validation.
-   - **game.ts**: Game-related logic.
-   - **timer.ts**: Handles the timer for each turn.
+   - **game.ts**: Handles the main game logic, including rules and turn management.
+   - **timer.ts**: Manages the timer for each player's turn.
+   - **pieces/**: Folder containing individual TypeScript files for each chess piece type:
+      - **bishop.ts**: Defines the movement rules for the bishop.
+      - **king.ts**: Defines the movement rules for the king.
+      - **knight.ts**: Defines the movement rules for the knight.
+      - **pawn.ts**: Defines the movement rules for the pawn.
+      - **queen.ts**: Defines the movement rules for the queen.
+      - **rook.ts**: Defines the movement rules for the rook.
+   - **utils/**: Contains utility files:
+      - **pieceFactory.ts**: Factory for creating instances of chess pieces.
+      - **utils.ts**: Other helper functions used across the project.
 
 ### Implementing Capture of Pieces
 
@@ -92,8 +102,6 @@ To implement castling:
 
 ## Additional Features
 
-- **Draw by Mutual Agreement**: A button in the UI allows players to propose a draw. If both players agree, the game
-  ends in a draw.
 - **Insufficient Material**: The game detects situations where a checkmate is impossible due to insufficient material (
   e.g., King vs. King).
 
