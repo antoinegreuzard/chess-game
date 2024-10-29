@@ -1,6 +1,6 @@
 // src/ai.ts
 import { Board } from './board';
-import { PieceColor } from './piece';
+import { PieceColor, PieceType } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
@@ -89,14 +89,31 @@ export class AI {
   ): number {
     const boardKey = board.toString();
 
+    // Vérifie le temps limite
     if (Date.now() - this.startTime > this.maxTime) {
       return evaluateBoard(board, this.color);
     }
 
+    // Vérifie si le résultat est déjà dans la table de transposition
     if (this.transpositionTable.has(boardKey)) {
       return this.transpositionTable.get(boardKey)!;
     }
 
+    // Null Move Pruning : Effectue un coup nul pour voir si une menace est évidente
+    if (depth > 1 && !board.isKingInCheck(this.color)) {
+      const nullMoveEval = -this.minimax(
+        board,
+        depth - 2,
+        -beta,
+        -alpha,
+        !isMaximizing,
+      );
+      if (nullMoveEval >= beta) {
+        return beta; // Coupe si le coup nul montre une menace
+      }
+    }
+
+    // Condition de fin de récursion
     if (
       depth === 0 ||
       board.isCheckmate(this.color) ||
@@ -108,26 +125,36 @@ export class AI {
       return evaluation;
     }
 
-    if (
-      board.isKingInCheck(this.color) &&
-      this.getAllValidMoves(board).length === 0
-    ) {
-      return -Infinity;
-    }
-
     if (isMaximizing) {
       let maxEval = -Infinity;
       let moves = this.getAllValidMoves(board);
       moves = this.sortMoves(moves, board, depth);
 
-      for (const move of moves) {
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
         const fromPiece = board.getPiece(move.fromX, move.fromY);
         const toPiece = board.getPiece(move.toX, move.toY);
 
+        // Late Move Reduction : Réduit la profondeur pour les coups tardifs
+        const shouldReduce = i > 3 && depth > 2;
+        const newDepth = shouldReduce ? depth - 1 : depth;
+
+        // Extension : Allonge la profondeur pour les échecs et poussées de pions
+        const isCheck = board.isKingInCheck(this.color);
+        const isPawnPush =
+          fromPiece &&
+          fromPiece.type === PieceType.PAWN &&
+          (move.toY === 0 || move.toY === 7);
+        const extendedDepth = isCheck || isPawnPush ? newDepth + 1 : newDepth;
+
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-
-        const evaluation = this.minimax(board, depth - 1, alpha, beta, false);
-
+        const evaluation = this.minimax(
+          board,
+          extendedDepth - 1,
+          alpha,
+          beta,
+          false,
+        );
         board.setPiece(move.fromX, move.fromY, fromPiece);
         board.setPiece(move.toX, move.toY, toPiece);
 
@@ -147,14 +174,31 @@ export class AI {
       let moves = this.getAllValidMoves(board);
       moves = this.sortMoves(moves, board, depth);
 
-      for (const move of moves) {
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
         const fromPiece = board.getPiece(move.fromX, move.fromY);
         const toPiece = board.getPiece(move.toX, move.toY);
 
+        // Late Move Reduction : Réduit la profondeur pour les coups tardifs
+        const shouldReduce = i > 3 && depth > 2;
+        const newDepth = shouldReduce ? depth - 1 : depth;
+
+        // Extension : Allonge la profondeur pour les échecs et poussées de pions
+        const isCheck = board.isKingInCheck(this.getOpponentColor());
+        const isPawnPush =
+          fromPiece &&
+          fromPiece.type === PieceType.PAWN &&
+          (move.toY === 0 || move.toY === 7);
+        const extendedDepth = isCheck || isPawnPush ? newDepth + 1 : newDepth;
+
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-
-        const evaluation = this.minimax(board, depth - 1, alpha, beta, true);
-
+        const evaluation = this.minimax(
+          board,
+          extendedDepth - 1,
+          alpha,
+          beta,
+          true,
+        );
         board.setPiece(move.fromX, move.fromY, fromPiece);
         board.setPiece(move.toX, move.toY, toPiece);
 
