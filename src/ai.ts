@@ -2,10 +2,14 @@
 import { Board } from './board';
 import { PieceColor, PieceType, Piece } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';
-import { getEndgameMove } from './endgameTablebase'; // Ajoute un module de tablebases
+import { getEndgameMove } from './endgameTablebase';
+import { openingBook } from './openingBook';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
+  private openingMoves: {
+    [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
+  } = openingBook;
   private transpositionTable: Map<string, number>; // Table de transposition
   private readonly maxTime: number; // Temps maximum de réflexion en millisecondes
   private startTime: number; // Temps de début pour gestion du temps
@@ -32,6 +36,11 @@ export class AI {
   public makeMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const openingMove = this.getOpeningMove(board);
+    if (openingMove) {
+      return openingMove;
+    }
+
     // Vérifie si on peut utiliser une table de fin de partie
     const endgameMove = this.useEndgameTablebase(board);
     if (endgameMove) {
@@ -511,5 +520,36 @@ export class AI {
       (targetPiece && targetPiece.color !== piece.color) ||
       board.isKingInCheck(piece.color)
     );
+  }
+
+  // Méthode pour trouver le mouvement d'ouverture
+  private getOpeningMove(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const boardHash = this.getBoardHash(board);
+
+    if (this.openingMoves[boardHash]) {
+      return this.openingMoves[boardHash][0]; // Récupère le premier mouvement d'ouverture correspondant
+    }
+
+    return null; // Aucun mouvement d'ouverture trouvé
+  }
+
+  // Génération d'un identifiant de position simplifié pour le dictionnaire d'ouverture
+  private getBoardHash(board: Board): string {
+    let hash = '';
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = board.getPiece(x, y);
+        if (piece) {
+          const pieceCode =
+            piece.color === PieceColor.WHITE
+              ? piece.type
+              : piece.type.toLowerCase();
+          hash += pieceCode + x + y + ' ';
+        }
+      }
+    }
+    return hash.trim();
   }
 }
