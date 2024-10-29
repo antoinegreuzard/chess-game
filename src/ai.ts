@@ -1,6 +1,6 @@
 // src/ai.ts
 import { Board } from './board';
-import { PieceColor, PieceType } from './piece';
+import { PieceColor, PieceType, Piece } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';
 import { getEndgameMove } from './endgameTablebase'; // Ajoute un module de tablebases
 
@@ -46,7 +46,7 @@ export class AI {
     // Si MCTS n'est pas utilisé, continue avec Minimax
     let bestMove = null;
     let bestValue = -Infinity;
-    const maxDepth = 7; // Augmentation de la profondeur maximale de recherche
+    const maxDepth = 10; // Augmentation de la profondeur maximale de recherche
     this.startTime = Date.now();
 
     for (let depth = 1; depth <= maxDepth; depth++) {
@@ -57,13 +57,19 @@ export class AI {
 
       for (const move of moves) {
         const piece = board.getPiece(move.fromX, move.fromY);
+        if (!piece) continue;
         const originalPiece = board.getPiece(move.toX, move.toY);
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+
+        const isCritical =
+          board.isKingInCheck(this.color) ||
+          this.isCriticalMove(piece, move, board);
+        const adjustedDepth = isCritical ? depth + 1 : depth;
 
         // Appelle la recherche Minimax avec Alpha-Beta Pruning
         const boardValue = this.minimax(
           board,
-          depth - 1,
+          adjustedDepth - 1,
           -Infinity,
           Infinity,
           false,
@@ -486,5 +492,24 @@ export class AI {
       return getEndgameMove(board, this.color); // Utilise une table de fin de partie externe
     }
     return null;
+  }
+
+  // Fonction pour identifier les mouvements critiques
+  private isCriticalMove(
+    piece: Piece,
+    move: {
+      fromX: number;
+      fromY: number;
+      toX: number;
+      toY: number;
+    },
+    board: Board,
+  ): boolean {
+    // Considère les captures et les coups qui mettent en échec comme critiques
+    const targetPiece = board.getPiece(move.toX, move.toY);
+    return (
+      (targetPiece && targetPiece.color !== piece.color) ||
+      board.isKingInCheck(piece.color)
+    );
   }
 }
