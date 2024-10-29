@@ -41,7 +41,7 @@ export class King extends Piece {
 
         // Assure que le roi n'est pas en échec avant, pendant ou après le roque
         if (
-          !board.isKingInCheck(this.color) &&
+          !board.isKing(fromX, fromY) &&
           !board.isSquareUnderAttack(fromX + direction, fromY, this.color) &&
           !board.isSquareUnderAttack(toX, fromY, this.color)
         ) {

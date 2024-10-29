@@ -1,6 +1,6 @@
 // game.ts
 import { Board } from './board';
-import { updateCapturedPieces } from './utils';
+import { updateCapturedPieces } from './utils/utils';
 import { PieceColor } from './piece';
 
 export class Game {

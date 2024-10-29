@@ -3,7 +3,7 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
-import { showMessage, updateCapturedPieces } from './utils';
+import { showMessage, updateCapturedPieces } from './utils/utils';
 
 const game = new Game();
 const board = game.getBoard();
@@ -201,7 +201,11 @@ export function handleMove(
 if (passTurnButton) {
   passTurnButton.addEventListener('click', (event) => {
     event.preventDefault();
-    if (gameState === 'playing' && currentPlayer === PieceColor.WHITE) {
+    if (
+      gameState === 'playing' &&
+      currentPlayer === PieceColor.WHITE &&
+      !board.isKingInCheck(PieceColor.WHITE)
+    ) {
       showMessage(
         `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
       );

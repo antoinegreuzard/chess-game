@@ -34,13 +34,18 @@ export interface BoardInterface {
   ): boolean;
 
   promotePawn(x: number, y: number, pieceType: string): void;
+
+  isSquareUnderAttack(x: number, y: number, color: string): boolean;
+
+  isKing(x: number, y: number): boolean;
 }
 
 export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   abstract isValidMove(
     fromX: number,

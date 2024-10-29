@@ -6,7 +6,7 @@ import { Bishop } from './pieces/bishop';
 import { Queen } from './pieces/queen';
 import { King } from './pieces/king';
 import { Pawn } from './pieces/pawn';
-import { updateCapturedPieces } from './utils';
+import { updateCapturedPieces } from './utils/utils';
 
 type BoardSquare = Piece | null;
 
@@ -396,6 +396,11 @@ export class Board implements BoardInterface {
       }
     }
     return null;
+  }
+
+  public isKing(x: number, y: number): boolean {
+    const piece = this.getPiece(x, y);
+    return piece instanceof King;
   }
 
   public isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean {
