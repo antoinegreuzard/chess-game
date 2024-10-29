@@ -3,26 +3,20 @@ import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
 import { PieceColor, PieceType } from './piece';
-import { showMessage, updateCapturedPieces } from './utils/utils';
+import {
+  getPieceSymbol,
+  showMessage,
+  updateCapturedPieces,
+} from './utils/utils';
 
 const game = new Game();
 const board = game.getBoard();
-const moveHistoryElement = document.getElementById(
-  'moveHistory',
-) as HTMLButtonElement;
-const currentTurnElement = document.getElementById(
-  'currentTurn',
-) as HTMLButtonElement;
-const timerElement = document.getElementById('timer') as HTMLButtonElement;
-const passTurnButton = document.getElementById(
-  'passTurnButton',
-) as HTMLButtonElement;
-const gameMessageElement = document.getElementById(
-  'gameMessage',
-) as HTMLButtonElement;
-const replayButton = document.getElementById(
-  'replayButton',
-) as HTMLButtonElement;
+const moveHistoryElement = document.getElementById('moveHistory') as HTMLUListElement;
+const currentTurnElement = document.getElementById('currentTurn') as HTMLDivElement;
+const timerElement = document.getElementById('timer') as HTMLDivElement;
+const passTurnButton = document.getElementById('passTurnButton') as HTMLButtonElement;
+const gameMessageElement = document.getElementById('gameMessage') as HTMLDivElement;
+const replayButton = document.getElementById('replayButton') as HTMLButtonElement;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Ajout de l'état pour la proposition de nullité
@@ -145,7 +139,7 @@ function addMoveToHistory(
   toY: number,
   pieceType: PieceType,
 ) {
-  const moveText = `${pieceType} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
+  const moveText = `${getPieceSymbol(pieceType, PieceColor.WHITE)} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
   const listItem = document.createElement('li');
   listItem.textContent = moveText;
   moveHistoryElement.appendChild(listItem);

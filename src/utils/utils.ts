@@ -8,12 +8,12 @@ export let capturedBlack: string[] = [];
 export function showMessage(message: string) {
   const gameMessageElement = document.getElementById(
     'gameMessage',
-  ) as HTMLCanvasElement;
+  ) as HTMLDivElement;
   gameMessageElement.textContent = message;
   gameMessageElement.style.display = 'block'; // Afficher le message
 }
 
-function getPieceSymbol(piece: PieceType, color: PieceColor): string {
+export function getPieceSymbol(piece: PieceType, color: PieceColor): string {
   switch (piece) {
     case PieceType.PAWN:
       return color === PieceColor.WHITE ? '♙' : '♟';
@@ -47,10 +47,10 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
 export function updateCapturedPiecesDOM() {
   const capturedWhiteElement = document.getElementById(
     'capturedWhite',
-  ) as HTMLCanvasElement;
+  ) as HTMLDivElement;
   const capturedBlackElement = document.getElementById(
     'capturedBlack',
-  ) as HTMLCanvasElement;
+  ) as HTMLDivElement;
 
   if (capturedWhiteElement) {
     capturedWhiteElement.textContent = capturedWhite.join(' ');
