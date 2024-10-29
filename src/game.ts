@@ -1,7 +1,7 @@
 // game.ts
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
-import { PieceColor } from './piece';
+import { PieceColor, PieceType } from './piece';
 
 export class Game {
   private readonly board: Board;
@@ -25,10 +25,10 @@ export class Game {
         );
 
         if (wasMoved && captureData) {
-          captureData.capturedWhite.forEach((piece) =>
+          captureData.capturedWhite.forEach((piece: PieceType) =>
             updateCapturedPieces(piece, PieceColor.WHITE),
           );
-          captureData.capturedBlack.forEach((piece) =>
+          captureData.capturedBlack.forEach((piece: PieceType) =>
             updateCapturedPieces(piece, PieceColor.BLACK),
           );
         }

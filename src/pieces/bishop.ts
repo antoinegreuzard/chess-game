@@ -1,8 +1,7 @@
 // src/pieces/bishop.ts
-import { PieceColor, PieceType } from '../piece';
-import { BoardInterface } from '../piece';
+import { Piece, PieceColor, PieceType, BoardInterface } from '../piece';
 
-export class Bishop extends (await import('../piece')).Piece {
+export class Bishop extends Piece {
   constructor(color: PieceColor) {
     super(color, PieceType.BISHOP);
   }

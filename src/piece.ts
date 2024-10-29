@@ -38,14 +38,15 @@ export interface BoardInterface {
   isSquareUnderAttack(x: number, y: number, color: string): boolean;
 
   isKing(x: number, y: number): boolean;
+
+  isAdjacentToAnotherKing(x: number, y: number, color: PieceColor): boolean;
 }
 
 export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {
-  }
+  ) {}
 
   abstract isValidMove(
     fromX: number,
@@ -75,7 +76,6 @@ export abstract class Piece {
     return true;
   }
 
-  // src/piece.ts
   public canCapture(toX: number, toY: number, board: BoardInterface): boolean {
     const targetPiece = board.getPiece(toX, toY);
     return !targetPiece || targetPiece.color !== this.color;

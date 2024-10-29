@@ -7,12 +7,22 @@ import { showMessage, updateCapturedPieces } from './utils/utils';
 
 const game = new Game();
 const board = game.getBoard();
-const moveHistoryElement = document.getElementById('moveHistory')!;
-const currentTurnElement = document.getElementById('currentTurn')!;
-const timerElement = document.getElementById('timer')!;
-const passTurnButton = document.getElementById('passTurnButton')!;
-const gameMessageElement = document.getElementById('gameMessage')!;
-const replayButton = document.getElementById('replayButton')!;
+const moveHistoryElement = document.getElementById(
+  'moveHistory',
+) as HTMLButtonElement;
+const currentTurnElement = document.getElementById(
+  'currentTurn',
+) as HTMLButtonElement;
+const timerElement = document.getElementById('timer') as HTMLButtonElement;
+const passTurnButton = document.getElementById(
+  'passTurnButton',
+) as HTMLButtonElement;
+const gameMessageElement = document.getElementById(
+  'gameMessage',
+) as HTMLButtonElement;
+const replayButton = document.getElementById(
+  'replayButton',
+) as HTMLButtonElement;
 
 let currentPlayer: PieceColor = PieceColor.WHITE; // Les blancs commencent toujours
 let gameState: 'playing' | 'waiting' = 'playing'; // Ajout de l'état pour la proposition de nullité
@@ -35,12 +45,11 @@ let blackTimer = new Timer(60, (timeLeft) =>
 );
 
 // Fonction pour mettre à jour l'affichage du timer
-function updateTimerDisplay(timeLeft: number, color: PieceColor) {
+export function updateTimerDisplay(timeLeft: number, color: PieceColor) {
   if (color === currentPlayer) {
     timerElement.textContent = `Temps restant: ${timeLeft}s`;
     if (timeLeft <= 0 && !isGameEnded) {
-      endGame();
-      showMessage(
+      endGame(
         `${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par temps écoulé !`,
       );
     }
@@ -91,30 +100,25 @@ function updateTurn() {
     board.isKingInCheck(PieceColor.WHITE)
   ) {
     if (board.isCheckmate(PieceColor.BLACK)) {
-      endGame();
-      showMessage('Échec et Mat ! Blanc gagne !');
+      endGame('Échec et Mat ! Blanc gagne !');
     }
 
     if (board.isCheckmate(PieceColor.WHITE)) {
-      endGame();
-      showMessage('Échec et Mat ! Noir gagne !');
+      endGame('Échec et Mat ! Noir gagne !');
     }
   }
 
   // Vérifie les conditions de nullité
   if (board.isStalemate(currentPlayer)) {
-    endGame();
-    showMessage('Pat ! La partie est nulle.');
+    endGame('Pat ! La partie est nulle.');
   }
 
   if (board.isInsufficientMaterial()) {
-    endGame();
-    showMessage('Matériel insuffisant pour continuer, partie nulle !');
+    endGame('Matériel insuffisant pour continuer, partie nulle !');
   }
 
   if (board.isFiftyMoveRule()) {
-    endGame();
-    showMessage('Règle des 50 coups, partie nulle !');
+    endGame('Règle des 50 coups, partie nulle !');
   }
 
   // Seul "playing" permet de jouer
@@ -220,3 +224,4 @@ if (replayButton) {
     location.reload();
   });
 }
+export { Game };
