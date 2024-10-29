@@ -101,29 +101,32 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
       if (piece) {
         let pieceScore = pieceValues[piece.type];
 
+        // Appliquer les tables de position selon le type de pièce
         const pieceTable = pieceSquareTables[piece.type];
         if (pieceTable) {
           pieceScore += pieceTable[y][x];
         }
 
+        // Contrôle du centre du plateau
         const positionKey = `${x},${y}`;
         if (centerControlBonus[positionKey]) {
           pieceScore += centerControlBonus[positionKey];
         }
 
+        // Structure des pions pour vérifier les pions passés
         if (piece.type === PieceType.PAWN) {
           pieceScore += evaluatePawnStructure(board, x, y, piece.color);
+          if (isPassedPawn(board, x, y, piece.color)) {
+            pieceScore += 1.0; // Bonus pour les pions passés
+          }
         }
 
+        // Vérifier si le roi est exposé
         if (
-          piece.type === PieceType.BISHOP &&
-          hasBishopPair(board, piece.color)
+          piece.type === PieceType.KING &&
+          isKingExposed(board, x, y, piece.color)
         ) {
-          pieceScore += 0.5;
-        }
-
-        if (isKingExposed(board, x, y, piece.color)) {
-          pieceScore -= 0.5;
+          pieceScore -= 0.5; // Réduction pour les rois exposés
         }
 
         score += piece.color === color ? pieceScore : -pieceScore;
@@ -191,13 +194,6 @@ function checkIsolatedPawns(
   return 0;
 }
 
-function hasBishopPair(board: Board, color: PieceColor): boolean {
-  const bishops = getPieces(board, color).filter(
-    (piece) => piece.type === PieceType.BISHOP,
-  );
-  return bishops.length === 2;
-}
-
 function isKingExposed(
   board: Board,
   x: number,
@@ -211,41 +207,63 @@ function isKingExposed(
       { dx: 1, dy: 0 },
       { dx: 0, dy: -1 },
       { dx: 0, dy: 1 },
+      { dx: -1, dy: -1 },
+      { dx: 1, dy: 1 },
+      { dx: -1, dy: 1 },
+      { dx: 1, dy: -1 },
     ];
 
     return surroundingSquares.some(({ dx, dy }) => {
       const newX = x + dx;
       const newY = y + dy;
 
-      // Utilise `isWithinBounds` pour vérifier que les coordonnées sont valides avant d'accéder à la pièce
       if (board.isWithinBounds(newX, newY)) {
         const adjPiece = board.getPiece(newX, newY);
         return (
-          !adjPiece ||
-          adjPiece.color !== color ||
-          adjPiece.type === PieceType.KING
+          !adjPiece || // Case vide
+          adjPiece.color !== color || // Pièce ennemie
+          adjPiece.type !== PieceType.PAWN // Pas de pion pour protéger
         );
       }
-
-      // Si la case est hors des limites, considère que le roi est exposé
-      return true;
+      return true; // Case hors limites, expose le roi
     });
   }
   return false;
 }
 
-// Nouvelle méthode pour obtenir toutes les pièces d'une certaine couleur sur le plateau
-export function getPieces(board: Board, color: PieceColor): Piece[] {
-  const pieces: Piece[] = [];
+function isPassedPawn(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): boolean {
+  const direction = color === PieceColor.WHITE ? -1 : 1;
 
-  for (let y = 0; y < 8; y++) {
-    for (let x = 0; x < 8; x++) {
-      const piece = board.getPiece(x, y);
-      if (piece && piece.color === color) {
-        pieces.push(piece);
-      }
+  for (let i = y + direction; i >= 0 && i < 8; i += direction) {
+    const pieceInFront = board.getPiece(x, i);
+    if (
+      pieceInFront &&
+      pieceInFront.type === PieceType.PAWN &&
+      pieceInFront.color !== color
+    ) {
+      return false;
     }
   }
 
-  return pieces;
+  // Vérifier s'il y a des pions alliés sur les colonnes adjacentes
+  const adjacentColumns = [x - 1, x + 1];
+  return adjacentColumns.every((col) => {
+    if (col < 0 || col >= 8) return true;
+    for (let i = 0; i < 8; i++) {
+      const adjacentPiece = board.getPiece(col, i);
+      if (
+        adjacentPiece &&
+        adjacentPiece.type === PieceType.PAWN &&
+        adjacentPiece.color === color
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
 }
