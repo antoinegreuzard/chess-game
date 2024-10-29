@@ -5,12 +5,15 @@ export default defineConfig({
   base: '/chess-game/',
   build: {
     outDir: 'dist',
-    minify: 'esbuild',
+    minify: false,
     target: 'esnext',
     sourcemap: true,
     rollupOptions: {
       output: {
-        format: 'es',
+        inlineDynamicImports: true, // Force l’inclusion de tous les imports dynamiques dans un seul fichier
+        entryFileNames: 'bundle.js', // Spécifie le nom du fichier final
+        chunkFileNames: undefined, // Empêche la création de chunks additionnels
+        assetFileNames: '[name].[ext]',
       },
     },
   },
