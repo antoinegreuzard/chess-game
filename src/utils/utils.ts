@@ -6,7 +6,9 @@ export let capturedWhite: string[] = [];
 export let capturedBlack: string[] = [];
 
 export function showMessage(message: string) {
-  const gameMessageElement = document.getElementById('gameMessage')!;
+  const gameMessageElement = document.getElementById(
+    'gameMessage',
+  ) as HTMLCanvasElement;
   gameMessageElement.textContent = message;
   gameMessageElement.style.display = 'block'; // Afficher le message
 }
@@ -43,8 +45,12 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
 }
 
 export function updateCapturedPiecesDOM() {
-  const capturedWhiteElement = document.getElementById('capturedWhite');
-  const capturedBlackElement = document.getElementById('capturedBlack');
+  const capturedWhiteElement = document.getElementById(
+    'capturedWhite',
+  ) as HTMLCanvasElement;
+  const capturedBlackElement = document.getElementById(
+    'capturedBlack',
+  ) as HTMLCanvasElement;
 
   if (capturedWhiteElement) {
     capturedWhiteElement.textContent = capturedWhite.join(' ');
