@@ -3,8 +3,8 @@ import { Board } from './board';
 import { Piece, PieceColor } from './piece';
 
 export class CanvasRenderer {
-  private canvas: HTMLCanvasElement;
-  private context: CanvasRenderingContext2D;
+  private readonly canvas: HTMLCanvasElement;
+  private readonly context: CanvasRenderingContext2D;
   private readonly tileSize: number;
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
@@ -13,9 +13,9 @@ export class CanvasRenderer {
   private kingInCheckPosition: { x: number; y: number } | null = null;
 
   constructor(
-    private board: Board,
+    private readonly board: Board,
     canvasId: string,
-    private moveHandler: (
+    private readonly moveHandler: (
       fromX: number,
       fromY: number,
       toX: number,
