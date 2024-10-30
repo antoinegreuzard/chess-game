@@ -105,11 +105,13 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
         // Appliquer les tables de position selon le type de pièce
         const pieceTable = pieceSquareTables[piece.type];
         if (pieceTable) {
-          pieceScore += pieceTable[y][x];
+          const adjustedY = color === PieceColor.WHITE ? y : 7 - y;
+          pieceScore += pieceTable[adjustedY][x];
         }
 
         // Contrôle du centre du plateau
-        const positionKey = `${x},${y}`;
+        const adjustedY = color === PieceColor.WHITE ? y : 7 - y;
+        const positionKey = `${x},${adjustedY}`;
         if (centerControlBonus[positionKey]) {
           pieceScore += centerControlBonus[positionKey];
         }
@@ -135,7 +137,7 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
     }
   }
 
-  return score;
+  return parseFloat(score.toFixed(2));
 }
 
 // Évaluer la structure des pions

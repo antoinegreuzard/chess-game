@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "esnext",
+    "module": "esnext",
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "./"
+    "rootDir": "./",
+    "lib": [
+      "esnext",
+      "dom"
+    ],
   },
   "include": [
     "src/**/*",

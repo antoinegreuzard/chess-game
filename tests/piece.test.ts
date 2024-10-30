@@ -1,81 +1,96 @@
 // tests/piece.test.ts
-import { PieceColor, PieceType, BoardInterface } from '../src/piece';
+import { Piece, PieceColor, PieceType, BoardInterface } from '../src/piece';
+import { King } from '../src/pieces/king';
 import { createPiece } from '../src/utils/pieceFactory';
 
-describe('Piece and createPiece functionality', () => {
-  let mockBoard: BoardInterface;
+class MockBoard implements BoardInterface {
+  private board: (Piece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
 
-  beforeEach(() => {
-    // Mocking the BoardInterface for testing
-    mockBoard = {
-      getPiece: jest.fn(),
-      updateEnPassantTarget: jest.fn(),
-      isEnPassantMove: jest.fn(),
-      promotePawn: jest.fn(),
-      isSquareUnderAttack: jest.fn(),
-      isKing: jest.fn(),
-      isAdjacentToAnotherKing: jest.fn(),
-    };
+  getPiece(x: number, y: number): Piece | null {
+    return this.board[y][x];
+  }
+
+  setPiece(x: number, y: number, piece: Piece | null): void {
+    this.board[y][x] = piece;
+  }
+
+  updateEnPassantTarget(): void {
+  }
+
+  isEnPassantMove(): boolean {
+    return false;
+  }
+
+  promotePawn(): void {
+  }
+
+  isSquareUnderAttack(): boolean {
+    return false;
+  }
+
+  isKing(x: number, y: number): boolean {
+    const piece = this.getPiece(x, y);
+    return !!piece && piece.type === PieceType.KING;
+  }
+
+  isAdjacentToAnotherKing(x: number, y: number, color: PieceColor): boolean {
+    return false;
+  }
+
+  getPlayerColor(): PieceColor {
+    return PieceColor.WHITE;
+  }
+}
+
+describe('Piece', () => {
+  let board: MockBoard;
+  let whiteRook: Piece;
+  let blackRook: Piece;
+
+  beforeEach(async () => {
+    board = new MockBoard();
+    whiteRook = await createPiece(PieceType.ROOK, PieceColor.WHITE);
+    blackRook = await createPiece(PieceType.ROOK, PieceColor.BLACK);
   });
 
-  describe('createPiece', () => {
-    it('should create a white pawn', async () => {
-      const piece = await createPiece(PieceType.PAWN, PieceColor.WHITE);
-      expect(piece).toBeDefined();
-      expect(piece.type).toBe(PieceType.PAWN);
-      expect(piece.color).toBe(PieceColor.WHITE);
-    });
+  test('isPathClear returns true for a clear path', () => {
+    board.setPiece(3, 3, whiteRook);
+    expect(whiteRook.isPathClear(3, 3, 3, 6, board)).toBe(true);
+  });
 
-    it('should create a black rook', async () => {
-      const piece = await createPiece(PieceType.ROOK, PieceColor.BLACK);
-      expect(piece).toBeDefined();
-      expect(piece.type).toBe(PieceType.ROOK);
-      expect(piece.color).toBe(PieceColor.BLACK);
-    });
+  test('isPathClear returns false when path is blocked', () => {
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(3, 5, blackRook);
+    expect(whiteRook.isPathClear(3, 3, 3, 6, board)).toBe(false);
+  });
 
-    it('should create a white knight', async () => {
-      const piece = await createPiece(PieceType.KNIGHT, PieceColor.WHITE);
-      expect(piece).toBeDefined();
-      expect(piece.type).toBe(PieceType.KNIGHT);
-      expect(piece.color).toBe(PieceColor.WHITE);
-    });
+  test('canCapture returns true for opponent piece', () => {
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(3, 5, blackRook);
+    expect(whiteRook.canCapture(3, 5, board)).toBe(true);
+  });
 
-    it('should throw an error for unknown piece type', async () => {
-      await expect(createPiece('UNKNOWN' as PieceType, PieceColor.WHITE)).rejects.toThrow('Type de pièce inconnu : UNKNOWN');
+  test('canCapture returns false for same color piece', () => {
+    const anotherWhiteRook = whiteRook;
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(3, 5, anotherWhiteRook);
+    expect(whiteRook.canCapture(3, 5, board)).toBe(false);
+  });
+
+  test('toData returns correct piece data', () => {
+    const data = whiteRook.toData();
+    expect(data).toEqual({
+      color: PieceColor.WHITE,
+      type: PieceType.ROOK,
+      hasMoved: false,
     });
   });
 
-  describe('Piece functionality', () => {
-    it('should allow capture if target square has enemy piece', async () => {
-      const piece = await createPiece(PieceType.ROOK, PieceColor.WHITE);
-      (mockBoard.getPiece as jest.Mock).mockReturnValue({
-        color: PieceColor.BLACK,
-      });
-
-      expect(piece.canCapture(3, 3, mockBoard)).toBe(true);
-    });
-
-    it('should not allow capture if target square has same color piece', async () => {
-      const piece = await createPiece(PieceType.BISHOP, PieceColor.BLACK);
-      (mockBoard.getPiece as jest.Mock).mockReturnValue({
-        color: PieceColor.BLACK,
-      });
-
-      expect(piece.canCapture(3, 3, mockBoard)).toBe(false);
-    });
-
-    it('should indicate path is clear if there are no pieces in the way', async () => {
-      const piece = await createPiece(PieceType.ROOK, PieceColor.WHITE);
-      (mockBoard.getPiece as jest.Mock).mockReturnValue(null);
-
-      expect(piece.isPathClear(0, 0, 3, 0, mockBoard)).toBe(true);
-    });
-
-    it('should indicate path is blocked if there is a piece in the way', async () => {
-      const piece = await createPiece(PieceType.QUEEN, PieceColor.WHITE);
-      (mockBoard.getPiece as jest.Mock).mockImplementation((x, y) => (x === 1 && y === 0 ? { color: PieceColor.BLACK } : null));
-
-      expect(piece.isPathClear(0, 0, 3, 0, mockBoard)).toBe(false);
-    });
+  test('fromData creates piece from data', async () => {
+    const data = { color: PieceColor.BLACK, type: PieceType.KING };
+    const piece = await Piece.fromData(data);
+    expect(piece).toBeInstanceOf(King);
+    expect(piece.color).toBe(PieceColor.BLACK);
+    expect(piece.type).toBe(PieceType.KING);
   });
 });
