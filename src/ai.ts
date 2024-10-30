@@ -312,7 +312,9 @@ export class AI {
   }
 
   private getOpponentColor(): PieceColor {
-    return this.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+    return this.color === PieceColor.WHITE
+      ? PieceColor.BLACK
+      : PieceColor.WHITE;
   }
 
   private getAllValidMoves(

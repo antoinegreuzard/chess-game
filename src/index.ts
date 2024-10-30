@@ -13,8 +13,12 @@ async function initializeGame(playerColor: PieceColor) {
   const game = new Game(playerColor);
   const board = await game.getBoard();
 
-  const whiteMovesElement = document.getElementById('whiteMoves') as HTMLUListElement;
-  const blackMovesElement = document.getElementById('blackMoves') as HTMLUListElement;
+  const whiteMovesElement = document.getElementById(
+    'whiteMoves',
+  ) as HTMLUListElement;
+  const blackMovesElement = document.getElementById(
+    'blackMoves',
+  ) as HTMLUListElement;
   const currentTurnElement = document.getElementById(
     'currentTurn',
   ) as HTMLDivElement;
@@ -116,7 +120,9 @@ async function initializeGame(playerColor: PieceColor) {
     // Vérification de l'état de la partie avant de passer le tour
     if (board.isKingInCheck(currentPlayer)) {
       if (board.isCheckmate(currentPlayer)) {
-        endGame(`${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par échec et mat !`);
+        endGame(
+          `${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par échec et mat !`,
+        );
         return;
       }
     } else if (board.isStalemate(currentPlayer)) {
@@ -236,7 +242,9 @@ async function initializeGame(playerColor: PieceColor) {
         currentPlayer === playerColor &&
         !board.isKingInCheck(playerColor)
       ) {
-        showMessage(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
+        showMessage(
+          `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
+        );
         await updateTurn();
       }
     });
@@ -250,4 +258,5 @@ async function initializeGame(playerColor: PieceColor) {
 }
 
 // Export pour permettre à index.html d'appeler initializeGame avec la couleur choisie
-(window as any).startGame = (playerColor: PieceColor) => initializeGame(playerColor);
+(window as any).startGame = (playerColor: PieceColor) =>
+  initializeGame(playerColor);

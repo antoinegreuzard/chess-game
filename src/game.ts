@@ -7,14 +7,20 @@ export class Game {
   private readonly board: Board;
   private aiWorker: Worker;
   private readonly aiColor: PieceColor;
-  private lastAIMove: { fromX: number; fromY: number; toX: number; toY: number } | null = null;
+  private lastAIMove: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  } | null = null;
 
   constructor(playerColor: PieceColor) {
     this.board = new Board();
     this.aiWorker = new Worker(new URL('./ai.worker.ts', import.meta.url), {
       type: 'module',
     });
-    this.aiColor = playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+    this.aiColor =
+      playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   }
 
   public async getBoard(): Promise<Board> {
