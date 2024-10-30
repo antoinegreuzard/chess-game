@@ -1,5 +1,4 @@
-import { PieceColor } from '../src/types';
-import { Piece } from '../src/piece';
+import { PieceColor, Piece } from '../src/piece';
 import { Bishop } from '../src/pieces/bishop';
 import { King } from '../src/pieces/king';
 import { Knight } from '../src/pieces/knight';

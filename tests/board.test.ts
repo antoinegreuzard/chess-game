@@ -1,5 +1,5 @@
 import { Board } from '../src/board';
-import { PieceType, PieceColor } from '../src/types';
+import { PieceType, PieceColor } from '../src/piece';
 import { King } from '../src/pieces/king';
 import { Pawn } from '../src/pieces/pawn';
 import { Rook } from '../src/pieces/rook';
@@ -18,13 +18,13 @@ describe('Board', () => {
 
   beforeEach(async () => {
     board = new Board();
-    await board.initializeBoard();
+    await board.init();
     clearBoard(); // Vider le plateau avant chaque test
   });
 
   it('should initialize the board with pieces in the correct positions', async () => {
     board = new Board(); // Réinitialiser le board pour tester l'initialisation
-    await board.initializeBoard();
+    await board.init();
     expect(board.getPiece(0, 0)).toBeInstanceOf(Rook);
     expect(board.getPiece(4, 0)).toBeInstanceOf(King);
     expect(board.getPiece(0, 1)).toBeInstanceOf(Pawn);

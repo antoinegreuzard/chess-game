@@ -2,10 +2,11 @@
 import { Board } from '../src/board';
 import { AI } from '../src/ai';
 import { Pawn } from '../src/pieces/pawn';
-import { PieceColor } from '../src/types';
+import { PieceColor } from '../src/piece';
 import { King } from '../src/pieces/king';
 import { Rook } from '../src/pieces/rook';
 import { Queen } from '../src/pieces/queen';
+import { Knight } from '../src/pieces/knight';
 
 describe('AI', () => {
   let board: Board;
@@ -21,7 +22,7 @@ describe('AI', () => {
 
   beforeEach(async () => {
     board = new Board();
-    await board.initializeBoard();
+    await board.init();
     ai = new AI(PieceColor.BLACK);
     clearBoard();
   });

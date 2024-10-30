@@ -1,6 +1,5 @@
 // src/pieces/knight.ts
-import { Piece } from '../piece';
-import { PieceColor, PieceType, BoardInterface } from '../types';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class Knight extends Piece {
   constructor(color: PieceColor) {

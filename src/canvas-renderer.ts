@@ -1,7 +1,6 @@
 // src/canvas-renderer.ts
 import { Board } from './board';
-import { PieceColor } from './types';
-import { Piece } from './piece';
+import { Piece, PieceColor } from './piece';
 
 export class CanvasRenderer {
   private canvas: HTMLCanvasElement;
@@ -34,7 +33,6 @@ export class CanvasRenderer {
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    this.initialize();
   }
 
   // Animation pour déplacer une pièce
@@ -267,15 +265,5 @@ export class CanvasRenderer {
     if (moveSuccessful) {
       this.drawBoard();
     }
-  }
-
-  private async initialize() {
-    await this.board.populateBoard(); // Assure l'initialisation du plateau
-    this.drawBoard(); // Dessine le plateau une fois prêt
-
-    // Ajouter des écouteurs pour gérer les événements de glisser-déposer
-    this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 }

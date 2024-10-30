@@ -1,5 +1,5 @@
 // utils.test.ts
-import { PieceColor, PieceType } from '../src/types';
+import { PieceColor, PieceType } from '../src/piece';
 import {
   showMessage,
   updateCapturedPieces,

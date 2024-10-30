@@ -1,7 +1,7 @@
 // ai.worker.ts
 import { Board } from './board';
 import { AI } from './ai';
-import { PieceColor, PieceType } from './types';
+import { PieceColor, PieceType } from './piece';
 
 const ai = new AI(PieceColor.BLACK);
 

@@ -1,6 +1,6 @@
 // src/endgameTablebase.ts
 import { Board } from './board';
-import { PieceColor, PieceType } from './types';
+import { PieceColor, PieceType } from './piece';
 
 type Move = { fromX: number; fromY: number; toX: number; toY: number };
 

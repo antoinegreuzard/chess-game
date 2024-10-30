@@ -1,8 +1,7 @@
 // src/pieces/rook.ts
 
-import { Piece } from '../piece';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 import { createPiece } from '../utils/pieceFactory';
-import { PieceColor, PieceType, BoardInterface } from '../types';
 
 export class Rook extends Piece {
   public readonly type: PieceType = PieceType.ROOK;

@@ -1,5 +1,5 @@
 // tests/piece.test.ts
-import { PieceColor, PieceType, BoardInterface } from '../src/types';
+import { PieceColor, PieceType, BoardInterface } from '../src/piece';
 import { createPiece } from '../src/utils/pieceFactory';
 
 describe('Piece and createPiece functionality', () => {
@@ -38,6 +38,10 @@ describe('Piece and createPiece functionality', () => {
       expect(piece).toBeDefined();
       expect(piece.type).toBe(PieceType.KNIGHT);
       expect(piece.color).toBe(PieceColor.WHITE);
+    });
+
+    it('should throw an error for unknown piece type', async () => {
+      await expect(createPiece('UNKNOWN' as PieceType, PieceColor.WHITE)).rejects.toThrow('Type de pièce inconnu : UNKNOWN');
     });
   });
 

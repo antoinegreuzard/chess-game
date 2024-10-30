@@ -1,4 +1,4 @@
-import { PieceColor, PieceType } from '../src/types';
+import { PieceColor, PieceType } from '../src/piece';
 import { createPiece } from '../src/utils/pieceFactory';
 
 describe('createPiece', () => {
@@ -42,5 +42,11 @@ describe('createPiece', () => {
     expect(piece).toBeDefined();
     expect(piece.type).toBe(PieceType.KING);
     expect(piece.color).toBe(PieceColor.BLACK);
+  });
+
+  it('should throw an error for an unknown piece type', async () => {
+    await expect(createPiece('UNKNOWN' as PieceType, PieceColor.WHITE)).rejects.toThrow(
+      'Type de pièce inconnu : UNKNOWN',
+    );
   });
 });

@@ -1,5 +1,4 @@
-import { Piece } from '../piece';
-import { PieceColor, PieceType, BoardInterface } from '../types';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class King extends Piece {
   public hasMoved: boolean = false;

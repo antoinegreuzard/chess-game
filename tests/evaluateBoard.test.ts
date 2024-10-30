@@ -1,6 +1,6 @@
 // evaluateBoard.test.ts
 import { Board } from '../src/board';
-import { PieceColor } from '../src/types';
+import { PieceColor, PieceType } from '../src/piece';
 import { Pawn } from '../src/pieces/pawn';
 import { Knight } from '../src/pieces/knight';
 import { Bishop } from '../src/pieces/bishop';
@@ -14,7 +14,7 @@ describe('evaluateBoard', () => {
 
   beforeEach(async () => {
     board = new Board();
-    await board.initializeBoard();
+    await board.init();
     clearBoard();
   });
 
