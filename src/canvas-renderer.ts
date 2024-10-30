@@ -1,4 +1,3 @@
-// src/canvas-renderer.ts
 import { Board } from './board';
 import { Piece, PieceColor } from './piece';
 
@@ -6,6 +5,7 @@ export class CanvasRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
   private readonly tileSize: number;
+  private readonly flipBoard: boolean;
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
   private startY: number | null = null;
@@ -20,19 +20,25 @@ export class CanvasRenderer {
       fromY: number,
       toX: number,
       toY: number,
-    ) => boolean, // Utilisation d'un retour booléen pour vérifier si le mouvement est valide
+    ) => boolean,
+    flipBoard: boolean = false, // Argument pour inverser le plateau si le joueur est Noir
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.context = this.canvas.getContext('2d')!;
     this.tileSize = this.canvas.width / 8;
+    this.flipBoard = flipBoard;
 
-    // Définir le curseur par défaut
-    this.canvas.style.cursor = 'default';
-
-    // Ajouter des écouteurs pour gérer les événements de glisser-déposer
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+  }
+
+  // Conversion des coordonnées selon l'orientation
+  private getCoordinates(x: number, y: number): { x: number; y: number } {
+    if (this.flipBoard) {
+      return { x: 7 - x, y: 7 - y };
+    }
+    return { x, y };
   }
 
   // Animation pour déplacer une pièce
@@ -46,33 +52,29 @@ export class CanvasRenderer {
     const frames = 10;
     let currentFrame = 0;
 
-    const startX = fromX * this.tileSize;
-    const startY = fromY * this.tileSize;
-    const deltaX = ((toX - fromX) * this.tileSize) / frames;
-    const deltaY = ((toY - fromY) * this.tileSize) / frames;
+    const { x: startX, y: startY } = this.getCoordinates(fromX, fromY);
+    const { x: endX, y: endY } = this.getCoordinates(toX, toY);
+    const deltaX = ((endX - startX) * this.tileSize) / frames;
+    const deltaY = ((endY - startY) * this.tileSize) / frames;
 
     const animate = () => {
       if (currentFrame <= frames) {
-        // Redessine l'échiquier pour effacer l'ancienne position de la pièce
         this.drawBoard();
-
         this.context.fillStyle =
           piece.color === PieceColor.WHITE ? 'white' : 'black';
         this.context.font = '48px Arial';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
 
-        // Dessine la pièce en mouvement
         this.context.fillText(
           this.getPieceText(piece),
-          startX + deltaX * currentFrame + this.tileSize / 2,
-          startY + deltaY * currentFrame + this.tileSize / 2,
+          startX * this.tileSize + deltaX * currentFrame + this.tileSize / 2,
+          startY * this.tileSize + deltaY * currentFrame + this.tileSize / 2,
         );
 
         currentFrame++;
         requestAnimationFrame(animate);
       } else {
-        // Redessiner l'échiquier à la fin de l'animation pour afficher la pièce à la position finale
         this.drawBoard();
       }
     };
@@ -82,11 +84,12 @@ export class CanvasRenderer {
 
   // Surligne les mouvements valides pour une pièce sélectionnée
   highlightValidMoves(moves: { x: number; y: number }[]): void {
-    this.context.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Couleur de surlignage (vert translucide)
+    this.context.fillStyle = 'rgba(0, 255, 0, 0.5)';
     moves.forEach((move) => {
+      const { x, y } = this.getCoordinates(move.x, move.y);
       this.context.fillRect(
-        move.x * this.tileSize,
-        move.y * this.tileSize,
+        x * this.tileSize,
+        y * this.tileSize,
         this.tileSize,
         this.tileSize,
       );
@@ -95,13 +98,10 @@ export class CanvasRenderer {
 
   // Dessiner l'échiquier et les pièces
   public drawBoard(): void {
-    // Obtenir la position du roi en échec si elle existe
     const kingInCheck = this.board.getKingInCheck();
     this.kingInCheckPosition = kingInCheck
-      ? { x: kingInCheck.x, y: kingInCheck.y }
+      ? this.getCoordinates(kingInCheck.x, kingInCheck.y)
       : null;
-
-    // Dessiner le plateau
     this.drawTiles();
     this.drawPieces();
   }
@@ -110,22 +110,22 @@ export class CanvasRenderer {
   private drawTiles(): void {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
+        const { x: newX, y: newY } = this.getCoordinates(x, y);
         const isDarkTile = (x + y) % 2 === 1;
         let tileColor = isDarkTile ? '#769656' : '#eeeed2';
 
-        // Si la case contient le roi en échec, change la couleur
         if (
           this.kingInCheckPosition &&
           this.kingInCheckPosition.x === x &&
           this.kingInCheckPosition.y === y
         ) {
-          tileColor = '#ff6347'; // Par exemple, une couleur rouge pour indiquer l'échec
+          tileColor = '#ff6347';
         }
 
         this.context.fillStyle = tileColor;
         this.context.fillRect(
-          x * this.tileSize,
-          y * this.tileSize,
+          newX * this.tileSize,
+          newY * this.tileSize,
           this.tileSize,
           this.tileSize,
         );
@@ -139,7 +139,8 @@ export class CanvasRenderer {
       for (let x = 0; x < 8; x++) {
         const piece = this.board.getPiece(x, y);
         if (piece) {
-          this.drawPiece(piece, x, y);
+          const { x: newX, y: newY } = this.getCoordinates(x, y);
+          this.drawPiece(piece, newX, newY);
         }
       }
     }
@@ -184,20 +185,18 @@ export class CanvasRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
+    const { x: adjustedX, y: adjustedY } = this.getCoordinates(x, y);
 
-    const piece = this.board.getPiece(x, y);
+    const piece = this.board.getPiece(adjustedX, adjustedY);
     if (piece) {
       this.draggingPiece = piece;
-      this.startX = x;
-      this.startY = y;
-      this.canvas.style.cursor = 'grabbing'; // Change le curseur pendant le drag
+      this.startX = adjustedX;
+      this.startY = adjustedY;
+      this.canvas.style.cursor = 'grabbing';
 
-      // Obtenez les mouvements légaux pour la pièce sélectionnée
-      this.highlightedMoves = this.board.getValidMoves(x, y);
-
-      // Redessinez le plateau avec les cases surlignées
+      this.highlightedMoves = this.board.getValidMoves(adjustedX, adjustedY);
       this.drawBoard();
-      this.highlightValidMoves(this.highlightedMoves); // Surligne les mouvements valides
+      this.highlightValidMoves(this.highlightedMoves);
     }
   }
 
@@ -207,27 +206,19 @@ export class CanvasRenderer {
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
-    // Changer le curseur lorsque la souris survole une pièce
     let piece = null;
     if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
-    if (piece && !this.draggingPiece) {
-      this.canvas.style.cursor = 'pointer';
-    } else if (!this.draggingPiece) {
-      this.canvas.style.cursor = 'default';
-    }
+    this.canvas.style.cursor =
+      piece && !this.draggingPiece ? 'pointer' : 'default';
 
     if (!this.draggingPiece) return;
 
-    // Dessiner l'échiquier et les pièces
     this.drawBoard();
-
-    // Assurez-vous que les mouvements valides restent visibles pendant le glissement
     this.highlightValidMoves(this.highlightedMoves);
 
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
-    // Dessiner la pièce en mouvement
     this.context.fillStyle =
       this.draggingPiece.color === 'white' ? 'white' : 'black';
     this.context.font = '48px Arial';
@@ -245,23 +236,22 @@ export class CanvasRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
+    const { x: adjustedX, y: adjustedY } = this.getCoordinates(x, y);
 
-    // Utilise la fonction de rappel `moveHandler` pour déplacer la pièce
-    const moveSuccessful = this.moveHandler(this.startX, this.startY, x, y);
+    const moveSuccessful = this.moveHandler(
+      this.startX,
+      this.startY,
+      adjustedX,
+      adjustedY,
+    );
 
-    // Réinitialise l'état de glissement
     this.draggingPiece = null;
     this.startX = null;
     this.startY = null;
-    this.canvas.style.cursor = 'default'; // Rétablir le curseur par défaut
-
-    // Efface les coups surlignés
+    this.canvas.style.cursor = 'default';
     this.highlightedMoves = [];
-
-    // Redessine le plateau après la fin du glissement
     this.drawBoard();
 
-    // Si le mouvement est réussi, met à jour le tour
     if (moveSuccessful) {
       this.drawBoard();
     }
