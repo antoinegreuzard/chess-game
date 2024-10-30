@@ -76,6 +76,7 @@ async function initializeGame(playerColor: PieceColor) {
       });
       return true;
     },
+    playerColor === PieceColor.WHITE,
   );
   renderer.drawBoard();
 
