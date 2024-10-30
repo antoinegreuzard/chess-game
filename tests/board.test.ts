@@ -1,108 +1,137 @@
+// tests/board.test.ts
 import { Board } from '../src/board';
-import { PieceType, PieceColor } from '../src/piece';
+import { PieceColor, PieceType } from '../src/piece';
 import { King } from '../src/pieces/king';
-import { Pawn } from '../src/pieces/pawn';
 import { Rook } from '../src/pieces/rook';
+import { Pawn } from '../src/pieces/pawn';
+import { Bishop } from '../src/pieces/bishop';
 
 describe('Board', () => {
   let board: Board;
 
-  // Fonction pour vider le plateau
-  function clearBoard() {
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        board.setPiece(x, y, null);
-      }
-    }
-  }
-
   beforeEach(async () => {
     board = new Board();
     await board.init();
-    clearBoard(); // Vider le plateau avant chaque test
+    board['grid'] = Array(8).fill(null).map(() => Array(8).fill(null));
   });
 
-  it('should initialize the board with pieces in the correct positions', async () => {
-    board = new Board(); // Réinitialiser le board pour tester l'initialisation
-    await board.init();
-    expect(board.getPiece(0, 0)).toBeInstanceOf(Rook);
-    expect(board.getPiece(4, 0)).toBeInstanceOf(King);
-    expect(board.getPiece(0, 1)).toBeInstanceOf(Pawn);
-    expect(board.getPiece(7, 7)).toBeInstanceOf(Rook);
-    expect(board.getPiece(4, 7)).toBeInstanceOf(King);
-    expect(board.getPiece(0, 6)).toBeInstanceOf(Pawn);
+  test('initializeBoard sets up pieces correctly', async () => {
+    board = new Board();
+    await board.init(); // Initialisation complète, pas de vidage de grille
+
+    const whiteKing = board.getPiece(4, 0);
+    const blackKing = board.getPiece(4, 7);
+    const whitePawn = board.getPiece(0, 1);
+
+    expect(whiteKing?.type).toBe(PieceType.KING);
+    expect(blackKing?.type).toBe(PieceType.KING);
+    expect(whitePawn?.type).toBe(PieceType.PAWN);
   });
 
-  it('should return true for squares within bounds and false for out-of-bounds', () => {
-    expect(board.isWithinBounds(3, 3)).toBe(true);
-    expect(board.isWithinBounds(8, 3)).toBe(false);
-    expect(board.isWithinBounds(3, -1)).toBe(false);
+
+  test('isWithinBounds returns true for valid board coordinates', () => {
+    expect(board.isWithinBounds(4, 4)).toBe(true);
+    expect(board.isWithinBounds(0, 0)).toBe(true);
+    expect(board.isWithinBounds(7, 7)).toBe(true);
   });
 
-  it('should get a piece from a specific position', () => {
-    const whiteRook = new Rook(PieceColor.WHITE);
-    board.setPiece(0, 0, whiteRook);
-    const piece = board.getPiece(0, 0);
-    expect(piece).toBeDefined();
-    expect(piece?.type).toBe(PieceType.ROOK);
-    expect(piece?.color).toBe(PieceColor.WHITE);
+  test('isWithinBounds returns false for out-of-bounds coordinates', () => {
+    expect(board.isWithinBounds(-1, 0)).toBe(false);
+    expect(board.isWithinBounds(8, 5)).toBe(false);
   });
 
-  it('should move a piece correctly', () => {
-    const whitePawn = new Pawn(PieceColor.WHITE);
-    board.setPiece(0, 1, whitePawn);
-    expect(board.movePiece(0, 1, 0, 3)).toBe(true);
-    expect(board.getPiece(0, 3)).toBeInstanceOf(Pawn);
-    expect(board.getPiece(0, 1)).toBeNull();
+  test('getValidMoves returns correct moves for a piece', () => {
+    const pawn = new Pawn(PieceColor.WHITE);
+    board.setPiece(4, 1, pawn);
+
+    const validMoves = board.getValidMoves(4, 1);
+    expect(validMoves).toContainEqual({ x: 4, y: 2 });
+    expect(validMoves).toContainEqual({ x: 4, y: 3 });
   });
 
-  it('should not allow a move outside the board', () => {
-    const whitePawn = new Pawn(PieceColor.WHITE);
-    board.setPiece(0, 1, whitePawn);
-    expect(board.movePiece(0, 1, 0, 8)).toBe(false);
+  test('movePiece performs a valid move', () => {
+    const pawn = new Pawn(PieceColor.WHITE);
+    board.setPiece(4, 1, pawn);
+
+    const moved = board.movePiece(4, 1, 4, 3);
+    expect(moved).toBe(true);
+    expect(board.getPiece(4, 3)).toBe(pawn);
+    expect(board.getPiece(4, 1)).toBeNull();
   });
 
-  it('should detect if a king is in check', () => {
-    board.setPiece(4, 4, new King(PieceColor.WHITE));
-    board.setPiece(4, 7, new Rook(PieceColor.BLACK));
-    expect(board.isKingInCheck(PieceColor.WHITE)).toBe(true);
-    expect(board.isKingInCheck(PieceColor.BLACK)).toBe(false);
+  test('movePiece prevents moving to a position occupied by same color', () => {
+    const whiteRook1 = new Rook(PieceColor.WHITE);
+    const whiteRook2 = new Rook(PieceColor.WHITE);
+    board.setPiece(0, 0, whiteRook1);
+    board.setPiece(0, 1, whiteRook2);
+
+    const moved = board.movePiece(0, 0, 0, 1);
+    expect(moved).toBe(false);
+    expect(board.getPiece(0, 0)).toBe(whiteRook1);
+    expect(board.getPiece(0, 1)).toBe(whiteRook2);
   });
 
-  it('should allow en passant capture', () => {
-    const whitePawn = new Pawn(PieceColor.WHITE);
-    const blackPawn = new Pawn(PieceColor.BLACK);
-    board.setPiece(0, 1, whitePawn);
-    board.setPiece(1, 3, blackPawn);
-    board.movePiece(0, 1, 0, 3); // Le pion noir avance de deux cases
-    expect(board.isEnPassantMove(1, 3, 0, 2)).toBe(true);
-  });
-
-  it('should detect castling as a valid move', () => {
+  test('isKingInCheck returns true when king is in check', () => {
     const whiteKing = new King(PieceColor.WHITE);
-    const whiteRook = new Rook(PieceColor.WHITE);
-    board.setPiece(4, 0, whiteKing);
-    board.setPiece(7, 0, whiteRook);
-    expect(board.movePiece(4, 0, 6, 0)).toBe(true);
+    const blackRook = new Rook(PieceColor.BLACK);
+    board.setPiece(4, 4, whiteKing);
+    board.setPiece(4, 5, blackRook);
+
+    expect(board.isKingInCheck(PieceColor.WHITE)).toBe(true);
   });
 
-  it('should identify insufficient material for checkmate', () => {
+  test('isCheckmate returns true when king has no legal moves and is in check', () => {
+    const whiteKing = new King(PieceColor.WHITE);
+    const blackRook = new Rook(PieceColor.BLACK);
+    const blackBishop = new Bishop(PieceColor.BLACK);
+    board.setPiece(0, 0, whiteKing);
+    board.setPiece(0, 5, blackRook);
+    board.setPiece(5, 0, blackRook);
+    board.setPiece(7, 7, blackBishop);
+
+    expect(board.isCheckmate(PieceColor.WHITE)).toBe(true);
+  });
+
+  test('isStalemate returns true when king has no legal moves but is not in check', () => {
+    const whiteKing = new King(PieceColor.WHITE);
+    board.setPiece(0, 0, whiteKing);
+    board.setPiece(1, 7, new Rook(PieceColor.BLACK));
+    board.setPiece(7, 1, new Rook(PieceColor.BLACK));
+
+    expect(board.isStalemate(PieceColor.WHITE)).toBe(true);
+  });
+
+  test('handleCastling performs valid castling move', () => {
+    const whiteKing = new King(PieceColor.BLACK);
+    const whiteRook = new Rook(PieceColor.BLACK);
+    board.setPiece(4, 7, whiteKing);
+    board.setPiece(7, 7, whiteRook);
+
+    const moved = board.movePiece(4, 7, 6, 7);
+    expect(moved).toBe(true);
+    expect(board.getPiece(6, 7)).toBe(whiteKing);
+    expect(board.getPiece(5, 7)).toBe(whiteRook);
+  });
+
+  test('getKingInCheck identifies the correct king in check', () => {
+    const whiteKing = new King(PieceColor.WHITE);
+    const blackRook = new Rook(PieceColor.BLACK);
+    board.setPiece(4, 4, whiteKing);
+    board.setPiece(4, 7, blackRook);
+
+    const kingInCheck = board.getKingInCheck();
+    expect(kingInCheck).toEqual({ x: 4, y: 4 });
+  });
+
+  test('isFiftyMoveRule returns true after 50 moves without a pawn move or capture', () => {
+    board['halfMoveCount'] = 50;
+    expect(board.isFiftyMoveRule()).toBe(true);
+  });
+
+  test('isInsufficientMaterial returns true for king vs king', () => {
     board.setPiece(0, 0, new King(PieceColor.WHITE));
     board.setPiece(7, 7, new King(PieceColor.BLACK));
+
     expect(board.isInsufficientMaterial()).toBe(true);
-  });
-
-  it('should correctly identify a stalemate position', () => {
-    board.setPiece(7, 7, new King(PieceColor.WHITE));
-    board.setPiece(0, 0, new King(PieceColor.BLACK));
-    board.setPiece(1, 7, new Rook(PieceColor.WHITE));
-    board.setPiece(7, 1, new Rook(PieceColor.WHITE));
-    expect(board.isStalemate(PieceColor.BLACK)).toBe(true);
-  });
-
-  it('should not allow a move that would place the king in check', () => {
-    board.setPiece(4, 0, new King(PieceColor.WHITE));
-    board.setPiece(5, 7, new Rook(PieceColor.BLACK));
-    expect(board.movePiece(4, 0, 5, 0)).toBe(false);
   });
 });

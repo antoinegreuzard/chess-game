@@ -3,6 +3,9 @@ import { Piece, PieceColor, PieceType, BoardInterface } from '../piece';
 
 export class Pawn extends Piece {
   public hasMoved: boolean = false;
+  private _toX: number | null = null;
+  private _toY: number | null = null;
+  private _board: BoardInterface | null = null;
 
   constructor(color: PieceColor) {
     super(color, PieceType.PAWN);
@@ -15,20 +18,33 @@ export class Pawn extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    const playerColor = board.getPlayerColor();
     const direction = this.color === PieceColor.WHITE ? 1 : -1;
     const startRow = this.color === PieceColor.WHITE ? 1 : 6;
     const distanceY = (toY - fromY) * direction;
     const distanceX = Math.abs(toX - fromX);
 
+    const promotionRow = playerColor === PieceColor.WHITE ? 7 : 0;
+
     if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
-      if (
-        ((this.color === PieceColor.WHITE && toY === 7) ||
-          (this.color === PieceColor.BLACK && toY === 0)) &&
-        board.getPiece(fromX, fromY)?.type === PieceType.PAWN
-      ) {
-        this.handlePromotion(toX, toY, board);
+      // Vérifie la rangée de promotion et déclenche la promotion uniquement à cette rangée
+      if (toY === promotionRow) {
+        return this.handlePromotion(toX, toY, board);
       }
       return true;
+    }
+
+    if (distanceX === 1 && distanceY === 1) {
+      if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
+        if (toY === promotionRow) {
+          return this.handlePromotion(toX, toY, board);
+        }
+        return true;
+      }
+
+      if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
+        return true;
+      }
     }
 
     if (
@@ -42,40 +58,13 @@ export class Pawn extends Piece {
       return true;
     }
 
-    if (distanceX === 1 && distanceY === 1) {
-      if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
-        if (
-          (this.color === PieceColor.WHITE && toY === 7) ||
-          (this.color === PieceColor.BLACK &&
-            toY === 0 &&
-            board.getPiece(fromX, fromY)?.type === PieceType.PAWN)
-        ) {
-          this.handlePromotion(toX, toY, board);
-        }
-        return true;
-      }
-
-      if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
-        return true;
-      }
-    }
-
     return false;
   }
 
-  handlePromotion(toX: number, toY: number, board: BoardInterface): void {
-    const promotionDialog = document.getElementById(
-      'promotionDialog',
-    ) as HTMLDivElement;
-
-    if (promotionDialog) {
-      promotionDialog.style.display = 'block';
-
-      // Définir la fonction de promotion en capturant le contexte (x, y)
-      window.promote = (pieceType: string) => {
-        promotionDialog.style.display = 'none';
-        board.promotePawn(toX, toY, pieceType);
-      };
-    }
+  handlePromotion(toX: number, toY: number, board: BoardInterface): boolean {
+    this._toX = toX;
+    this._toY = toY;
+    this._board = board;
+    return true;
   }
 }

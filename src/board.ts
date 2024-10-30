@@ -10,6 +10,7 @@ export class Board implements BoardInterface {
   private grid: (Piece | null)[][];
   private enPassantTarget: { x: number; y: number } | null = null;
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
+  private currentPlayer: PieceColor = PieceColor.WHITE;
 
   constructor() {
     this.grid = [];
@@ -121,10 +122,10 @@ export class Board implements BoardInterface {
         return false;
       }
 
-      // Gestion du roque
-      if (Piece.isKing(piece) && Math.abs(toX - fromX) === 2) {
+      if (piece?.type === PieceType.KING && Math.abs(toX - fromX) === 2) {
         if (this.isCastlingValid(piece, fromX, fromY, toX)) {
           this.handleCastling(toX, fromY);
+          piece.hasMoved = true; // Met à jour le statut de mouvement du roi
           return true;
         } else {
           return false;
@@ -142,6 +143,7 @@ export class Board implements BoardInterface {
       // Sauvegarde l'état avant de simuler le mouvement
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
+      piece.hasMoved = true;
 
       // Vérifie si le mouvement met le roi du joueur en échec
       if (this.isKingInCheck(piece.color)) {
@@ -186,11 +188,12 @@ export class Board implements BoardInterface {
     const rookX = toX > fromX ? 7 : 0;
     const rook = this.getPiece(rookX, fromY);
 
+    // Vérification des conditions de roque : roi et tour n'ont pas bougé, et la tour est présente
     if (!(rook?.type === PieceType.ROOK) || rook.hasMoved || king.hasMoved)
       return false;
 
-    // Vérifie que les cases entre le roi et la tour sont libres
-    for (let x = fromX + direction; x !== toX; x += direction) {
+    // Vérifie que les cases entre le roi et la tour sont libres et non attaquées
+    for (let x = fromX + direction; x !== toX + direction; x += direction) {
       if (
         this.getPiece(x, fromY) ||
         this.isSquareUnderAttack(x, fromY, king.color)
@@ -199,25 +202,38 @@ export class Board implements BoardInterface {
       }
     }
 
-    return (
-      !this.isSquareUnderAttack(fromX, fromY, king.color) &&
-      !this.isSquareUnderAttack(toX, fromY, king.color)
-    );
+    return true;
   }
 
   private handleCastling(kingX: number, kingY: number): void {
-    // Déplacement pour le petit roque (roi se déplace vers la droite)
+    // Petit roque (roi vers la droite)
     if (kingX === 6) {
       const rook = this.getPiece(7, kingY);
-      if (rook?.type === PieceType.ROOK) {
-        this.movePiece(7, kingY, 5, kingY);
+      const king = this.getPiece(4, kingY);
+      if (
+        rook?.type === PieceType.ROOK &&
+        !rook.hasMoved &&
+        king?.type === PieceType.KING
+      ) {
+        this.setPiece(5, kingY, rook); // Déplace la tour
+        this.setPiece(7, kingY, null); // Enlève la tour de sa position initiale
+        this.setPiece(6, kingY, king); // Déplace le roi vers sa nouvelle position
+        this.setPiece(4, kingY, null); // Enlève le roi de sa position initiale
       }
     }
-    // Déplacement pour le grand roque (roi se déplace vers la gauche)
+    // Grand roque (roi vers la gauche)
     else if (kingX === 2) {
       const rook = this.getPiece(0, kingY);
-      if (rook?.type === PieceType.ROOK) {
-        this.movePiece(0, kingY, 3, kingY);
+      const king = this.getPiece(4, kingY);
+      if (
+        rook?.type === PieceType.ROOK &&
+        !rook.hasMoved &&
+        king?.type === PieceType.KING
+      ) {
+        this.setPiece(3, kingY, rook); // Déplace la tour
+        this.setPiece(0, kingY, null); // Enlève la tour de sa position initiale
+        this.setPiece(2, kingY, king); // Déplace le roi vers sa nouvelle position
+        this.setPiece(4, kingY, null); // Enlève le roi de sa position initiale
       }
     }
   }
@@ -436,6 +452,7 @@ export class Board implements BoardInterface {
       for (let fromX = 0; fromX < 8; fromX++) {
         const piece = this.getPiece(fromX, fromY);
         if (piece && piece.color !== color) {
+          // Vérifie si la pièce adverse peut se déplacer sur la case (x, y)
           if (piece.isValidMove(fromX, fromY, x, y, this)) {
             return true;
           }
@@ -644,5 +661,13 @@ export class Board implements BoardInterface {
 
   public getPieces(): Piece[] {
     return this.grid.flat().filter((piece): piece is Piece => piece !== null);
+  }
+
+  public setPlayerColor(color: PieceColor): void {
+    this.currentPlayer = color;
+  }
+
+  public getPlayerColor(): PieceColor {
+    return this.currentPlayer;
   }
 }
