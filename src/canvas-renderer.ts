@@ -60,7 +60,8 @@ export class CanvasRenderer {
     const animate = () => {
       if (currentFrame <= frames) {
         this.drawBoard();
-        this.context.fillStyle = piece.color === PieceColor.WHITE ? 'white' : 'black';
+        this.context.fillStyle =
+          piece.color === PieceColor.WHITE ? 'white' : 'black';
         this.context.font = '48px Arial';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
@@ -98,7 +99,9 @@ export class CanvasRenderer {
   // Dessiner l'échiquier et les pièces
   public drawBoard(): void {
     const kingInCheck = this.board.getKingInCheck();
-    this.kingInCheckPosition = kingInCheck ? this.getCoordinates(kingInCheck.x, kingInCheck.y) : null;
+    this.kingInCheckPosition = kingInCheck
+      ? this.getCoordinates(kingInCheck.x, kingInCheck.y)
+      : null;
     this.drawTiles();
     this.drawPieces();
   }
@@ -111,7 +114,11 @@ export class CanvasRenderer {
         const isDarkTile = (x + y) % 2 === 1;
         let tileColor = isDarkTile ? '#769656' : '#eeeed2';
 
-        if (this.kingInCheckPosition && this.kingInCheckPosition.x === x && this.kingInCheckPosition.y === y) {
+        if (
+          this.kingInCheckPosition &&
+          this.kingInCheckPosition.x === x &&
+          this.kingInCheckPosition.y === y
+        ) {
           tileColor = '#ff6347';
         }
 
@@ -201,7 +208,8 @@ export class CanvasRenderer {
 
     let piece = null;
     if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
-    this.canvas.style.cursor = piece && !this.draggingPiece ? 'pointer' : 'default';
+    this.canvas.style.cursor =
+      piece && !this.draggingPiece ? 'pointer' : 'default';
 
     if (!this.draggingPiece) return;
 
@@ -211,7 +219,8 @@ export class CanvasRenderer {
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
-    this.context.fillStyle = this.draggingPiece.color === 'white' ? 'white' : 'black';
+    this.context.fillStyle =
+      this.draggingPiece.color === 'white' ? 'white' : 'black';
     this.context.font = '48px Arial';
     this.context.textAlign = 'center';
     this.context.textBaseline = 'middle';
@@ -221,14 +230,20 @@ export class CanvasRenderer {
 
   // Gérer la fin du glissement
   private handleMouseUp(event: MouseEvent): void {
-    if (!this.draggingPiece || this.startX === null || this.startY === null) return;
+    if (!this.draggingPiece || this.startX === null || this.startY === null)
+      return;
 
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
     const { x: adjustedX, y: adjustedY } = this.getCoordinates(x, y);
 
-    const moveSuccessful = this.moveHandler(this.startX, this.startY, adjustedX, adjustedY);
+    const moveSuccessful = this.moveHandler(
+      this.startX,
+      this.startY,
+      adjustedX,
+      adjustedY,
+    );
 
     this.draggingPiece = null;
     this.startX = null;
