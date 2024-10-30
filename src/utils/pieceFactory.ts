@@ -1,5 +1,6 @@
-import { PieceColor, PieceType } from '../piece';
+import { PieceColor, PieceType } from '../types';
 
+// Création différée des pièces pour éviter les imports immédiats
 export async function createPiece(type: PieceType, color: PieceColor) {
   switch (type) {
     case PieceType.PAWN:
@@ -21,6 +22,6 @@ export async function createPiece(type: PieceType, color: PieceColor) {
       const { King } = await import('../pieces/king');
       return new King(color);
     default:
-      throw new Error(`Type de pièce inconnu : ${type}`);
+      throw new Error(`Unknown piece type: ${type}`);
   }
 }

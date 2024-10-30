@@ -1,9 +1,10 @@
 // src/ai.ts
 import { Board } from './board';
-import { PieceColor, PieceType, Piece } from './piece';
+import { Piece } from './piece';
 import { evaluateBoard, centerControlBonus } from './evaluator';
 import { getEndgameMove } from './endgameTablebase';
 import { openingBook } from './openingBook';
+import { PieceColor, PieceType } from './types';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {

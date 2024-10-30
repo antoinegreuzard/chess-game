@@ -1,26 +1,30 @@
 // src/board.ts
-import { BoardInterface, Piece, PieceColor, PieceType } from './piece';
+import { Piece } from './piece';
 import { King } from './pieces/king';
 import { updateCapturedPieces } from './utils/utils';
 import { createPiece } from './utils/pieceFactory';
+import { PieceColor, PieceType, BoardInterface } from './types';
 
 type BoardSquare = Piece | null;
 
 export class Board implements BoardInterface {
-  private grid: (Piece | null)[][];
+  private grid: BoardSquare[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
   private enPassantTarget: { x: number; y: number } | null = null;
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
 
   constructor() {
-    this.grid = [];
+    // Initialisation asynchrone de la grille avec les pièces
+    this.populateBoard();
   }
 
-  public async init(): Promise<void> {
+  private async populateBoard() {
     this.grid = await this.initializeBoard();
   }
 
-  private async initializeBoard(): Promise<(Piece | null)[][]> {
-    const board: (Piece | null)[][] = Array(8)
+  public async initializeBoard(): Promise<BoardSquare[][]> {
+    const board: BoardSquare[][] = Array(8)
       .fill(null)
       .map(() => Array(8).fill(null));
 
@@ -521,7 +525,7 @@ export class Board implements BoardInterface {
 
   public static async fromData(data: any): Promise<Board> {
     const board = new Board();
-    await board.init();
+    await board.initializeBoard();
     board.grid = await Promise.all(
       data.grid.map(async (row: any[]) =>
         Promise.all(

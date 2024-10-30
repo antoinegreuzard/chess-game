@@ -1,7 +1,7 @@
 // tests/mocks/WorkerMock.ts
 import { Board } from '../../src/board';
 import { AI } from '../../src/ai';
-import { PieceColor, PieceType } from '../../src/piece';
+import { PieceColor, PieceType } from '../../src/types';
 
 export class WorkerMock {
   onmessage: ((event: { data: any }) => void) | null = null;

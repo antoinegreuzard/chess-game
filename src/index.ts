@@ -2,7 +2,7 @@
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
-import { PieceColor, PieceType } from './piece';
+import { PieceColor, PieceType } from './types';
 import {
   getPieceSymbol,
   showMessage,

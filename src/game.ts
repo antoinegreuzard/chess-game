@@ -1,7 +1,7 @@
 // game.ts
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
-import { PieceColor, PieceType } from './piece';
+import { PieceColor, PieceType } from './types';
 
 export class Game {
   private readonly board: Board;
@@ -15,7 +15,7 @@ export class Game {
   }
 
   public async getBoard(): Board {
-    await this.board.init();
+    await this.board.initializeBoard();
     return this.board;
   }
 

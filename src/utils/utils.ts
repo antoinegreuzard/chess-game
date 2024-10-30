@@ -1,6 +1,6 @@
 // src/utils/utils.ts
 
-import { PieceColor, PieceType } from '../piece';
+import { PieceColor, PieceType } from '../types';
 
 export let capturedWhite: string[] = [];
 export let capturedBlack: string[] = [];

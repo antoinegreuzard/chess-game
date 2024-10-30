@@ -1,5 +1,6 @@
 // src/pieces/pawn.ts
-import { Piece, PieceColor, PieceType, BoardInterface } from '../piece';
+import { Piece } from '../piece';
+import { PieceColor, PieceType, BoardInterface } from '../types';
 
 export class Pawn extends Piece {
   public hasMoved: boolean = false;
@@ -72,9 +73,9 @@ export class Pawn extends Piece {
       promotionDialog.style.display = 'block';
 
       // Définir la fonction de promotion en capturant le contexte (x, y)
-      window.promote = (pieceType: string) => {
+      window.promote = async (pieceType: string) => {
         promotionDialog.style.display = 'none';
-        board.promotePawn(toX, toY, pieceType);
+        await board.promotePawn(toX, toY, pieceType);
       };
     }
   }
