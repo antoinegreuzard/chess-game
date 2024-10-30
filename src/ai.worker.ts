@@ -3,10 +3,13 @@ import { Board } from './board';
 import { AI } from './ai';
 import { PieceColor, PieceType } from './piece';
 
-const ai = new AI(PieceColor.BLACK);
+let ai: AI;
 
 self.onmessage = async (event) => {
-  const { boardData } = event.data;
+  const { boardData, aiColor } = event.data;
+
+  ai = new AI(aiColor);
+
   const board = await Board.fromData(boardData);
 
   const bestMove = ai.makeMove(board);

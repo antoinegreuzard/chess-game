@@ -1,4 +1,3 @@
-// src/index.ts
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
@@ -10,13 +9,12 @@ import {
 } from './utils/utils';
 
 // Fonction asynchrone pour initialiser le jeu
-async function initializeGame() {
-  const game = new Game();
+async function initializeGame(playerColor: PieceColor) {
+  const game = new Game(playerColor);
   const board = await game.getBoard();
 
-  const moveHistoryElement = document.getElementById(
-    'moveHistory',
-  ) as HTMLUListElement;
+  const whiteMovesElement = document.getElementById('whiteMoves') as HTMLUListElement;
+  const blackMovesElement = document.getElementById('blackMoves') as HTMLUListElement;
   const currentTurnElement = document.getElementById(
     'currentTurn',
   ) as HTMLDivElement;
@@ -68,18 +66,22 @@ async function initializeGame() {
     (fromX, fromY, toX, toY) => {
       // Appeler `handleMove` sans attendre, pour gérer l'asynchronisme
       handleMove(fromX, fromY, toX, toY).then((result) => {
-        // Si nécessaire, utilisez `result` pour déclencher d'autres actions après coup
         if (!result) {
           showMessage('Mouvement non autorisé.');
         }
       });
-
-      // Retourne une valeur par défaut immédiatement pour satisfaire `CanvasRenderer`
       return true;
     },
   );
   renderer.drawBoard();
-  whiteTimer.start();
+
+  // Ajuste le début de la partie selon la couleur sélectionnée par le joueur
+  if (playerColor === PieceColor.WHITE) {
+    whiteTimer.start();
+  } else {
+    blackTimer.start();
+    await triggerAIMove(); // L'IA commence si le joueur choisit Noir
+  }
 
   function endGame(message: string) {
     showMessage(message);
@@ -101,7 +103,7 @@ async function initializeGame() {
     currentTurnElement.textContent = `Tour actuel: ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`;
     hasMoved = false;
 
-    passTurnButton.disabled = currentPlayer === PieceColor.BLACK;
+    passTurnButton.disabled = currentPlayer !== playerColor;
 
     if (currentPlayer === PieceColor.WHITE) {
       if (blackTimer.isRunning) blackTimer.stop();
@@ -111,38 +113,26 @@ async function initializeGame() {
       blackTimer.reset(60);
     }
 
-    if (
-      board.isKingInCheck(PieceColor.BLACK) ||
-      board.isKingInCheck(PieceColor.WHITE)
-    ) {
-      if (board.isCheckmate(PieceColor.BLACK)) {
-        endGame('Échec et Mat ! Blanc gagne !');
+    // Vérification de l'état de la partie avant de passer le tour
+    if (board.isKingInCheck(currentPlayer)) {
+      if (board.isCheckmate(currentPlayer)) {
+        endGame(`${currentPlayer === PieceColor.WHITE ? 'Noir' : 'Blanc'} gagne par échec et mat !`);
+        return;
       }
-
-      if (board.isCheckmate(PieceColor.WHITE)) {
-        endGame('Échec et Mat ! Noir gagne !');
-      }
-    }
-
-    if (board.isStalemate(currentPlayer)) {
+    } else if (board.isStalemate(currentPlayer)) {
       endGame('Pat ! La partie est nulle.');
-    }
-
-    if (board.isInsufficientMaterial()) {
+      return;
+    } else if (board.isInsufficientMaterial()) {
       endGame('Matériel insuffisant pour continuer, partie nulle !');
-    }
-
-    if (board.isFiftyMoveRule()) {
+      return;
+    } else if (board.isFiftyMoveRule()) {
       endGame('Règle des 50 coups, partie nulle !');
-    }
-
-    if (gameState === 'playing') {
-      gameState = 'playing';
+      return;
     }
 
     moveHistory.push([]);
 
-    if (currentPlayer === PieceColor.BLACK) {
+    if (currentPlayer !== playerColor) {
       await triggerAIMove();
     }
   }
@@ -150,6 +140,21 @@ async function initializeGame() {
   async function triggerAIMove() {
     isAITurn = true;
     await game.makeAIMove();
+
+    // Obtenez le dernier mouvement effectué par l'IA à partir du plateau
+    const lastMove = game.getLastAIMove(); // Assurez-vous d'avoir une méthode pour récupérer ce mouvement
+
+    if (lastMove) {
+      // Ajoute le mouvement de l'IA dans l'historique
+      addMoveToHistory(
+        lastMove.fromX,
+        lastMove.fromY,
+        lastMove.toX,
+        lastMove.toY,
+        board.getPiece(lastMove.toX, lastMove.toY)?.type || PieceType.PAWN,
+      );
+    }
+
     renderer.drawBoard();
     isAITurn = false;
     await updateTurn();
@@ -162,10 +167,16 @@ async function initializeGame() {
     toY: number,
     pieceType: PieceType,
   ) {
-    const moveText = `${getPieceSymbol(pieceType, PieceColor.WHITE)} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
+    const moveText = `${getPieceSymbol(pieceType, currentPlayer)} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
     const listItem = document.createElement('li');
     listItem.textContent = moveText;
-    moveHistoryElement.appendChild(listItem);
+
+    // Ajoute le mouvement dans la liste appropriée selon la couleur
+    if (currentPlayer === PieceColor.WHITE && whiteMovesElement) {
+      whiteMovesElement.appendChild(listItem);
+    } else if (currentPlayer === PieceColor.BLACK && blackMovesElement) {
+      blackMovesElement.appendChild(listItem);
+    }
 
     moveHistory[moveHistory.length - 1].push({
       fromX,
@@ -222,12 +233,10 @@ async function initializeGame() {
       event.preventDefault();
       if (
         gameState === 'playing' &&
-        currentPlayer === PieceColor.WHITE &&
-        !board.isKingInCheck(PieceColor.WHITE)
+        currentPlayer === playerColor &&
+        !board.isKingInCheck(playerColor)
       ) {
-        showMessage(
-          `Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
-        );
+        showMessage(`Tour passé pour ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`);
         await updateTurn();
       }
     });
@@ -240,5 +249,5 @@ async function initializeGame() {
   }
 }
 
-// Appeler la fonction pour démarrer le jeu
-initializeGame().then();
+// Export pour permettre à index.html d'appeler initializeGame avec la couleur choisie
+(window as any).startGame = (playerColor: PieceColor) => initializeGame(playerColor);

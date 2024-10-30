@@ -6,12 +6,15 @@ import { PieceColor, PieceType } from './piece';
 export class Game {
   private readonly board: Board;
   private aiWorker: Worker;
+  private readonly aiColor: PieceColor;
+  private lastAIMove: { fromX: number; fromY: number; toX: number; toY: number } | null = null;
 
-  constructor() {
+  constructor(playerColor: PieceColor) {
     this.board = new Board();
     this.aiWorker = new Worker(new URL('./ai.worker.ts', import.meta.url), {
       type: 'module',
     });
+    this.aiColor = playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
   }
 
   public async getBoard(): Promise<Board> {
@@ -25,6 +28,8 @@ export class Game {
         const { bestMove, captureData } = event.data;
 
         if (bestMove) {
+          this.lastAIMove = bestMove;
+
           const wasMoved = this.board.movePiece(
             bestMove.fromX,
             bestMove.fromY,
@@ -45,7 +50,11 @@ export class Game {
       };
 
       const boardData = this.board.toData();
-      this.aiWorker.postMessage({ boardData });
+      this.aiWorker.postMessage({ boardData, aiColor: this.aiColor }); // Envoie la couleur de l'IA au worker
     });
+  }
+
+  public getLastAIMove() {
+    return this.lastAIMove;
   }
 }
