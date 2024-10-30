@@ -137,7 +137,7 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
     }
   }
 
-  return score;
+  return parseFloat(score.toFixed(2));
 }
 
 // Évaluer la structure des pions

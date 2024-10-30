@@ -9,7 +9,7 @@ import {
 } from './utils/utils';
 
 // Fonction asynchrone pour initialiser le jeu
-async function initializeGame(playerColor: PieceColor) {
+export async function initializeGame(playerColor: PieceColor) {
   const game = new Game(playerColor);
   const board = await game.getBoard();
   board.setPlayerColor(playerColor);
