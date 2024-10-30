@@ -101,7 +101,4 @@ export abstract class Piece {
   }
 
   // Méthode clone pour créer une nouvelle instance identique
-  public async clone(): Promise<Piece> {
-    return await createPiece(this.type, this.color);
-  }
 }

@@ -14,7 +14,7 @@ export class Game {
     });
   }
 
-  public async getBoard(): Board {
+  public async getBoard(): Promise<Board> {
     await this.board.init();
     return this.board;
   }

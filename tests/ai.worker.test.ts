@@ -1,8 +1,7 @@
 // ai.worker.test.ts
 import { Board } from '../src/board';
-import { PieceColor, PieceType } from '../src/piece';
+import { PieceColor } from '../src/piece';
 import { Rook } from '../src/pieces/rook';
-import { Queen } from '../src/pieces/queen';
 import { WorkerMock } from './mocks/WorkerMock';
 
 // Remplace le Worker global par WorkerMock pour les tests
