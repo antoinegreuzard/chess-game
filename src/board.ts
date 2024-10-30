@@ -576,9 +576,9 @@ export class Board implements BoardInterface {
       row.map((piece) =>
         piece
           ? Object.create(
-            Object.getPrototypeOf(piece),
-            Object.getOwnPropertyDescriptors(piece),
-          )
+              Object.getPrototypeOf(piece),
+              Object.getOwnPropertyDescriptors(piece),
+            )
           : null,
       ),
     );

@@ -114,10 +114,11 @@ export class CanvasRenderer {
         const isDarkTile = (x + y) % 2 === 1;
         let tileColor = isDarkTile ? '#769656' : '#eeeed2';
 
+        // Vérification de la position du roi en échec après conversion
         if (
           this.kingInCheckPosition &&
-          this.kingInCheckPosition.x === x &&
-          this.kingInCheckPosition.y === y
+          this.kingInCheckPosition.x === newX &&
+          this.kingInCheckPosition.y === newY
         ) {
           tileColor = '#ff6347';
         }
