@@ -24,7 +24,8 @@ class MockBoard extends Board {
     return false;
   }
 
-  promotePawn() {
+  promotePawn(_x: number, _y: number, _pieceType: string): Promise<void> {
+    return Promise.resolve();
   }
 }
 

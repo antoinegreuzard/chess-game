@@ -21,10 +21,11 @@ describe('ai.worker', () => {
     }
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Initialise un nouvel AI pour chaque test
     aiWorker = new Worker('./ai.worker.ts');
     board = new Board();
+    await board.init();
     clearBoard();
   });
 

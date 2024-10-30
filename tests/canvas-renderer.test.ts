@@ -11,7 +11,7 @@ describe('CanvasRenderer', () => {
   let renderer: CanvasRenderer;
   const mockMoveHandler = jest.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     document.body.innerHTML = '<canvas id="chessCanvas" width="400" height="400"></canvas>';
     canvas = document.getElementById('chessCanvas') as HTMLCanvasElement;
     context = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -23,6 +23,7 @@ describe('CanvasRenderer', () => {
     jest.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => setTimeout(cb, 10));
 
     board = new Board();
+    await board.init();
     renderer = new CanvasRenderer(board, 'chessCanvas', mockMoveHandler);
   });
 

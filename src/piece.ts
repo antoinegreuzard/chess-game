@@ -1,5 +1,6 @@
 // src/piece.ts
 import { createPiece } from './utils/pieceFactory';
+import { King } from './pieces/king';
 
 export enum PieceColor {
   WHITE = 'white',
@@ -43,6 +44,8 @@ export interface BoardInterface {
 }
 
 export abstract class Piece {
+  public hasMoved: boolean = false;
+
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
@@ -74,6 +77,10 @@ export abstract class Piece {
       y += dy;
     }
     return true;
+  }
+
+  static isKing(piece: Piece): piece is King {
+    return piece.type === PieceType.KING;
   }
 
   public canCapture(toX: number, toY: number, board: BoardInterface): boolean {
