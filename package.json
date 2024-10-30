@@ -7,6 +7,7 @@
   "scripts": {
     "build": "vite build",
     "start": "vite",
+    "preview": "vite preview",
     "prettier": "prettier --write 'src/**/*.{js,ts,html,css}'",
     "prettier-check": "prettier --check 'src/**/*.{js,ts,html,css}'",
     "lint": "eslint 'src/**/*.{js,ts}' --config ./eslint.config.js",

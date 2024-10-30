@@ -1,6 +1,6 @@
 // evaluateBoard.test.ts
 import { Board } from '../src/board';
-import { PieceColor, PieceType } from '../src/piece';
+import { PieceColor } from '../src/piece';
 import { Pawn } from '../src/pieces/pawn';
 import { Knight } from '../src/pieces/knight';
 import { Bishop } from '../src/pieces/bishop';
