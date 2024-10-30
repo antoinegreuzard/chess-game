@@ -41,6 +41,8 @@ export interface BoardInterface {
   isKing(x: number, y: number): boolean;
 
   isAdjacentToAnotherKing(x: number, y: number, color: PieceColor): boolean;
+
+  getPlayerColor(): PieceColor;
 }
 
 export abstract class Piece {
@@ -99,6 +101,4 @@ export abstract class Piece {
   static async fromData(data: any): Promise<Piece> {
     return await createPiece(data.type, data.color);
   }
-
-  // Méthode clone pour créer une nouvelle instance identique
 }

@@ -10,6 +10,7 @@ export class Board implements BoardInterface {
   private grid: (Piece | null)[][];
   private enPassantTarget: { x: number; y: number } | null = null;
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
+  private currentPlayer: PieceColor;
 
   constructor() {
     this.grid = [];
@@ -575,9 +576,9 @@ export class Board implements BoardInterface {
       row.map((piece) =>
         piece
           ? Object.create(
-              Object.getPrototypeOf(piece),
-              Object.getOwnPropertyDescriptors(piece),
-            )
+            Object.getPrototypeOf(piece),
+            Object.getOwnPropertyDescriptors(piece),
+          )
           : null,
       ),
     );
@@ -644,5 +645,13 @@ export class Board implements BoardInterface {
 
   public getPieces(): Piece[] {
     return this.grid.flat().filter((piece): piece is Piece => piece !== null);
+  }
+
+  public setPlayerColor(color: PieceColor): void {
+    this.currentPlayer = color;
+  }
+
+  public getPlayerColor(): PieceColor {
+    return this.currentPlayer;
   }
 }

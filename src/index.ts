@@ -12,6 +12,7 @@ import {
 async function initializeGame(playerColor: PieceColor) {
   const game = new Game(playerColor);
   const board = await game.getBoard();
+  board.setPlayerColor(playerColor);
 
   const whiteMovesElement = document.getElementById(
     'whiteMoves',

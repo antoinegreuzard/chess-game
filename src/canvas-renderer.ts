@@ -36,7 +36,7 @@ export class CanvasRenderer {
   // Conversion des coordonnées selon l'orientation
   private getCoordinates(x: number, y: number): { x: number; y: number } {
     if (this.flipBoard) {
-      return { x: 7 - x, y: 7 - y };
+      return { x, y: 7 - y };
     }
     return { x, y };
   }

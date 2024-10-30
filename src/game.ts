@@ -31,7 +31,21 @@ export class Game {
   public makeAIMove(): Promise<void> {
     return new Promise((resolve) => {
       this.aiWorker.onmessage = (event) => {
-        const { bestMove, captureData } = event.data;
+        const { bestMove, captureData, promotionRequired } = event.data;
+
+        if (promotionRequired) {
+          // Affiche la boîte de dialogue pour sélectionner la promotion
+          const promotionDialog = document.getElementById(
+            'promotionDialog',
+          ) as HTMLDivElement;
+          promotionDialog.style.display = 'block';
+
+          window.promote = (pieceType: string) => {
+            promotionDialog.style.display = 'none';
+            // Envoie la promotion choisie au worker si besoin
+            this.aiWorker.postMessage({ promotionType: pieceType });
+          };
+        }
 
         if (bestMove) {
           this.lastAIMove = bestMove;
