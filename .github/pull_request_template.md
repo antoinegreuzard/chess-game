@@ -2,10 +2,6 @@
 
 Décrivez les modifications effectuées dans cette PR (Pull Request). Quelles fonctionnalités ou corrections ont été ajoutées ? 
 
-## Résolution de Problèmes
-
-Clôture de : #NuméroDuTicket
-
 ## Type de modification
 
 Cochez les cases correspondantes :
