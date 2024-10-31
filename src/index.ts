@@ -1,3 +1,4 @@
+// src/index.ts
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
@@ -10,7 +11,14 @@ import {
 
 // Fonction asynchrone pour initialiser le jeu
 export async function initializeGame(playerColor: PieceColor) {
-  const game = new Game(playerColor);
+  let moveHistory: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+    pieceType: PieceType;
+  }[][] = [[]];
+  const game = new Game(playerColor, moveHistory);
   const board = await game.getBoard();
   board.setPlayerColor(playerColor);
 
@@ -37,13 +45,6 @@ export async function initializeGame(playerColor: PieceColor) {
   let currentPlayer: PieceColor = PieceColor.WHITE;
   let gameState: 'playing' | 'waiting' = 'playing';
   let hasMoved = false;
-  let moveHistory: {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-    pieceType: PieceType;
-  }[][] = [[]];
   let isGameEnded = false;
   let isAITurn = false;
 
@@ -95,6 +96,9 @@ export async function initializeGame(playerColor: PieceColor) {
     replayButton.style.display = 'block';
     if (whiteTimer.isRunning) whiteTimer.stop();
     if (blackTimer.isRunning) blackTimer.stop();
+
+    // Appel de la fonction de sauvegarde
+    game.saveGameToFile();
   }
 
   function clearMessage() {

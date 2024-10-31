@@ -24,6 +24,12 @@ export class AI {
       score: number;
     }[]
   >; // Heuristic des coups efficaces
+  private moveHistory: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }[] = [];
 
   constructor(
     private readonly color: PieceColor,
@@ -39,38 +45,39 @@ export class AI {
   public makeMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    // Vérifie si un mouvement d'ouverture est disponible
     const openingMove = this.getOpeningMove(board);
     if (openingMove) {
+      this.moveHistory.push(openingMove); // Ajoute à l'historique des coups
       return openingMove;
     }
 
-    // Récupérer le mouvement d'ouverture en fonction des mouvements passés
+    // Vérifie si un mouvement d'ouverture basé sur les coups passés est disponible
     const pastMoves = this.getPastMoves();
     const chosenMove = this.chooseMove(pastMoves);
-
     if (chosenMove) {
+      this.moveHistory.push(chosenMove); // Ajoute à l'historique des coups
       return chosenMove;
     }
-
-    if (chosenMove) {
-      return chosenMove;
-    }
-
-    // Vérifie si on peut utiliser une table de fin de partie
     const endgameMove = this.useEndgameTablebase(board);
     if (endgameMove) {
+      this.moveHistory.push(endgameMove); // Ajoute à l'historique des coups
       return endgameMove;
     }
 
-    // Détermine si MCTS est pertinent pour la position actuelle
+    // Utilise MCTS pour les positions complexes ou de fin de partie
     if (this.shouldUseMCTS(board)) {
-      return this.mcts(board); // Utilise MCTS pour les positions complexes ou de fin de partie
+      const mctsMove = this.mcts(board);
+      if (mctsMove) {
+        this.moveHistory.push(mctsMove); // Ajoute à l'historique des coups
+      }
+      return mctsMove;
     }
 
-    // Si MCTS n'est pas utilisé, continue avec Minimax
+    // Utilise Minimax avec Alpha-Beta Pruning si aucun autre mouvement n'est trouvé
     let bestMove = null;
     let bestValue = -Infinity;
-    const maxDepth = 10; // Augmentation de la profondeur maximale de recherche
+    const maxDepth = 10; // Profondeur maximale de recherche pour Minimax
     this.startTime = Date.now();
 
     for (let depth = 1; depth <= maxDepth; depth++) {
@@ -107,23 +114,31 @@ export class AI {
           bestMove = move;
         }
 
-        // Limite le temps de réflexion
+        // Vérifie le temps de réflexion et arrête si le maximum est atteint
         if (Date.now() - this.startTime > this.maxTime) {
           break;
         }
       }
 
-      // Limite le temps de réflexion
+      // Vérifie encore une fois le temps de réflexion à la fin de chaque profondeur
       if (Date.now() - this.startTime > this.maxTime) {
         break;
       }
     }
 
+    // Ajoute le meilleur mouvement trouvé à l'historique des coups si existant
+    if (bestMove) {
+      this.moveHistory.push(bestMove);
+    }
+
     return bestMove;
   }
 
+  // Fonction pour récupérer les coups passés en format abrégé
   private getPastMoves(): string[] {
-    return []; // Retourne les coups passés selon votre logique.
+    return this.moveHistory.map(
+      (move) => `${move.fromX}${move.fromY}${move.toX}${move.toY}`,
+    );
   }
 
   // Fonction Minimax avec Alpha-Beta Pruning et table de transposition
@@ -261,7 +276,10 @@ export class AI {
     depth: number,
     move: { fromX: number; fromY: number; toX: number; toY: number },
   ) {
-    const killers = this.killerMoves.get(depth) || [];
+    // Récupère les killer moves actuels pour la profondeur spécifiée ou initialise un tableau vide
+    const killers = this.killerMoves.get(depth) ?? [];
+
+    // Vérifie si le mouvement est déjà présent et augmente son score, sinon l'ajoute
     const existingMove = killers.find(
       (k) => k.move.fromX === move.fromX && k.move.fromY === move.fromY,
     );
@@ -272,9 +290,12 @@ export class AI {
       killers.push({ move, score: 1 });
     }
 
+    // Trie et limite le tableau des killer moves aux deux meilleurs par profondeur
     this.killerMoves.set(
       depth,
-      killers.toSorted((a, b) => b.score - a.score).slice(0, 2),
+      killers
+        .sort((a, b) => b.score - a.score) // Trie les moves par score décroissant
+        .slice(0, 2), // Garde uniquement les deux meilleurs
     );
   }
 
@@ -287,34 +308,36 @@ export class AI {
   ): number {
     const maxQuiescenceDepth = 5;
 
-    if (depth >= maxQuiescenceDepth) return evaluateBoard(board, this.color);
+    if (depth >= maxQuiescenceDepth) {
+      return evaluateBoard(board, this.color);
+    }
 
     const standPat = evaluateBoard(board, this.color);
     if (standPat >= beta) return beta;
     if (alpha < standPat) alpha = standPat;
 
-    const moves = this.getAllValidMoves(board).filter((move) =>
+    const captureMoves = this.getAllValidMoves(board).filter((move) =>
       board.isCapture(move.fromX, move.fromY, move.toX, move.toY),
     );
 
-    for (const move of moves) {
+    for (const move of captureMoves) {
       const fromPiece = board.getPiece(move.fromX, move.fromY);
       const toPiece = board.getPiece(move.toX, move.toY);
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       const kingSafe = !board.isKingInCheck(this.color);
+      let score = standPat;
 
       if (kingSafe) {
-        const score = -this.quiescenceSearch(board, -beta, -alpha, depth + 1);
-        board.setPiece(move.fromX, move.fromY, fromPiece);
-        board.setPiece(move.toX, move.toY, toPiece);
-
-        if (score >= beta) return beta;
-        if (score > alpha) alpha = score;
-      } else {
-        board.setPiece(move.fromX, move.fromY, fromPiece);
-        board.setPiece(move.toX, move.toY, toPiece);
+        score = -this.quiescenceSearch(board, -beta, -alpha, depth + 1);
       }
+
+      board.setPiece(move.fromX, move.fromY, fromPiece);
+      board.setPiece(move.toX, move.toY, toPiece);
+
+      // Met à jour alpha si un meilleur score est trouvé
+      if (score >= beta) return beta;
+      if (score > alpha) alpha = score;
     }
 
     return alpha;
@@ -404,7 +427,17 @@ export class AI {
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     const iterations = 1000; // Nombre de simulations
     const moveScores: Map<string, number> = new Map();
-    const validMoves = this.getAllValidMoves(board);
+
+    // Filtre les mouvements valides pour la simulation
+    const validMoves = this.getAllValidMoves(board).filter(
+      (move) =>
+        move.fromX !== undefined &&
+        move.fromY !== undefined &&
+        move.toX !== undefined &&
+        move.toY !== undefined,
+    );
+
+    if (validMoves.length === 0) return null;
 
     for (let i = 0; i < iterations; i++) {
       const move = validMoves[Math.floor(Math.random() * validMoves.length)];
@@ -427,18 +460,16 @@ export class AI {
         moveKey,
         (moveScores.get(moveKey) ?? 0) + simulationResult,
       );
+
+      // Vérifie le temps de réflexion pour arrêter les itérations si nécessaire
+      if (Date.now() - this.startTime > this.maxTime) {
+        break;
+      }
     }
 
-    // Vérifie si moveScores est vide avant d'utiliser reduce
-    if (moveScores.size === 0) {
-      return null; // Aucun mouvement valide trouvé
-    }
-
-    // Sélectionne le mouvement avec la meilleure note moyenne
+    // Trouve le mouvement avec la meilleure note moyenne
     const bestMoveKey = Array.from(moveScores.entries()).reduce(
-      (best, current) => {
-        return current[1] > best[1] ? current : best;
-      },
+      (best, current) => (current[1] > best[1] ? current : best),
     )[0];
 
     const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);

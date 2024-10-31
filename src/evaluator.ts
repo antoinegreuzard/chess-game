@@ -124,43 +124,32 @@ export function evaluateBoard(
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board.getPiece(x, y);
-      if (piece) {
-        let pieceScore = pieceValues[piece.type];
+      if (!piece) continue;
 
-        // Applique les tables de position adaptées à flipBoard
-        pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard);
+      // Applique la valeur de base et la table de position
+      let pieceScore = pieceValues[piece.type];
+      pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard);
 
-        // Contrôle du centre du plateau
-        const positionKey = `${x},${y}`;
-        if (centerControlBonus[positionKey]) {
-          pieceScore += centerControlBonus[positionKey];
-        }
-
-        // Bonus pour les pions passés et autres évaluations de structure
-        if (piece.type === PieceType.PAWN) {
-          pieceScore += evaluatePawnStructure(board, x, y, piece.color);
-          if (isPassedPawn(board, x, y, piece.color)) {
-            pieceScore += 1.0;
-          }
-        }
-        // Structure des pions pour vérifier les pions passés
-        if (piece.type === PieceType.PAWN) {
-          pieceScore += evaluatePawnStructure(board, x, y, piece.color);
-          if (isPassedPawn(board, x, y, piece.color)) {
-            pieceScore += 1.0; // Bonus pour les pions passés
-          }
-        }
-
-        // Vérifier si le roi est exposé
-        if (
-          piece.type === PieceType.KING &&
-          isKingExposed(board, x, y, piece.color)
-        ) {
-          pieceScore -= 0.5; // Réduction pour les rois exposés
-        }
-
-        score += piece.color === color ? pieceScore : -pieceScore;
+      // Ajoute le bonus pour le contrôle du centre
+      const positionKey = `${x},${y}`;
+      if (centerControlBonus[positionKey]) {
+        pieceScore += centerControlBonus[positionKey];
       }
+
+      // Évalue les pions pour structure et bonus de pion passé
+      if (piece.type === PieceType.PAWN) {
+        pieceScore += evaluatePawnStructure(board, x, y, piece.color);
+      }
+
+      // Pénalise les rois exposés
+      if (
+        piece.type === PieceType.KING &&
+        isKingExposed(board, x, y, piece.color)
+      ) {
+        pieceScore -= 0.5;
+      }
+
+      score += piece.color === color ? pieceScore : -pieceScore;
     }
   }
 
@@ -175,9 +164,18 @@ function evaluatePawnStructure(
   color: PieceColor,
 ): number {
   let score = 0;
+
+  // Pénalise les pions doublés
   score -= checkDoubledPawns(board, x, y, color) * 1.5;
+
+  // Pénalise les pions isolés
   score -= checkIsolatedPawns(board, x, y, color) * 1.5;
-  score += isPassedPawn(board, x, y, color) ? 1.0 : 0;
+
+  // Bonus pour les pions passés
+  if (isPassedPawn(board, x, y, color)) {
+    score += 1.0;
+  }
+
   return score;
 }
 

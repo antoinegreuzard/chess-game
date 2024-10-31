@@ -9,8 +9,10 @@ export function showMessage(message: string) {
   const gameMessageElement = document.getElementById(
     'gameMessage',
   ) as HTMLDivElement;
-  gameMessageElement.textContent = message;
-  gameMessageElement.style.display = 'block'; // Afficher le message
+  if (gameMessageElement) {
+    gameMessageElement.textContent = message;
+    gameMessageElement.style.display = 'block'; // Afficher le message
+  }
 }
 
 export function getPieceSymbol(piece: PieceType, color: PieceColor): string {
@@ -44,7 +46,7 @@ export function updateCapturedPieces(piece: PieceType, color: PieceColor) {
   updateCapturedPiecesDOM();
 }
 
-export function updateCapturedPiecesDOM() {
+export function updateCapturedPiecesDOM(): void {
   const capturedWhiteElement = document.getElementById(
     'capturedWhite',
   ) as HTMLDivElement;

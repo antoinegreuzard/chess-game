@@ -13,6 +13,10 @@ export class Queen extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
+
     // La reine peut se déplacer en ligne droite ou en diagonale
     if (
       fromX === toX || // Déplacement en colonne

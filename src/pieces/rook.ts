@@ -18,6 +18,10 @@ export class Rook extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
+
     const isStraightMove = fromX === toX || fromY === toY;
     if (!isStraightMove) {
       return false;
