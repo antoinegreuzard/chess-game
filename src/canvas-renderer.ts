@@ -24,7 +24,10 @@ export class CanvasRenderer {
     flipBoard: boolean = false, // Argument pour inverser le plateau si le joueur est Noir
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-    this.context = this.canvas.getContext('2d')!;
+    if (!this.canvas) throw new Error(`Canvas with id ${canvasId} not found`);
+    this.context = this.canvas.getContext('2d') as CanvasRenderingContext2D;
+    if (!this.context)
+      throw new Error(`Canvas context could not be initialized`);
     this.tileSize = this.canvas.width / 8;
     this.flipBoard = flipBoard;
 
@@ -257,10 +260,16 @@ export class CanvasRenderer {
     this.startY = null;
     this.canvas.style.cursor = 'default';
     this.highlightedMoves = [];
-    this.drawBoard();
+    if (adjustedX < 0 || adjustedX >= 8 || adjustedY < 0 || adjustedY >= 8) {
+      this.drawBoard();
+      return;
+    }
 
     if (moveSuccessful) {
-      this.drawBoard();
+      if (adjustedX < 0 || adjustedX >= 8 || adjustedY < 0 || adjustedY >= 8) {
+        this.drawBoard();
+        return;
+      }
     }
   }
 }

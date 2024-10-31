@@ -21,7 +21,7 @@ export class Pawn extends Piece {
     if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
       return false;
     }
-    
+
     const playerColor = board.getPlayerColor();
     const direction = this.color === PieceColor.WHITE ? 1 : -1;
     const startRow = this.color === PieceColor.WHITE ? 1 : 6;

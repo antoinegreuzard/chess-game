@@ -21,7 +21,7 @@ export class Rook extends Piece {
     if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
       return false;
     }
-    
+
     const isStraightMove = fromX === toX || fromY === toY;
     if (!isStraightMove) {
       return false;
