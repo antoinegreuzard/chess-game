@@ -4,6 +4,17 @@ import { PieceColor, PieceType } from './piece';
 
 type Move = { fromX: number; fromY: number; toX: number; toY: number };
 
+function flipMove(move: Move, flipBoard: boolean): Move {
+  if (!flipBoard) return move;
+
+  return {
+    fromX: 7 - move.fromX,
+    fromY: 7 - move.fromY,
+    toX: 7 - move.toX,
+    toY: 7 - move.toY,
+  };
+}
+
 // Retourne un mouvement optimal pour une fin de partie classique si disponible
 export function getEndgameMove(board: Board, color: PieceColor): Move | null {
   const pieces = board.getPieces();
@@ -52,7 +63,7 @@ export function getEndgameMove(board: Board, color: PieceColor): Move | null {
     return getKingPawnVsKingMove(board, color);
   }
 
-  return null; // Aucun mouvement de fin de partie trouvé
+  return move ? flipMove(move, color === PieceColor.BLACK || flipBoard) : null;
 }
 
 // Fonction utilitaire pour vérifier la présence d'une pièce spécifique

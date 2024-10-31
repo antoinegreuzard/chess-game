@@ -92,8 +92,25 @@ export const centerControlBonus: { [key: string]: number } = {
   '5,4': 0.25, // Cases autour
 };
 
+function getPieceSquareValue(
+  type: PieceType,
+  x: number,
+  y: number,
+  flipBoard: boolean,
+): number {
+  const table = pieceSquareTables[type];
+  if (!table) return 0;
+
+  // Inversion de la table pour les pièces noires si flipBoard est activé
+  return flipBoard ? table[7 - y][7 - x] : table[y][x];
+}
+
 // Fonction d'évaluation principale
-export function evaluateBoard(board: Board, color: PieceColor): number {
+export function evaluateBoard(
+  board: Board,
+  color: PieceColor,
+  flipBoard: boolean = false,
+): number {
   let score = 0;
 
   for (let y = 0; y < 8; y++) {
@@ -102,20 +119,22 @@ export function evaluateBoard(board: Board, color: PieceColor): number {
       if (piece) {
         let pieceScore = pieceValues[piece.type];
 
-        // Appliquer les tables de position selon le type de pièce
-        const pieceTable = pieceSquareTables[piece.type];
-        if (pieceTable) {
-          const adjustedY = color === PieceColor.WHITE ? y : 7 - y;
-          pieceScore += pieceTable[adjustedY][x];
-        }
+        // Applique les tables de position adaptées à flipBoard
+        pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard);
 
         // Contrôle du centre du plateau
-        const adjustedY = color === PieceColor.WHITE ? y : 7 - y;
-        const positionKey = `${x},${adjustedY}`;
+        const positionKey = `${x},${y}`;
         if (centerControlBonus[positionKey]) {
           pieceScore += centerControlBonus[positionKey];
         }
 
+        // Bonus pour les pions passés et autres évaluations de structure
+        if (piece.type === PieceType.PAWN) {
+          pieceScore += evaluatePawnStructure(board, x, y, piece.color);
+          if (isPassedPawn(board, x, y, piece.color)) {
+            pieceScore += 1.0;
+          }
+        }
         // Structure des pions pour vérifier les pions passés
         if (piece.type === PieceType.PAWN) {
           pieceScore += evaluatePawnStructure(board, x, y, piece.color);
@@ -197,6 +216,7 @@ function checkIsolatedPawns(
   return 0;
 }
 
+// Gère les cases hors limites pour éviter des expositions de roi mal calculées
 function isKingExposed(
   board: Board,
   x: number,
@@ -220,15 +240,13 @@ function isKingExposed(
       const newX = x + dx;
       const newY = y + dy;
 
-      if (board.isWithinBounds(newX, newY)) {
-        const adjPiece = board.getPiece(newX, newY);
-        return (
-          !adjPiece || // Case vide
-          adjPiece.color !== color || // Pièce ennemie
-          adjPiece.type !== PieceType.PAWN // Pas de pion pour protéger
-        );
-      }
-      return true; // Case hors limites, expose le roi
+      if (!board.isWithinBounds(newX, newY)) return false; // Case hors limites
+      const adjPiece = board.getPiece(newX, newY);
+      return (
+        !adjPiece || // Case vide
+        adjPiece.color !== color || // Pièce ennemie
+        adjPiece.type !== PieceType.PAWN // Pas de pion pour protéger
+      );
     });
   }
   return false;

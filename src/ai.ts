@@ -157,31 +157,17 @@ export class AI {
       let moves = this.getAllValidMoves(board);
       moves = this.sortMoves(moves, board, depth);
 
-      for (let i = 0; i < moves.length; i++) {
-        const move = moves[i];
+      for (const move of moves) {
         const fromPiece = board.getPiece(move.fromX, move.fromY);
         const toPiece = board.getPiece(move.toX, move.toY);
-
-        // Late Move Reduction : Réduit la profondeur pour les coups tardifs
-        const shouldReduce = i > 3 && depth > 2;
-        const newDepth = shouldReduce ? depth - 1 : depth;
-
-        // Extension : Allonge la profondeur pour les échecs et poussées de pions
         const isCheck = board.isKingInCheck(this.color);
         const isPawnPush =
           fromPiece &&
           fromPiece.type === PieceType.PAWN &&
           (move.toY === 0 || move.toY === 7);
-        const extendedDepth = isCheck || isPawnPush ? newDepth + 1 : newDepth;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        const evaluation = this.minimax(
-          board,
-          extendedDepth - 1,
-          alpha,
-          beta,
-          false,
-        );
+        const evaluation = this.minimax(board, depth - 1, alpha, beta, false);
         board.setPiece(move.fromX, move.fromY, fromPiece);
         board.setPiece(move.toX, move.toY, toPiece);
 
@@ -243,18 +229,14 @@ export class AI {
     }
   }
 
-  // Ajout d'un coup prometteur dans les killer moves
+  // Ajout des killer moves avec meilleure gestion de cache
   private addKillerMove(
     depth: number,
     move: { fromX: number; fromY: number; toX: number; toY: number },
   ) {
     const killers = this.killerMoves.get(depth) || [];
     const existingMove = killers.find(
-      (k) =>
-        k.move.fromX === move.fromX &&
-        k.move.fromY === move.fromY &&
-        k.move.toX === move.toX &&
-        k.move.toY === move.toY,
+      (k) => k.move.fromX === move.fromX && k.move.fromY === move.fromY,
     );
 
     if (existingMove) {
@@ -263,8 +245,10 @@ export class AI {
       killers.push({ move, score: 1 });
     }
 
-    killers.sort((a, b) => b.score - a.score);
-    this.killerMoves.set(depth, killers);
+    this.killerMoves.set(
+      depth,
+      killers.sort((a, b) => b.score - a.score).slice(0, 2),
+    );
   }
 
   // Recherche de quiescence pour améliorer l'évaluation des positions
@@ -274,11 +258,9 @@ export class AI {
     beta: number,
     depth: number = 0,
   ): number {
-    const maxQuiescenceDepth = 10;
+    const maxQuiescenceDepth = 5;
 
-    if (depth >= maxQuiescenceDepth) {
-      return evaluateBoard(board, this.color);
-    }
+    if (depth >= maxQuiescenceDepth) return evaluateBoard(board, this.color);
 
     const standPat = evaluateBoard(board, this.color);
     if (standPat >= beta) return beta;
@@ -513,33 +495,30 @@ export class AI {
   // Fonction pour identifier les mouvements critiques
   private isCriticalMove(
     piece: Piece,
-    move: {
-      fromX: number;
-      fromY: number;
-      toX: number;
-      toY: number;
-    },
+    move: { fromX: number; fromY: number; toX: number; toY: number },
     board: Board,
   ): boolean {
-    // Considère les captures et les coups qui mettent en échec comme critiques
     const targetPiece = board.getPiece(move.toX, move.toY);
     return (
-      (targetPiece && targetPiece.color !== piece.color) ||
-      board.isKingInCheck(piece.color)
+      targetPiece &&
+      targetPiece.color !== piece.color &&
+      targetPiece.type !== PieceType.PAWN
     );
   }
 
   // Méthode pour trouver le mouvement d'ouverture
+
   private getOpeningMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     const boardHash = this.getBoardHash(board);
 
     if (this.openingMoves[boardHash]) {
-      return this.openingMoves[boardHash][0]; // Récupère le premier mouvement d'ouverture correspondant
+      const move = this.openingMoves[boardHash][0];
+      return flipMove(move, this.color === PieceColor.BLACK); // Applique flipMove si c'est les Noirs
     }
 
-    return null; // Aucun mouvement d'ouverture trouvé
+    return null;
   }
 
   // Génération d'un identifiant de position simplifié pour le dictionnaire d'ouverture
