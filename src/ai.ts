@@ -1,16 +1,20 @@
 // src/ai.ts
 import { Board } from './board';
 import { Piece, PieceColor, PieceType } from './piece';
-import { centerControlBonus, evaluateBoard } from './evaluator';
+import {
+  centerControlBonus,
+  evaluateBoard,
+  evaluateKingSafety,
+} from './evaluator';
 import { getEndgameMove } from './endgameTablebase';
-import { flipMove, openingBook } from './openingBook';
+import { flipMove, getNextOpeningMove, openingBook } from './openingBook';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
-  private openingMoves: {
+  private readonly openingMoves: {
     [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
   } = openingBook;
-  private transpositionTable: Map<string, number>; // Table de transposition
+  private readonly transpositionTable: Map<string, number>; // Table de transposition
   private readonly maxTime: number; // Temps maximum de réflexion en millisecondes
   private startTime: number; // Temps de début pour gestion du temps
   private readonly killerMoves: Map<
@@ -22,7 +26,7 @@ export class AI {
   >; // Heuristic des coups efficaces
 
   constructor(
-    private color: PieceColor,
+    private readonly color: PieceColor,
     maxTime: number = 5000,
   ) {
     this.transpositionTable = new Map();
@@ -38,6 +42,18 @@ export class AI {
     const openingMove = this.getOpeningMove(board);
     if (openingMove) {
       return openingMove;
+    }
+
+    // Récupérer le mouvement d'ouverture en fonction des mouvements passés
+    const pastMoves = this.getPastMoves();
+    const chosenMove = this.chooseMove(pastMoves);
+
+    if (chosenMove) {
+      return chosenMove;
+    }
+
+    if (chosenMove) {
+      return chosenMove;
     }
 
     // Vérifie si on peut utiliser une table de fin de partie
@@ -106,6 +122,10 @@ export class AI {
     return bestMove;
   }
 
+  private getPastMoves(): string[] {
+    return []; // Retourne les coups passés selon votre logique.
+  }
+
   // Fonction Minimax avec Alpha-Beta Pruning et table de transposition
   private minimax(
     board: Board,
@@ -118,7 +138,7 @@ export class AI {
 
     // Vérifie le temps limite
     if (Date.now() - this.startTime > this.maxTime) {
-      return evaluateBoard(board, this.color);
+      return this.evaluatePositionWithKingSafety(board, this.color);
     }
 
     // Vérifie si le résultat est déjà dans la table de transposition
@@ -224,6 +244,18 @@ export class AI {
     }
   }
 
+  private chooseMove(
+    pastMoves: string[],
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const openingMove = getNextOpeningMove(pastMoves, openingBook);
+
+    if (openingMove) {
+      return openingMove;
+    }
+
+    return null;
+  }
+
   // Ajout des killer moves avec meilleure gestion de cache
   private addKillerMove(
     depth: number,
@@ -242,7 +274,7 @@ export class AI {
 
     this.killerMoves.set(
       depth,
-      killers.sort((a, b) => b.score - a.score).slice(0, 2),
+      killers.toSorted((a, b) => b.score - a.score).slice(0, 2),
     );
   }
 
@@ -393,7 +425,7 @@ export class AI {
       const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
       moveScores.set(
         moveKey,
-        (moveScores.get(moveKey) || 0) + simulationResult,
+        (moveScores.get(moveKey) ?? 0) + simulationResult,
       );
     }
 
@@ -411,6 +443,16 @@ export class AI {
 
     const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);
     return { fromX, fromY, toX, toY };
+  }
+
+  private evaluatePositionWithKingSafety(
+    board: Board,
+    color: PieceColor,
+  ): number {
+    let score = evaluateBoard(board, color); // Évaluation générale de la position
+    const kingSafety = evaluateKingSafety(board, color); // Évaluation de la sécurité du roi
+    score += kingSafety; // Ajuste le score en fonction de la sécurité du roi
+    return score;
   }
 
   // Simule une partie aléatoire pour obtenir une estimation du résultat

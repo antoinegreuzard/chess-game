@@ -1,9 +1,11 @@
 // tests/rook.test.ts
 import { Rook } from '../../src/pieces/rook';
-import { PieceColor, BoardInterface } from '../../src/piece';
+import { BoardInterface, PieceColor } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  private board: (Rook | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (Rook | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
 
   getPiece(x: number, y: number): Rook | null {
     return this.board[y][x];
@@ -13,15 +15,13 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {
-  }
+  updateEnPassantTarget(): void {}
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -38,6 +38,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('Rook', () => {

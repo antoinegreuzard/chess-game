@@ -1,9 +1,11 @@
 // tests/pawn.test.ts
 import { Pawn } from '../../src/pieces/pawn';
-import { PieceColor, BoardInterface } from '../../src/piece';
+import { BoardInterface, PieceColor } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  private board: (Pawn | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (Pawn | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
   public enPassantTarget: { x: number; y: number } | null = null;
 
   getPiece(x: number, y: number): Pawn | null {
@@ -14,16 +16,26 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(fromX: number, fromY: number, toX: number, toY: number, piece: Pawn): void {
+  updateEnPassantTarget(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    piece: Pawn,
+  ): void {
     this.enPassantTarget = { x: toX, y: toY };
   }
 
-  isEnPassantMove(fromX: number, fromY: number, toX: number, toY: number): boolean {
+  isEnPassantMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
     return this.enPassantTarget?.x === toX && this.enPassantTarget?.y === toY;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -40,6 +52,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('Pawn', () => {
@@ -81,10 +100,14 @@ describe('Pawn', () => {
   });
 
   test('isValidMove returns true for en passant capture', () => {
-    board.setPiece(3, 4, whitePawn);
-    board.setPiece(4, 4, blackPawn);
-    board.updateEnPassantTarget(4, 4, 4, 5, blackPawn);
-    expect(whitePawn.isValidMove(3, 4, 4, 5, board)).toBe(true);
+    board.setPiece(4, 4, whitePawn);
+    board.setPiece(5, 4, blackPawn);
+
+    // Simule le mouvement de deux cases pour le pion noir
+    board.updateEnPassantTarget(5, 4, 5, 5, blackPawn);
+
+    // Test de la capture en passant par le pion blanc
+    expect(whitePawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
   });
 
   test('isValidMove returns true for promotion row move', () => {

@@ -1,5 +1,5 @@
 // src/pieces/pawn.ts
-import { Piece, PieceColor, PieceType, BoardInterface } from '../piece';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../piece';
 
 export class Pawn extends Piece {
   public hasMoved: boolean = false;
@@ -42,7 +42,9 @@ export class Pawn extends Piece {
         return true;
       }
 
+      // Capture en passant
       if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
+        board.captureEnPassantIfValid(fromX, fromY, toX, toY);
         return true;
       }
     }

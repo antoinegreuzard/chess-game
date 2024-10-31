@@ -1,10 +1,12 @@
 // tests/piece.test.ts
-import { Piece, PieceColor, PieceType, BoardInterface } from '../src/piece';
+import { BoardInterface, Piece, PieceColor, PieceType } from '../src/piece';
 import { King } from '../src/pieces/king';
 import { createPiece } from '../src/utils/pieceFactory';
 
 class MockBoard implements BoardInterface {
-  private board: (Piece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (Piece | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
 
   getPiece(x: number, y: number): Piece | null {
     return this.board[y][x];
@@ -14,15 +16,13 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {
-  }
+  updateEnPassantTarget(): void {}
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -40,6 +40,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('Piece', () => {

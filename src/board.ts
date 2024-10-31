@@ -89,6 +89,40 @@ export class Board implements BoardInterface {
     return validMoves;
   }
 
+  private isCastlingMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
+    const piece = this.getPiece(fromX, fromY);
+    return <boolean>(
+      (piece &&
+        piece.type === PieceType.KING &&
+        Math.abs(toX - fromX) === 2 &&
+        fromY === toY)
+    );
+  }
+
+  public captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {
+    if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
+      const movingPawn = this.getPiece(fromX, fromY);
+      if (!movingPawn) return;
+
+      const capturedPawnY =
+        toY + (movingPawn.color === PieceColor.WHITE ? -1 : 1);
+
+      if (this.grid[capturedPawnY][toX]) {
+        this.grid[capturedPawnY][toX] = null;
+      }
+    }
+  }
+
   public getKingInCheck(): { x: number; y: number } | null {
     if (this.isKingInCheck(PieceColor.WHITE)) {
       return this.findKing(PieceColor.WHITE);
@@ -430,7 +464,7 @@ export class Board implements BoardInterface {
     return true; // Aucun coup légal trouvé, pat détecté
   }
 
-  private findKing(color: PieceColor): { x: number; y: number } | null {
+  findKing(color: PieceColor): { x: number; y: number } | null {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);

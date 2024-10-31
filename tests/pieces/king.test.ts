@@ -1,9 +1,11 @@
 // tests/king.test.ts
 import { King } from '../../src/pieces/king';
-import { PieceColor, PieceType, BoardInterface } from '../../src/piece';
+import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  private board: (King | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (King | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
   public isSquareUnderAttackCalled: boolean = false;
 
   getPiece(x: number, y: number): King | null {
@@ -14,15 +16,13 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {
-  }
+  updateEnPassantTarget(): void {}
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean {
     return this.isSquareUnderAttackCalled;
@@ -39,6 +39,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('King', () => {
@@ -79,7 +86,11 @@ describe('King', () => {
 
   test('isValidMove returns true for castling move', () => {
     board.setPiece(4, 0, whiteKing);
-    const whiteRook = { type: PieceType.ROOK, hasMoved: false, color: PieceColor.WHITE } as King;
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: false,
+      color: PieceColor.WHITE,
+    } as King;
     board.setPiece(0, 0, whiteRook); // Place rook for queenside castle
     expect(whiteKing.isValidMove(4, 0, 2, 0, board)).toBe(true); // Queenside castling
 
@@ -89,7 +100,11 @@ describe('King', () => {
 
   test('isValidMove returns false for castling if the path is under attack', () => {
     board.setPiece(4, 0, whiteKing);
-    const whiteRook = { type: PieceType.ROOK, hasMoved: false, color: PieceColor.WHITE } as King;
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: false,
+      color: PieceColor.WHITE,
+    } as King;
     board.setPiece(7, 0, whiteRook); // Place rook for kingside castle
 
     board.isSquareUnderAttackCalled = true; // Simule un carré sous attaque

@@ -92,6 +92,14 @@ export const centerControlBonus: { [key: string]: number } = {
   '5,4': 0.25, // Cases autour
 };
 
+export function evaluateKingSafety(board: Board, color: PieceColor): number {
+  const kingPosition = board.findKing(color);
+  return kingPosition &&
+    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+    ? -0.5
+    : 0;
+}
+
 function getPieceSquareValue(
   type: PieceType,
   x: number,
@@ -167,11 +175,9 @@ function evaluatePawnStructure(
   color: PieceColor,
 ): number {
   let score = 0;
-
-  // Vérifier les pions doublés et isolés avec une pénalité plus importante
-  score -= checkDoubledPawns(board, x, y, color) * 1.5; // Pénalité augmentée pour les pions doublés
-  score -= checkIsolatedPawns(board, x, y, color) * 1.5; // Pénalité augmentée pour les pions isolés
-
+  score -= checkDoubledPawns(board, x, y, color) * 1.5;
+  score -= checkIsolatedPawns(board, x, y, color) * 1.5;
+  score += isPassedPawn(board, x, y, color) ? 1.0 : 0;
   return score;
 }
 
