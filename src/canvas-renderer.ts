@@ -195,7 +195,7 @@ export class CanvasRenderer {
     const { x: adjustedX, y: adjustedY } = this.getInverseCoordinates(x, y);
 
     const piece = this.board.getPiece(adjustedX, adjustedY);
-    if (piece) {
+    if (piece && piece.color === this.board.getPlayerColor()) {
       this.draggingPiece = piece;
       this.startX = adjustedX;
       this.startY = adjustedY;
@@ -204,6 +204,8 @@ export class CanvasRenderer {
       this.highlightedMoves = this.board.getValidMoves(adjustedX, adjustedY);
       this.drawBoard();
       this.highlightValidMoves(this.highlightedMoves);
+    } else {
+      this.draggingPiece = null;
     }
   }
 
