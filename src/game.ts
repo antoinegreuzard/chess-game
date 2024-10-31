@@ -13,7 +13,7 @@ export class Game {
     toX: number;
     toY: number;
   } | null = null;
-  private moveHistory: {
+  private readonly moveHistory: {
     fromX: number;
     fromY: number;
     toX: number;
