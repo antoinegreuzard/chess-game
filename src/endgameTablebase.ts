@@ -4,9 +4,25 @@ import { PieceColor, PieceType } from './piece';
 
 type Move = { fromX: number; fromY: number; toX: number; toY: number };
 
+function flipMove(move: Move, flipBoard: boolean): Move {
+  if (!flipBoard) return move;
+
+  return {
+    fromX: 7 - move.fromX,
+    fromY: 7 - move.fromY,
+    toX: 7 - move.toX,
+    toY: 7 - move.toY,
+  };
+}
+
 // Retourne un mouvement optimal pour une fin de partie classique si disponible
-export function getEndgameMove(board: Board, color: PieceColor): Move | null {
+export function getEndgameMove(
+  board: Board,
+  color: PieceColor,
+  flipBoard: boolean = false,
+): Move | null {
   const pieces = board.getPieces();
+  let move: Move | null = null;
 
   // Roi + Tour contre Roi
   if (
@@ -15,22 +31,22 @@ export function getEndgameMove(board: Board, color: PieceColor): Move | null {
     hasPiece(pieces, PieceType.ROOK, color) &&
     hasPiece(pieces, PieceType.KING, getOpponentColor(color))
   ) {
-    return getKingRookVsKingMove(board, color);
+    move = getKingRookVsKingMove(board, color);
   }
 
   // Roi + Fou + Cavalier contre Roi
-  if (
+  else if (
     pieces.length === 4 &&
     hasPiece(pieces, PieceType.KING, color) &&
     hasPiece(pieces, PieceType.BISHOP, color) &&
     hasPiece(pieces, PieceType.KNIGHT, color) &&
     hasPiece(pieces, PieceType.KING, getOpponentColor(color))
   ) {
-    return getKingBishopKnightVsKingMove(board, color);
+    move = getKingBishopKnightVsKingMove(board, color);
   }
 
   // Roi + deux Fous contre Roi
-  if (
+  else if (
     pieces.length === 4 &&
     hasPiece(pieces, PieceType.KING, color) &&
     hasPiece(pieces, PieceType.BISHOP, color) &&
@@ -39,20 +55,21 @@ export function getEndgameMove(board: Board, color: PieceColor): Move | null {
     ).length === 2 &&
     hasPiece(pieces, PieceType.KING, getOpponentColor(color))
   ) {
-    return getKingTwoBishopsVsKingMove(board, color);
+    move = getKingTwoBishopsVsKingMove(board, color);
   }
 
   // Roi + Pion contre Roi (pour promotion)
-  if (
+  else if (
     pieces.length === 3 &&
     hasPiece(pieces, PieceType.KING, color) &&
     hasPiece(pieces, PieceType.PAWN, color) &&
     hasPiece(pieces, PieceType.KING, getOpponentColor(color))
   ) {
-    return getKingPawnVsKingMove(board, color);
+    move = getKingPawnVsKingMove(board, color);
   }
 
-  return null; // Aucun mouvement de fin de partie trouvé
+  // Ajuste le mouvement pour `flipBoard`
+  return move ? flipMove(move, color === PieceColor.BLACK || flipBoard) : null;
 }
 
 // Fonction utilitaire pour vérifier la présence d'une pièce spécifique

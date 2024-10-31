@@ -103,3 +103,17 @@ export const openingBook: {
     { fromX: 3, fromY: 1, toX: 3, toY: 3 }, // d7d5
   ],
 };
+
+export function flipMove(
+  move: { fromX: number; fromY: number; toX: number; toY: number },
+  flipBoard: boolean,
+): { fromX: number; fromY: number; toX: number; toY: number } {
+  if (!flipBoard) return move;
+
+  return {
+    fromX: 7 - move.fromX,
+    fromY: 7 - move.fromY,
+    toX: 7 - move.toX,
+    toY: 7 - move.toY,
+  };
+}

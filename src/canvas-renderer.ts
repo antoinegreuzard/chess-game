@@ -33,9 +33,15 @@ export class CanvasRenderer {
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
-  // Conversion des coordonnées selon l'orientation
   private getCoordinates(x: number, y: number): { x: number; y: number } {
-    return this.flipBoard ? { x, y: 7 - y } : { x, y };
+    return this.flipBoard ? { x: 7 - x, y: 7 - y } : { x, y };
+  }
+
+  private getInverseCoordinates(
+    x: number,
+    y: number,
+  ): { x: number; y: number } {
+    return this.flipBoard ? { x: 7 - x, y: 7 - y } : { x, y };
   }
 
   // Animation pour déplacer une pièce
@@ -79,7 +85,7 @@ export class CanvasRenderer {
     animate();
   }
 
-  // Surligne les mouvements valides pour une pièce sélectionnée
+  // Surligne les mouvements valides
   highlightValidMoves(moves: { x: number; y: number }[]): void {
     this.context.fillStyle = 'rgba(0, 255, 0, 0.5)';
     moves.forEach((move) => {
@@ -178,12 +184,12 @@ export class CanvasRenderer {
     }
   }
 
-  // Gérer le début du glissement
+  // Gestion de début du glissement
   private handleMouseDown(event: MouseEvent): void {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
-    const { x: adjustedX, y: adjustedY } = this.getCoordinates(x, y);
+    const { x: adjustedX, y: adjustedY } = this.getInverseCoordinates(x, y);
 
     const piece = this.board.getPiece(adjustedX, adjustedY);
     if (piece) {
@@ -198,14 +204,17 @@ export class CanvasRenderer {
     }
   }
 
-  // Gérer le mouvement pendant le glissement
+  // Gestion du mouvement pendant le glissement
   private handleMouseMove(event: MouseEvent): void {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
     let piece = null;
-    if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
+    const { x: adjX, y: adjY } = this.getInverseCoordinates(x, y);
+    if (this.board.isWithinBounds(adjX, adjY))
+      piece = this.board.getPiece(adjX, adjY);
+
     this.canvas.style.cursor =
       piece && !this.draggingPiece ? 'pointer' : 'default';
 
@@ -226,7 +235,7 @@ export class CanvasRenderer {
     this.context.fillText(pieceText, mouseX, mouseY);
   }
 
-  // Gérer la fin du glissement
+  // Gestion de la fin du glissement
   private handleMouseUp(event: MouseEvent): void {
     if (!this.draggingPiece || this.startX === null || this.startY === null)
       return;
@@ -234,7 +243,7 @@ export class CanvasRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
-    const { x: adjustedX, y: adjustedY } = this.getCoordinates(x, y);
+    const { x: adjustedX, y: adjustedY } = this.getInverseCoordinates(x, y);
 
     const moveSuccessful = this.moveHandler(
       this.startX,
