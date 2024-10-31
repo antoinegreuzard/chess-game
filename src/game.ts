@@ -2,8 +2,6 @@
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
 import { PieceColor, PieceType } from './piece';
-import * as fs from 'fs';
-import * as path from 'path';
 
 export class Game {
   private readonly board: Board;
@@ -103,15 +101,23 @@ export class Game {
       winner: this.board.getWinner(),
     };
 
-    const fileName = `game_${Date.now()}.json`;
-    const filePath = path.join(__dirname, '../public', fileName);
+    // Convertir les données en JSON
+    const json = JSON.stringify(gameData, null, 2);
 
-    fs.writeFile(filePath, JSON.stringify(gameData, null, 2), (err) => {
-      if (err) {
-        console.error('Erreur de sauvegarde de la partie:', err);
-      } else {
-        console.log('Partie sauvegardée avec succès dans', fileName);
-      }
-    });
+    // Créer un objet Blob avec les données JSON
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Créer un lien de téléchargement
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `game_${Date.now()}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+
+    // Nettoyer l'URL de l'objet Blob
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 }
