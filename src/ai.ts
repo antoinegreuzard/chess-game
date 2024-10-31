@@ -1,9 +1,9 @@
 // src/ai.ts
 import { Board } from './board';
-import { PieceColor, PieceType, Piece } from './piece';
-import { evaluateBoard, centerControlBonus } from './evaluator';
+import { Piece, PieceColor, PieceType } from './piece';
+import { centerControlBonus, evaluateBoard } from './evaluator';
 import { getEndgameMove } from './endgameTablebase';
-import { openingBook } from './openingBook';
+import { flipMove, openingBook } from './openingBook';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
@@ -494,10 +494,10 @@ export class AI {
     board: Board,
   ): boolean {
     const targetPiece = board.getPiece(move.toX, move.toY);
-    return (
-      targetPiece &&
-      targetPiece.color !== piece.color &&
-      targetPiece.type !== PieceType.PAWN
+    return <boolean>(
+      (targetPiece &&
+        targetPiece.color !== piece.color &&
+        targetPiece.type !== PieceType.PAWN)
     );
   }
 
