@@ -2,6 +2,8 @@
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
 import { PieceColor, PieceType } from './piece';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class Game {
   private readonly board: Board;
@@ -13,14 +15,22 @@ export class Game {
     toX: number;
     toY: number;
   } | null = null;
+  private moveHistory: { fromX: number; fromY: number; toX: number; toY: number; pieceType: PieceType; }[][];
 
-  constructor(playerColor: PieceColor) {
+  constructor(playerColor: PieceColor, moveHistory: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+    pieceType: PieceType;
+  }[][]) {
     this.board = new Board();
     this.aiWorker = new Worker(new URL('./ai.worker.ts', import.meta.url), {
       type: 'module',
     });
     this.aiColor =
       playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+    this.moveHistory = moveHistory;
   }
 
   public async getBoard(): Promise<Board> {
@@ -76,5 +86,23 @@ export class Game {
 
   public getLastAIMove() {
     return this.lastAIMove;
+  }
+
+  public saveGameToFile() {
+    const gameData = {
+      moves: this.moveHistory,
+      winner: this.board.getWinner(),
+    };
+
+    const fileName = `game_${Date.now()}.json`;
+    const filePath = path.join(__dirname, '../public', fileName);
+
+    fs.writeFile(filePath, JSON.stringify(gameData, null, 2), (err) => {
+      if (err) {
+        console.error('Erreur de sauvegarde de la partie:', err);
+      } else {
+        console.log('Partie sauvegardée avec succès dans', fileName);
+      }
+    });
   }
 }
