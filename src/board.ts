@@ -111,10 +111,15 @@ export class Board implements BoardInterface {
     toY: number,
   ): void {
     if (this.isEnPassantMove(fromX, fromY, toX, toY)) {
+      const movingPawn = this.getPiece(fromX, fromY);
+      if (!movingPawn) return;
+
       const capturedPawnY =
-        toY +
-        (this.getPiece(fromX, fromY)?.color === PieceColor.WHITE ? -1 : 1);
-      this.grid[capturedPawnY][toX] = null; // Capture le pion
+        toY + (movingPawn.color === PieceColor.WHITE ? -1 : 1);
+
+      if (this.grid[capturedPawnY][toX]) {
+        this.grid[capturedPawnY][toX] = null;
+      }
     }
   }
 
