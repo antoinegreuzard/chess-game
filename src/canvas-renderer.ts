@@ -260,16 +260,10 @@ export class CanvasRenderer {
     this.startY = null;
     this.canvas.style.cursor = 'default';
     this.highlightedMoves = [];
-    if (adjustedX < 0 || adjustedX >= 8 || adjustedY < 0 || adjustedY >= 8) {
-      this.drawBoard();
-      return;
-    }
+    this.drawBoard();
 
     if (moveSuccessful) {
-      if (adjustedX < 0 || adjustedX >= 8 || adjustedY < 0 || adjustedY >= 8) {
-        this.drawBoard();
-        return;
-      }
+      this.drawBoard();
     }
   }
 }
