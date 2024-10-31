@@ -105,7 +105,6 @@ export class Board implements BoardInterface {
       const capturedPawnY =
         toY + (movingPawn.color === PieceColor.WHITE ? -1 : 1);
 
-      // Supprime le pion capturé en passant
       if (this.grid[capturedPawnY][toX]) {
         this.grid[capturedPawnY][toX] = null;
       }

@@ -59,8 +59,6 @@ export class AI {
       this.moveHistory.push(chosenMove); // Ajoute à l'historique des coups
       return chosenMove;
     }
-
-    // Vérifie si un mouvement de fin de partie est disponible
     const endgameMove = this.useEndgameTablebase(board);
     if (endgameMove) {
       this.moveHistory.push(endgameMove); // Ajoute à l'historique des coups

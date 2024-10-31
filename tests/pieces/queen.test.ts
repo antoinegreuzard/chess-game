@@ -15,8 +15,7 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {
-  }
+  updateEnPassantTarget(): void {}
 
   isEnPassantMove(): boolean {
     return false;
