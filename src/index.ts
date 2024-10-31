@@ -96,6 +96,9 @@ export async function initializeGame(playerColor: PieceColor) {
     replayButton.style.display = 'block';
     if (whiteTimer.isRunning) whiteTimer.stop();
     if (blackTimer.isRunning) blackTimer.stop();
+
+    // Appel de la fonction de sauvegarde
+    game.saveGameToFile();
   }
 
   function clearMessage() {
