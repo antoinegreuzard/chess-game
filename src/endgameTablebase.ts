@@ -16,7 +16,11 @@ function flipMove(move: Move, flipBoard: boolean): Move {
 }
 
 // Retourne un mouvement optimal pour une fin de partie classique si disponible
-export function getEndgameMove(board: Board, color: PieceColor, flipBoard: boolean = false): Move | null {
+export function getEndgameMove(
+  board: Board,
+  color: PieceColor,
+  flipBoard: boolean = false,
+): Move | null {
   const pieces = board.getPieces();
   let move: Move | null = null;
 
@@ -67,7 +71,6 @@ export function getEndgameMove(board: Board, color: PieceColor, flipBoard: boole
   // Ajuste le mouvement pour `flipBoard`
   return move ? flipMove(move, color === PieceColor.BLACK || flipBoard) : null;
 }
-
 
 // Fonction utilitaire pour vérifier la présence d'une pièce spécifique
 function hasPiece(pieces: any[], type: PieceType, color: PieceColor): boolean {
