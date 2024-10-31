@@ -160,11 +160,6 @@ export class AI {
       for (const move of moves) {
         const fromPiece = board.getPiece(move.fromX, move.fromY);
         const toPiece = board.getPiece(move.toX, move.toY);
-        const isCheck = board.isKingInCheck(this.color);
-        const isPawnPush =
-          fromPiece &&
-          fromPiece.type === PieceType.PAWN &&
-          (move.toY === 0 || move.toY === 7);
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
         const evaluation = this.minimax(board, depth - 1, alpha, beta, false);
