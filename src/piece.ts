@@ -98,7 +98,6 @@ export abstract class Piece {
     return !targetPiece || targetPiece.color !== this.color;
   }
 
-
   // Sérialisation des données de la pièce
   public toData(): any {
     return {

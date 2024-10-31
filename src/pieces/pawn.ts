@@ -18,6 +18,10 @@ export class Pawn extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
+    
     const playerColor = board.getPlayerColor();
     const direction = this.color === PieceColor.WHITE ? 1 : -1;
     const startRow = this.color === PieceColor.WHITE ? 1 : 6;
@@ -57,6 +61,7 @@ export class Pawn extends Piece {
       !board.getPiece(fromX, fromY + direction)
     ) {
       board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
+      this.hasMoved = true; // Marque que le pion a bougé
       return true;
     }
 
