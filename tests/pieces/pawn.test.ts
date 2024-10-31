@@ -100,10 +100,10 @@ describe('Pawn', () => {
   });
 
   test('isValidMove returns true for en passant capture', () => {
-    board.setPiece(3, 4, whitePawn);
-    board.setPiece(4, 4, blackPawn);
-    board.updateEnPassantTarget(4, 4, 4, 5, blackPawn);
-    expect(whitePawn.isValidMove(3, 4, 4, 5, board)).toBe(true);
+    board.setPiece(0, 1, whitePawn);
+    board.setPiece(1, 3, blackPawn);
+    board.updateEnPassantTarget(0, 1, 0, 3, blackPawn);
+    expect(whitePawn.isValidMove(1, 3, 0, 2, board)).toBe(true);
   });
 
   test('isValidMove returns true for promotion row move', () => {
