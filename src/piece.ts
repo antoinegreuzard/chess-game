@@ -43,6 +43,13 @@ export interface BoardInterface {
   isAdjacentToAnotherKing(x: number, y: number, color: PieceColor): boolean;
 
   getPlayerColor(): PieceColor;
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void;
 }
 
 export abstract class Piece {

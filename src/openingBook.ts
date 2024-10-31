@@ -117,3 +117,15 @@ export function flipMove(
     toY: 7 - move.toY,
   };
 }
+
+export function getNextOpeningMove(
+  moves: string[],
+  openingBook: OpeningBook,
+): { fromX: number; fromY: number; toX: number; toY: number } | null {
+  const key = moves.join(' ');
+  return openingBook[key]?.[moves.length] ?? null;
+}
+
+export type OpeningBook = {
+  [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
+};

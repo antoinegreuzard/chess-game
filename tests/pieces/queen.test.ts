@@ -1,9 +1,11 @@
 // tests/queen.test.ts
 import { Queen } from '../../src/pieces/queen';
-import { PieceColor, BoardInterface } from '../../src/piece';
+import { BoardInterface, PieceColor } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  private board: (Queen | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (Queen | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
 
   getPiece(x: number, y: number): Queen | null {
     return this.board[y][x];
@@ -13,15 +15,13 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {
-  }
+  updateEnPassantTarget(): void {}
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -38,6 +38,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('Queen', () => {

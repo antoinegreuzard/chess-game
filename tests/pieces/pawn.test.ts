@@ -1,9 +1,11 @@
 // tests/pawn.test.ts
 import { Pawn } from '../../src/pieces/pawn';
-import { PieceColor, BoardInterface } from '../../src/piece';
+import { BoardInterface, PieceColor } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  private board: (Pawn | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+  private board: (Pawn | null)[][] = Array(8)
+    .fill(null)
+    .map(() => Array(8).fill(null));
   public enPassantTarget: { x: number; y: number } | null = null;
 
   getPiece(x: number, y: number): Pawn | null {
@@ -14,16 +16,26 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(fromX: number, fromY: number, toX: number, toY: number, piece: Pawn): void {
+  updateEnPassantTarget(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    piece: Pawn,
+  ): void {
     this.enPassantTarget = { x: toX, y: toY };
   }
 
-  isEnPassantMove(fromX: number, fromY: number, toX: number, toY: number): boolean {
+  isEnPassantMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
     return this.enPassantTarget?.x === toX && this.enPassantTarget?.y === toY;
   }
 
-  promotePawn(): void {
-  }
+  promotePawn(): void {}
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -40,6 +52,13 @@ class MockBoard implements BoardInterface {
   getPlayerColor(): PieceColor {
     return PieceColor.WHITE;
   }
+
+  captureEnPassantIfValid(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): void {}
 }
 
 describe('Pawn', () => {
