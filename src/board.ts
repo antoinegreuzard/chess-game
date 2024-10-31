@@ -13,7 +13,9 @@ export class Board implements BoardInterface {
   private currentPlayer: PieceColor = PieceColor.WHITE;
 
   constructor() {
-    this.grid = [];
+    this.grid = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
   }
 
   public async init(): Promise<void> {
@@ -30,8 +32,8 @@ export class Board implements BoardInterface {
       await createPiece(PieceType.ROOK, PieceColor.WHITE),
       await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
       await createPiece(PieceType.BISHOP, PieceColor.WHITE),
-      await createPiece(PieceType.KING, PieceColor.WHITE),
       await createPiece(PieceType.QUEEN, PieceColor.WHITE),
+      await createPiece(PieceType.KING, PieceColor.WHITE),
       await createPiece(PieceType.BISHOP, PieceColor.WHITE),
       await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
       await createPiece(PieceType.ROOK, PieceColor.WHITE),
@@ -47,8 +49,8 @@ export class Board implements BoardInterface {
       await createPiece(PieceType.ROOK, PieceColor.BLACK),
       await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
       await createPiece(PieceType.BISHOP, PieceColor.BLACK),
-      await createPiece(PieceType.KING, PieceColor.BLACK),
       await createPiece(PieceType.QUEEN, PieceColor.BLACK),
+      await createPiece(PieceType.KING, PieceColor.BLACK),
       await createPiece(PieceType.BISHOP, PieceColor.BLACK),
       await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
       await createPiece(PieceType.ROOK, PieceColor.BLACK),
@@ -89,21 +91,6 @@ export class Board implements BoardInterface {
     return validMoves;
   }
 
-  private isCastlingMove(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-  ): boolean {
-    const piece = this.getPiece(fromX, fromY);
-    return <boolean>(
-      (piece &&
-        piece.type === PieceType.KING &&
-        Math.abs(toX - fromX) === 2 &&
-        fromY === toY)
-    );
-  }
-
   public captureEnPassantIfValid(
     fromX: number,
     fromY: number,
@@ -114,9 +101,11 @@ export class Board implements BoardInterface {
       const movingPawn = this.getPiece(fromX, fromY);
       if (!movingPawn) return;
 
+      // Détermine la position du pion capturé en fonction de la couleur
       const capturedPawnY =
         toY + (movingPawn.color === PieceColor.WHITE ? -1 : 1);
 
+      // Supprime le pion capturé en passant
       if (this.grid[capturedPawnY][toX]) {
         this.grid[capturedPawnY][toX] = null;
       }
@@ -156,7 +145,8 @@ export class Board implements BoardInterface {
         return false;
       }
 
-      if (piece?.type === PieceType.KING && Math.abs(toX - fromX) === 2) {
+      // Gestion du roque pour le roi
+      if (piece.type === PieceType.KING && Math.abs(toX - fromX) === 2) {
         if (this.isCastlingValid(piece, fromX, fromY, toX)) {
           this.handleCastling(toX, fromY);
           piece.hasMoved = true; // Met à jour le statut de mouvement du roi
@@ -177,7 +167,6 @@ export class Board implements BoardInterface {
       // Sauvegarde l'état avant de simuler le mouvement
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
-      piece.hasMoved = true;
 
       // Vérifie si le mouvement met le roi du joueur en échec
       if (this.isKingInCheck(piece.color)) {
@@ -187,10 +176,12 @@ export class Board implements BoardInterface {
         return false;
       }
 
-      // Mise à jour de l'état après un mouvement valide
-      if ('hasMoved' in piece) {
-        (piece as any).hasMoved = true;
+      // Mise à jour de `hasMoved` pour les rois et tours
+      if (piece.type === PieceType.KING || piece.type === PieceType.ROOK) {
+        piece.hasMoved = true;
       }
+
+      // Mise à jour de l'état après un mouvement valide
       this.updateEnPassantTarget(fromX, fromY, toX, toY, piece);
 
       // Réinitialise le compteur pour la règle des 50 coups si un pion bouge ou une capture a lieu
@@ -247,12 +238,18 @@ export class Board implements BoardInterface {
       if (
         rook?.type === PieceType.ROOK &&
         !rook.hasMoved &&
-        king?.type === PieceType.KING
+        king?.type === PieceType.KING &&
+        !king.hasMoved
       ) {
+        // Déplace la tour et le roi pour le petit roque
         this.setPiece(5, kingY, rook); // Déplace la tour
         this.setPiece(7, kingY, null); // Enlève la tour de sa position initiale
         this.setPiece(6, kingY, king); // Déplace le roi vers sa nouvelle position
         this.setPiece(4, kingY, null); // Enlève le roi de sa position initiale
+
+        // Marque le roi et la tour comme ayant bougé
+        king.hasMoved = true;
+        rook.hasMoved = true;
       }
     }
     // Grand roque (roi vers la gauche)
@@ -262,12 +259,18 @@ export class Board implements BoardInterface {
       if (
         rook?.type === PieceType.ROOK &&
         !rook.hasMoved &&
-        king?.type === PieceType.KING
+        king?.type === PieceType.KING &&
+        !king.hasMoved
       ) {
+        // Déplace la tour et le roi pour le grand roque
         this.setPiece(3, kingY, rook); // Déplace la tour
         this.setPiece(0, kingY, null); // Enlève la tour de sa position initiale
         this.setPiece(2, kingY, king); // Déplace le roi vers sa nouvelle position
         this.setPiece(4, kingY, null); // Enlève le roi de sa position initiale
+
+        // Marque le roi et la tour comme ayant bougé
+        king.hasMoved = true;
+        rook.hasMoved = true;
       }
     }
   }
@@ -279,14 +282,17 @@ export class Board implements BoardInterface {
     toY: number,
     piece: Piece,
   ): void {
+    // Vérifie que la pièce est un pion et qu'il avance de deux cases
     if (
       piece?.type === PieceType.PAWN &&
       Math.abs(toY - fromY) === 2 &&
       fromX === toX
     ) {
-      // Si le pion avance de deux cases, configure la cible pour la prise en passant
+      // Si le pion avance de deux cases, configure `enPassantTarget`
+      // pour permettre une prise en passant lors du tour suivant
       this.enPassantTarget = { x: toX, y: (fromY + toY) / 2 };
     } else {
+      // Réinitialise `enPassantTarget` si aucune condition de prise en passant n'est remplie
       this.enPassantTarget = null;
     }
   }
@@ -308,9 +314,10 @@ export class Board implements BoardInterface {
       const capturedPawn = this.getPiece(toX, capturedPawnY);
 
       if (capturedPawn && capturedPawn.type === PieceType.PAWN) {
+        // Supprime le pion capturé de la grille
         this.grid[capturedPawnY][toX] = null;
 
-        // Déclare explicitement le type de captureData pour éviter l'erreur
+        // Initialise les données de capture
         const captureData: {
           capturedWhite: PieceType[];
           capturedBlack: PieceType[];
@@ -319,13 +326,14 @@ export class Board implements BoardInterface {
           capturedBlack: [],
         };
 
+        // Met à jour les données de capture selon la couleur du pion capturé
         if (capturedPawn.color === PieceColor.WHITE) {
           captureData.capturedWhite.push(capturedPawn.type);
         } else {
           captureData.capturedBlack.push(capturedPawn.type);
         }
 
-        // Appelle updateCapturedPieces pour mettre à jour le DOM
+        // Appelle updateCapturedPieces pour mettre à jour l'interface
         updateCapturedPieces(capturedPawn.type, capturedPawn.color);
 
         return captureData;
@@ -398,8 +406,12 @@ export class Board implements BoardInterface {
   }
 
   public isCheckmate(color: PieceColor): boolean {
-    if (!this.isKingInCheck(color)) {
-      return false; // Pas de mat si le roi n'est pas en échec
+    // Vérifie si le roi de la couleur donnée est en échec
+    const kingInCheck = this.isKingInCheck(color);
+
+    // Si le roi n'est pas en échec, ce n'est pas un échec et mat
+    if (!kingInCheck) {
+      return false;
     }
 
     // Parcourt chaque pièce de la couleur donnée pour trouver un mouvement légal
@@ -670,27 +682,28 @@ export class Board implements BoardInterface {
   }
 
   public getWinner(): PieceColor | null {
-    // Si c'est un échec et mat pour les Noirs, Blancs gagnent
+    // Vérifie si les Noirs sont en échec et mat, dans ce cas les Blancs gagnent
     if (this.isCheckmate(PieceColor.BLACK)) {
       return PieceColor.WHITE;
     }
 
-    // Si c'est un échec et mat pour les Blancs, Noirs gagnent
+    // Vérifie si les Blancs sont en échec et mat, dans ce cas les Noirs gagnent
     if (this.isCheckmate(PieceColor.WHITE)) {
       return PieceColor.BLACK;
     }
 
-    // Si c'est un pat, une égalité par matériel insuffisant, ou la règle des 50 coups, la partie est nulle
+    // Vérifie les conditions de partie nulle : pat, matériel insuffisant ou règle des 50 coups
     if (
       this.isStalemate(PieceColor.WHITE) ||
       this.isStalemate(PieceColor.BLACK) ||
       this.isInsufficientMaterial() ||
       this.isFiftyMoveRule()
     ) {
-      return null;
+      return null; // Partie nulle, aucun gagnant
     }
 
-    return null; // Retourne null si le jeu n'est pas encore terminé
+    // Le jeu est en cours, retourne `null` pour indiquer qu'aucun gagnant n'est déterminé
+    return null;
   }
 
   public getPieces(): Piece[] {

@@ -68,13 +68,13 @@ describe('CanvasRenderer Tests', () => {
   test('Displays king in check with red highlight', async () => {
     const whiteKing = await createPiece(PieceType.KING, PieceColor.WHITE);
     const blackRook = await createPiece(PieceType.ROOK, PieceColor.BLACK);
-    board.setPiece(3, 0, blackRook);
-    board.setPiece(3, 7, whiteKing);
+    board.setPiece(4, 0, blackRook);
+    board.setPiece(4, 7, whiteKing);
 
     renderer.drawBoard();
 
     // Vérifie que drawTiles a été appelé pour mettre en évidence l'échec du roi
-    const kingPosition = renderer['getCoordinates'](3, 7);
+    const kingPosition = renderer['getCoordinates'](4, 7);
     expect(renderer['kingInCheckPosition']).toEqual(kingPosition);
   });
 });
