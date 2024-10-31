@@ -42,8 +42,10 @@ export class Pawn extends Piece {
         return true;
       }
 
+      // Capture en passant
       if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
         board.captureEnPassantIfValid(fromX, fromY, toX, toY);
+        return true;
       }
     }
 

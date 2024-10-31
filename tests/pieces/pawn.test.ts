@@ -103,8 +103,10 @@ describe('Pawn', () => {
     board.setPiece(4, 4, whitePawn);
     board.setPiece(5, 4, blackPawn);
 
+    // Simule le mouvement de deux cases pour le pion noir
     board.updateEnPassantTarget(5, 4, 5, 5, blackPawn);
 
+    // Test de la capture en passant par le pion blanc
     expect(whitePawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
   });
 
