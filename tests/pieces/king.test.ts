@@ -3,6 +3,10 @@ import { King } from '../../src/pieces/king';
 import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
   private board: (King | null)[][] = Array(8)
     .fill(null)
     .map(() => Array(8).fill(null));
@@ -16,13 +20,12 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
   }
-
-  promotePawn(): void {}
 
   isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean {
     return this.isSquareUnderAttackCalled;
@@ -45,7 +48,8 @@ class MockBoard implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {}
+  ): void {
+  }
 }
 
 describe('King', () => {

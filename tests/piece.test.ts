@@ -16,13 +16,16 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {}
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -46,7 +49,8 @@ class MockBoard implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {}
+  ): void {
+  }
 }
 
 describe('Piece', () => {

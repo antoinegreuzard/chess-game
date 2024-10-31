@@ -1,6 +1,6 @@
 // tests/knight.test.ts
 import { Knight } from '../../src/pieces/knight';
-import { BoardInterface, PieceColor } from '../../src/piece';
+import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
   private board: (Knight | null)[][] = Array(8)
@@ -15,13 +15,16 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
   }
 
-  promotePawn(): void {}
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -44,7 +47,8 @@ class MockBoard implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {}
+  ): void {
+  }
 }
 
 describe('Knight', () => {

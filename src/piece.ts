@@ -34,9 +34,9 @@ export interface BoardInterface {
     toY: number,
   ): boolean;
 
-  promotePawn(x: number, y: number, pieceType: string): void;
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void>;
 
-  isSquareUnderAttack(x: number, y: number, color: string): boolean;
+  isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean;
 
   isKing(x: number, y: number): boolean;
 
@@ -58,7 +58,8 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   abstract isValidMove(
     fromX: number,
@@ -96,6 +97,7 @@ export abstract class Piece {
     const targetPiece = board.getPiece(toX, toY);
     return !targetPiece || targetPiece.color !== this.color;
   }
+
 
   // Sérialisation des données de la pièce
   public toData(): any {
