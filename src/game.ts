@@ -15,15 +15,24 @@ export class Game {
     toX: number;
     toY: number;
   } | null = null;
-  private moveHistory: { fromX: number; fromY: number; toX: number; toY: number; pieceType: PieceType; }[][];
-
-  constructor(playerColor: PieceColor, moveHistory: {
+  private moveHistory: {
     fromX: number;
     fromY: number;
     toX: number;
     toY: number;
     pieceType: PieceType;
-  }[][]) {
+  }[][];
+
+  constructor(
+    playerColor: PieceColor,
+    moveHistory: {
+      fromX: number;
+      fromY: number;
+      toX: number;
+      toY: number;
+      pieceType: PieceType;
+    }[][],
+  ) {
     this.board = new Board();
     this.aiWorker = new Worker(new URL('./ai.worker.ts', import.meta.url), {
       type: 'module',
