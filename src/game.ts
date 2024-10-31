@@ -94,30 +94,4 @@ export class Game {
   public getLastAIMove() {
     return this.lastAIMove;
   }
-
-  public saveGameToFile() {
-    const gameData = {
-      moves: this.moveHistory,
-      winner: this.board.getWinner(),
-    };
-
-    // Convertir les données en JSON
-    const json = JSON.stringify(gameData, null, 2);
-
-    // Créer un objet Blob avec les données JSON
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    // Créer un lien de téléchargement
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `game_${Date.now()}.json`;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-
-    // Nettoyer l'URL de l'objet Blob
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  }
 }
