@@ -15,11 +15,17 @@ export class King extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    // Vérifie que la destination est dans les limites du plateau
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
+
     const dx = Math.abs(toX - fromX);
     const dy = Math.abs(toY - fromY);
 
     // Mouvement classique du roi
     if (dx <= 1 && dy <= 1) {
+      // Vérifie que la case cible contient une pièce ennemie ou est vide
       return (
         this.canCapture(toX, toY, board) &&
         !board.isAdjacentToAnotherKing(toX, toY, this.color)
@@ -28,6 +34,11 @@ export class King extends Piece {
 
     // Vérifications pour le roque
     if (!this.hasMoved && dy === 0 && dx === 2) {
+      // Vérifie que la position de départ du roi n'est pas sous attaque
+      if (board.isSquareUnderAttack(fromX, fromY, this.color)) {
+        return false;
+      }
+
       const direction = toX > fromX ? 1 : -1; // Vers la droite ou la gauche
       const rookX = toX > fromX ? 7 : 0; // Position initiale de la tour
       const rook = board.getPiece(rookX, fromY);

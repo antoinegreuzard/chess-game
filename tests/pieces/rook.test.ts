@@ -1,6 +1,6 @@
 // tests/rook.test.ts
 import { Rook } from '../../src/pieces/rook';
-import { BoardInterface, PieceColor } from '../../src/piece';
+import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
   private board: (Rook | null)[][] = Array(8)
@@ -21,7 +21,9 @@ class MockBoard implements BoardInterface {
     return false;
   }
 
-  promotePawn(): void {}
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -44,7 +46,8 @@ class MockBoard implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {}
+  ): void {
+  }
 }
 
 describe('Rook', () => {

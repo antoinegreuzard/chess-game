@@ -19,10 +19,10 @@ describe('Board', () => {
     board = new Board();
     await board.init(); // Initialisation complète, pas de vidage de grille
 
-    const whiteQueen = board.getPiece(4, 0);
-    const whiteKing = board.getPiece(3, 0);
-    const blackQueen = board.getPiece(4, 7);
-    const blackKing = board.getPiece(3, 7);
+    const whiteQueen = board.getPiece(3, 0);
+    const whiteKing = board.getPiece(4, 0);
+    const blackQueen = board.getPiece(3, 7);
+    const blackKing = board.getPiece(4, 7);
     const whitePawn = board.getPiece(0, 1);
 
     expect(whiteQueen?.type).toBe(PieceType.QUEEN);

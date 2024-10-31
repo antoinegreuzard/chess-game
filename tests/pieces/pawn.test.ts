@@ -1,6 +1,6 @@
 // tests/pawn.test.ts
 import { Pawn } from '../../src/pieces/pawn';
-import { BoardInterface, PieceColor } from '../../src/piece';
+import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
   private board: (Pawn | null)[][] = Array(8)
@@ -35,7 +35,9 @@ class MockBoard implements BoardInterface {
     return this.enPassantTarget?.x === toX && this.enPassantTarget?.y === toY;
   }
 
-  promotePawn(): void {}
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   isSquareUnderAttack(): boolean {
     return false;
@@ -58,7 +60,8 @@ class MockBoard implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
-  ): void {}
+  ): void {
+  }
 }
 
 describe('Pawn', () => {

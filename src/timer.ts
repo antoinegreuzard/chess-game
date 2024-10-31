@@ -1,15 +1,12 @@
 // src/timer.ts
 export class Timer {
-  private intervalId: number | null = null;
+  private intervalId: NodeJS.Timeout | null = null;
   private currentTime: number;
   private readonly onTimeUpdate: (timeLeft: number) => void;
   public isRunning: boolean = false;
 
-  constructor(
-    private initialTime: number,
-    onTimeUpdate: (timeLeft: number) => void,
-  ) {
-    this.currentTime = initialTime;
+  constructor(initialTime: number, onTimeUpdate: (timeLeft: number) => void) {
+    this.currentTime = Math.max(0, initialTime);
     this.onTimeUpdate = onTimeUpdate;
   }
 
@@ -18,8 +15,8 @@ export class Timer {
     if (this.isRunning) return;
 
     this.isRunning = true;
-    this.intervalId = window.setInterval(() => {
-      this.currentTime--;
+    this.intervalId = setInterval(() => {
+      this.currentTime = Math.max(this.currentTime - 1, 0);
       this.onTimeUpdate(this.currentTime);
 
       if (this.currentTime <= 0) {
@@ -45,10 +42,12 @@ export class Timer {
   }
 
   // Réinitialiser le temps
-  public reset(time: number): void {
+  public reset(time: number, startImmediately: boolean = true): void {
     this.stop();
-    this.currentTime = time;
-    this.onTimeUpdate(this.currentTime); // Appel immédiat pour la mise à jour du temps
-    this.start();
+    this.currentTime = Math.max(0, time);
+    this.onTimeUpdate(this.currentTime);
+    if (startImmediately) {
+      this.start();
+    }
   }
 }

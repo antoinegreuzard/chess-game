@@ -13,6 +13,10 @@ export class Bishop extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
+
     // Le fou se déplace en diagonale
     if (Math.abs(toX - fromX) === Math.abs(toY - fromY)) {
       // Vérifie que la trajectoire est dégagée
