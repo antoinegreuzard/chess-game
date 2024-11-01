@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
