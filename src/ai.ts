@@ -55,10 +55,9 @@ export class AI {
     }
 
     // Vérifie si un mouvement d'ouverture basé sur les coups passés est disponible
-    const pastMoves = this.getPastMoves();
-    const chosenMove = this.chooseMove(pastMoves, board);
+    const chosenMove = this.chooseMove(board);
     if (chosenMove) {
-      this.moveHistory.push(chosenMove); // Ajoute à l'historique des coups
+      this.moveHistory.push(chosenMove);
       return chosenMove;
     }
     const endgameMove = this.useEndgameTablebase(board);
@@ -147,13 +146,6 @@ export class AI {
     const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
     const currentScore = this.historicalMoveScores.get(moveKey) || 0;
     this.historicalMoveScores.set(moveKey, currentScore + 1);
-  }
-
-  // Fonction pour récupérer les coups passés en format abrégé
-  private getPastMoves(): string[] {
-    return this.moveHistory.map(
-      (move) => `${move.fromX}${move.fromY}${move.toX}${move.toY}`,
-    );
   }
 
   // Fonction Minimax avec Alpha-Beta Pruning et table de transposition
@@ -275,10 +267,14 @@ export class AI {
   }
 
   private chooseMove(
-    pastMoves: string[],
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const openingMove = getNextOpeningMove(pastMoves, this.openingMoves);
+    const key = this.moveHistory
+      .map((move) => `${move.fromX}${move.fromY}${move.toX}${move.toY}`)
+      .join(' ');
+
+    console.log(key);
+    const openingMove = getNextOpeningMove(key, this.openingMoves);
 
     if (openingMove) {
       const flippedMove = flipMove(
