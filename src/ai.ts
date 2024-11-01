@@ -56,7 +56,7 @@ export class AI {
 
     // Vérifie si un mouvement d'ouverture basé sur les coups passés est disponible
     const pastMoves = this.getPastMoves();
-    const chosenMove = this.chooseMove(pastMoves);
+    const chosenMove = this.chooseMove(pastMoves, board);
     if (chosenMove) {
       this.moveHistory.push(chosenMove); // Ajoute à l'historique des coups
       return chosenMove;
@@ -276,11 +276,35 @@ export class AI {
 
   private chooseMove(
     pastMoves: string[],
+    board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const openingMove = getNextOpeningMove(pastMoves, openingBook);
+    const openingMove = getNextOpeningMove(pastMoves, this.openingMoves);
 
     if (openingMove) {
-      return openingMove;
+      const flippedMove = flipMove(
+        openingMove,
+        this.color === PieceColor.BLACK,
+      );
+
+      // Évaluation de la position pour ajuster le choix de l'ouverture
+      board.movePiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        flippedMove.toX,
+        flippedMove.toY,
+      );
+      const evaluation = evaluateBoard(board, this.color);
+      board.setPiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        board.getPiece(flippedMove.toX, flippedMove.toY),
+      );
+      board.setPiece(flippedMove.toX, flippedMove.toY, null);
+
+      const threshold = 0.3;
+      if (evaluation >= threshold) {
+        return flippedMove;
+      }
     }
 
     return null;
@@ -639,11 +663,33 @@ export class AI {
     const boardHash = this.getBoardHash(board);
 
     if (this.openingMoves[boardHash]) {
+      // Sélectionne le premier coup suggéré par défaut
       const move = this.openingMoves[boardHash][0];
-      return flipMove(move, this.color === PieceColor.BLACK); // Applique flipMove si c'est les Noirs
+      const flippedMove = flipMove(move, this.color === PieceColor.BLACK);
+
+      // Évalue la position après le coup d'ouverture
+      board.movePiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        flippedMove.toX,
+        flippedMove.toY,
+      );
+      const evaluation = evaluateBoard(board, this.color);
+      board.setPiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        board.getPiece(flippedMove.toX, flippedMove.toY),
+      );
+      board.setPiece(flippedMove.toX, flippedMove.toY, null);
+
+      // Seuil pour sortir du livre d'ouvertures si la position est défavorable
+      const exitThreshold = -0.5;
+      if (evaluation > exitThreshold) {
+        return flippedMove; // Choisit le coup d'ouverture par défaut si l'évaluation est favorable
+      }
     }
 
-    return null;
+    return null; // Sort du livre si aucune ouverture valide n'est trouvée ou si l'évaluation est inférieure au seuil
   }
 
   // Génération d'un identifiant de position simplifié pour le dictionnaire d'ouverture
