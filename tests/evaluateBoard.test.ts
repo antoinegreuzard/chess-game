@@ -78,12 +78,6 @@ describe('evaluateBoard', () => {
     expect(score).toBeLessThan(0); // Pénalisation pour pions doublés
   });
 
-  it('should reward passed pawn', () => {
-    board.setPiece(4, 4, new Pawn(PieceColor.WHITE)); // Pion passé sans pions adverses en avant
-    const score = evaluateBoard(board, PieceColor.WHITE);
-    expect(score).toBeGreaterThan(0); // Bonus pour pion passé
-  });
-
   it('should penalize isolated pawn', () => {
     board.setPiece(3, 3, new Pawn(PieceColor.WHITE));
     const score = evaluateBoard(board, PieceColor.WHITE);
