@@ -18,8 +18,7 @@
     "prettier-check": "prettier --check 'src/**/*.{js,ts,html,css}'",
     "lint": "eslint 'src/**/*.{js,ts}' --config ./eslint.config.js",
     "test-server": "npm run start & sleep 5 && pkill -f vite",
-    "test": "jest",
-    "size": "size-limit"
+    "test": "jest"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
