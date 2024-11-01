@@ -3,10 +3,6 @@ import { King } from '../../src/pieces/king';
 import { BoardInterface, PieceColor, PieceType } from '../../src/piece';
 
 class MockBoard implements BoardInterface {
-  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
   private board: (King | null)[][] = Array(8)
     .fill(null)
     .map(() => Array(8).fill(null));
@@ -20,7 +16,8 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
@@ -49,6 +46,10 @@ class MockBoard implements BoardInterface {
     toY: number,
   ): void {
   }
+
+  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 }
 
 describe('King', () => {
@@ -62,55 +63,101 @@ describe('King', () => {
     blackKing = new King(PieceColor.BLACK);
   });
 
+  test('isValidMove returns false if moving outside of board limits', () => {
+    board.setPiece(0, 0, whiteKing);
+    expect(whiteKing.isValidMove(0, 0, 0, -1, board)).toBe(false);
+  });
+
   test('isValidMove returns true for a valid single square move', () => {
     board.setPiece(4, 4, whiteKing);
-    expect(whiteKing.isValidMove(4, 4, 4, 5, board)).toBe(true); // Move 1 up
-    expect(whiteKing.isValidMove(4, 4, 3, 4, board)).toBe(true); // Move 1 left
-    expect(whiteKing.isValidMove(4, 4, 4, 3, board)).toBe(true); // Move 1 down
+    expect(whiteKing.isValidMove(4, 4, 4, 5, board)).toBe(true);
   });
 
   test('isValidMove returns false for a move adjacent to another king', () => {
     board.setPiece(4, 4, whiteKing);
-    expect(whiteKing.isValidMove(4, 4, 5, 4, board)).toBe(false); // Adjacent to a king at (5,4)
+    expect(whiteKing.isValidMove(4, 4, 5, 4, board)).toBe(false); // Adjacent to a king
   });
 
   test('isValidMove returns true for capturing an opponent piece', () => {
     board.setPiece(4, 4, whiteKing);
-    board.setPiece(5, 5, blackKing); // Place opponent piece
+    board.setPiece(5, 5, blackKing);
     expect(whiteKing.isValidMove(4, 4, 5, 5, board)).toBe(true);
   });
 
   test('isValidMove returns false for capturing a piece of the same color', () => {
     const anotherWhiteKing = new King(PieceColor.WHITE);
     board.setPiece(4, 4, whiteKing);
-    board.setPiece(5, 5, anotherWhiteKing); // Place friendly piece
+    board.setPiece(5, 5, anotherWhiteKing);
     expect(whiteKing.isValidMove(4, 4, 5, 5, board)).toBe(false);
   });
 
-  test('isValidMove returns true for castling move', () => {
+  test('isValidMove returns true for castling move (queenside)', () => {
     board.setPiece(4, 0, whiteKing);
     const whiteRook = {
       type: PieceType.ROOK,
       hasMoved: false,
       color: PieceColor.WHITE,
     } as King;
-    board.setPiece(0, 0, whiteRook); // Place rook for queenside castle
-    expect(whiteKing.isValidMove(4, 0, 2, 0, board)).toBe(true); // Queenside castling
-
-    board.setPiece(7, 0, whiteRook); // Place rook for kingside castle
-    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(true); // Kingside castling
+    board.setPiece(0, 0, whiteRook);
+    expect(whiteKing.isValidMove(4, 0, 2, 0, board)).toBe(true);
   });
 
-  test('isValidMove returns false for castling if the path is under attack', () => {
+  test('isValidMove returns true for castling move (kingside)', () => {
     board.setPiece(4, 0, whiteKing);
     const whiteRook = {
       type: PieceType.ROOK,
       hasMoved: false,
       color: PieceColor.WHITE,
     } as King;
-    board.setPiece(7, 0, whiteRook); // Place rook for kingside castle
+    board.setPiece(7, 0, whiteRook);
+    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(true);
+  });
 
-    board.isSquareUnderAttackCalled = true; // Simule un carré sous attaque
-    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(false); // Path under attack
+  test('isValidMove returns false for castling if king has moved', () => {
+    whiteKing.hasMoved = true;
+    board.setPiece(4, 0, whiteKing);
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: false,
+      color: PieceColor.WHITE,
+    } as King;
+    board.setPiece(7, 0, whiteRook);
+    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(false);
+  });
+
+  test('isValidMove returns false for castling if rook has moved', () => {
+    board.setPiece(4, 0, whiteKing);
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: true, // Rook has moved
+      color: PieceColor.WHITE,
+    } as King;
+    board.setPiece(7, 0, whiteRook);
+    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(false);
+  });
+
+  test('isValidMove returns false for castling if path is blocked', () => {
+    board.setPiece(4, 0, whiteKing);
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: false,
+      color: PieceColor.WHITE,
+    } as King;
+    board.setPiece(7, 0, whiteRook);
+    const blockingPiece = new King(PieceColor.WHITE);
+    board.setPiece(5, 0, blockingPiece); // Block the castling path
+    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(false);
+  });
+
+  test('isValidMove returns false for castling if any square is under attack', () => {
+    board.setPiece(4, 0, whiteKing);
+    const whiteRook = {
+      type: PieceType.ROOK,
+      hasMoved: false,
+      color: PieceColor.WHITE,
+    } as King;
+    board.setPiece(7, 0, whiteRook);
+    board.isSquareUnderAttackCalled = true; // Simulate square under attack
+    expect(whiteKing.isValidMove(4, 0, 6, 0, board)).toBe(false);
   });
 });

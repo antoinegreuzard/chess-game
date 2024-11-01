@@ -15,7 +15,8 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
@@ -24,7 +25,7 @@ class MockBoard implements BoardInterface {
   promotePawn(x: number, y: number, pieceType: PieceType): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  
+
   isSquareUnderAttack(): boolean {
     return false;
   }
@@ -90,5 +91,17 @@ describe('Knight', () => {
     board.setPiece(3, 3, whiteKnight);
     board.setPiece(5, 4, new Knight(PieceColor.WHITE)); // Place friendly piece
     expect(whiteKnight.isValidMove(3, 3, 5, 4, board)).toBe(false);
+  });
+
+  test('isValidMove returns false if moving outside of board limits', () => {
+    board.setPiece(0, 0, whiteKnight);
+    expect(whiteKnight.isValidMove(0, 0, -2, 1, board)).toBe(false); // Off left edge
+    expect(whiteKnight.isValidMove(0, 0, 1, -2, board)).toBe(false); // Off top edge
+  });
+
+  test('isValidMove returns true for L-shape moves near the edge of the board', () => {
+    board.setPiece(1, 0, whiteKnight); // Near top-left edge
+    expect(whiteKnight.isValidMove(1, 0, 0, 2, board)).toBe(true); // Move 1 left, 2 down
+    expect(whiteKnight.isValidMove(1, 0, 2, 2, board)).toBe(true); // Move 1 right, 2 down
   });
 });

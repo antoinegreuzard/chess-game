@@ -15,7 +15,8 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
@@ -76,16 +77,35 @@ describe('Rook', () => {
     expect(whiteRook.isValidMove(3, 3, 5, 5, board)).toBe(false);
   });
 
-  test('isValidMove returns false when path is blocked', () => {
+  test('isValidMove returns false when path is blocked vertically', () => {
     board.setPiece(3, 3, whiteRook);
-    board.setPiece(3, 4, blackRook); // Placer une pièce pour bloquer le chemin
+    board.setPiece(3, 4, blackRook); // Block the path
     expect(whiteRook.isValidMove(3, 3, 3, 5, board)).toBe(false);
+  });
+
+  test('isValidMove returns false when path is blocked horizontally', () => {
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(4, 3, blackRook); // Block the path
+    expect(whiteRook.isValidMove(3, 3, 5, 3, board)).toBe(false);
+  });
+
+  test('isValidMove returns false if moving outside of board limits', () => {
+    board.setPiece(3, 3, whiteRook);
+    expect(whiteRook.isValidMove(3, 3, -1, 3, board)).toBe(false);
+    expect(whiteRook.isValidMove(3, 3, 3, 8, board)).toBe(false);
   });
 
   test('canCapture returns true for opponent piece', () => {
     board.setPiece(3, 3, whiteRook);
     board.setPiece(3, 5, blackRook);
     expect(whiteRook.canCapture(3, 5, board)).toBe(true);
+  });
+
+  test('canCapture returns false for same color piece', () => {
+    const anotherWhiteRook = new Rook(PieceColor.WHITE);
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(3, 5, anotherWhiteRook);
+    expect(whiteRook.canCapture(3, 5, board)).toBe(false);
   });
 
   test('toData returns correct piece data', () => {
@@ -103,5 +123,15 @@ describe('Rook', () => {
     expect(rook).toBeInstanceOf(Rook);
     expect(rook.color).toBe(PieceColor.BLACK);
     expect(rook.hasMoved).toBe(true);
+  });
+
+  test('toData serializes piece with hasMoved property set to true', () => {
+    whiteRook.hasMoved = true;
+    const data = whiteRook.toData();
+    expect(data).toEqual({
+      color: PieceColor.WHITE,
+      type: 'rook',
+      hasMoved: true,
+    });
   });
 });

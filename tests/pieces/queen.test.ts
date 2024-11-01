@@ -15,7 +15,8 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
@@ -59,6 +60,18 @@ describe('Queen', () => {
     board = new MockBoard();
     whiteQueen = new Queen(PieceColor.WHITE);
     blackQueen = new Queen(PieceColor.BLACK);
+  });
+
+  test('isValidMove returns false when path is blocked horizontally', () => {
+    board.setPiece(3, 3, whiteQueen);
+    board.setPiece(4, 3, blackQueen);
+    expect(whiteQueen.isValidMove(3, 3, 5, 3, board)).toBe(false);
+  });
+
+  test('isValidMove returns false if moving outside of board limits', () => {
+    board.setPiece(3, 3, whiteQueen);
+    expect(whiteQueen.isValidMove(3, 3, -1, 3, board)).toBe(false);
+    expect(whiteQueen.isValidMove(3, 3, 3, 8, board)).toBe(false);
   });
 
   test('isValidMove returns true for a valid vertical move', () => {

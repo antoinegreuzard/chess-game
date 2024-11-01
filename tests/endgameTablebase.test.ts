@@ -15,7 +15,7 @@ describe('Endgame Move Generation Tests', () => {
 
   beforeEach(async () => {
     board = new Board();
-    await board.init(); // Initialise un échiquier vide pour chaque test
+    await board.init();
     board['grid'] = Array(8).fill(null).map(() => Array(8).fill(null));
   });
 
@@ -38,7 +38,7 @@ describe('Endgame Move Generation Tests', () => {
 
     const move = getEndgameMove(board, PieceColor.WHITE);
     expect(move).not.toBeNull();
-    expect(move?.fromX).toBe(2); // Cavalier se déplace pour pousser le roi adverse
+    expect(move?.fromX).toBe(2); // Fou se déplace pour rapprocher le roi adverse
   });
 
   test('King + Two Bishops vs King endgame move', async () => {
@@ -49,7 +49,7 @@ describe('Endgame Move Generation Tests', () => {
 
     const move = getEndgameMove(board, PieceColor.WHITE);
     expect(move).not.toBeNull();
-    expect(move?.fromX).toBe(2); // Fou se déplace pour forcer le roi adverse vers un coin
+    expect(move?.fromX).toBe(2); // Fou pousse le roi adverse vers le bord
   });
 
   test('King + Pawn vs King endgame move', async () => {
@@ -62,5 +62,25 @@ describe('Endgame Move Generation Tests', () => {
     expect(move?.fromX).toBe(5);
     expect(move?.fromY).toBe(5);
     expect(move?.toY).toBe(6); // Pion avance pour promotion
+  });
+
+  test('No endgame move available when pieces do not match any endgame scenario', async () => {
+    await placePiece(board, PieceType.KING, PieceColor.WHITE, 4, 4);
+    await placePiece(board, PieceType.ROOK, PieceColor.WHITE, 5, 5);
+    await placePiece(board, PieceType.BISHOP, PieceColor.WHITE, 2, 2);
+    await placePiece(board, PieceType.KING, PieceColor.BLACK, 7, 7);
+
+    const move = getEndgameMove(board, PieceColor.WHITE);
+    expect(move).toBeNull(); // Aucun mouvement optimal pour cette configuration
+  });
+
+  test('Endgame move generation considers flipBoard for black pieces', async () => {
+    await placePiece(board, PieceType.KING, PieceColor.BLACK, 0, 0);
+    await placePiece(board, PieceType.ROOK, PieceColor.BLACK, 1, 0);
+    await placePiece(board, PieceType.KING, PieceColor.WHITE, 7, 7);
+
+    const move = getEndgameMove(board, PieceColor.BLACK, true);
+    expect(move).not.toBeNull();
+    expect(move?.fromX).toBe(6); // La position est inversée pour la vue noire
   });
 });
