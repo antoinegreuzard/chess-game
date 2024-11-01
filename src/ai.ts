@@ -5,6 +5,7 @@ import {
   centerControlBonus,
   evaluateBoard,
   evaluateKingSafety,
+  pieceValues,
 } from './ai/evaluator';
 import { getEndgameMove } from './ai/endgameTablebase';
 import { flipMove, getNextOpeningMove, openingBook } from './ai/openingBook';
@@ -30,6 +31,7 @@ export class AI {
     toX: number;
     toY: number;
   }[] = [];
+  private readonly historicalMoveScores: Map<string, number> = new Map(); // Stockage des scores historiques des mouvements
 
   constructor(
     private readonly color: PieceColor,
@@ -129,9 +131,22 @@ export class AI {
     // Ajoute le meilleur mouvement trouvé à l'historique des coups si existant
     if (bestMove) {
       this.moveHistory.push(bestMove);
+      this.updateHistoricalScore(bestMove);
     }
 
     return bestMove;
+  }
+
+  // Fonction pour augmenter le score historique d'un mouvement après son utilisation
+  private updateHistoricalScore(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }) {
+    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
+    const currentScore = this.historicalMoveScores.get(moveKey) || 0;
+    this.historicalMoveScores.set(moveKey, currentScore + 1);
   }
 
   // Fonction pour récupérer les coups passés en format abrégé
@@ -395,29 +410,51 @@ export class AI {
     depth: number,
   ): { fromX: number; fromY: number; toX: number; toY: number }[] {
     return moves.sort((a, b) => {
-      const killerMovesAtDepth = this.killerMoves.get(depth);
+      // 1. Priorité aux mouvements capturant des pièces de valeur plus élevée
+      const pieceA = board.getPiece(a.toX, a.toY);
+      const pieceB = board.getPiece(b.toX, b.toY);
 
+      const valueA = pieceA ? pieceValues[pieceA.type] : 0;
+      const valueB = pieceB ? pieceValues[pieceB.type] : 0;
+
+      if (valueA !== valueB) {
+        return valueB - valueA; // Tri décroissant par valeur de capture
+      }
+
+      // 2. Bonus pour le contrôle des cases centrales
+      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
+      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
+
+      if (centerControlA !== centerControlB) {
+        return centerControlB - centerControlA; // Tri par contrôle du centre
+      }
+
+      // 3. Priorité aux mouvements dans les killer moves pour cette profondeur
+      const killerMovesAtDepth = this.killerMoves.get(depth);
       if (
         killerMovesAtDepth &&
         killerMovesAtDepth.some(
-          (move: {
-            move: { fromX: number; fromY: number; toX: number; toY: number };
-          }) => move.move.fromX === a.fromX && move.move.fromY === a.fromY,
+          (move) =>
+            move.move.fromX === a.fromX &&
+            move.move.fromY === a.fromY &&
+            move.move.toX === a.toX &&
+            move.move.toY === a.toY,
         )
       ) {
         return -1;
       }
 
-      const pieceA = board.getPiece(a.toX, a.toY);
-      const pieceB = board.getPiece(b.toX, b.toY);
+      // 4. Score historique pour le mouvement, favorise les coups réussis dans le passé
+      const scoreA =
+        this.historicalMoveScores.get(
+          `${a.fromX},${a.fromY},${a.toX},${a.toY}`,
+        ) || 0;
+      const scoreB =
+        this.historicalMoveScores.get(
+          `${b.fromX},${b.fromY},${b.toX},${b.toY}`,
+        ) || 0;
 
-      if (pieceA && !pieceB) return -1;
-      if (!pieceA && pieceB) return 1;
-
-      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
-      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
-
-      return centerControlB - centerControlA;
+      return scoreB - scoreA; // Tri par score historique décroissant
     });
   }
 

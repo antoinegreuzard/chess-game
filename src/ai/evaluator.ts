@@ -3,7 +3,7 @@ import { Board } from '../board';
 import { PieceColor, PieceType } from '../piece';
 
 // Valeurs des pièces (évaluation de base)
-const pieceValues: { [key in PieceType]: number } = {
+export const pieceValues: { [key in PieceType]: number } = {
   [PieceType.PAWN]: 1,
   [PieceType.KNIGHT]: 3,
   [PieceType.BISHOP]: 3.25,
@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
