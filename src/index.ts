@@ -103,6 +103,22 @@ export async function initializeGame(playerColor: PieceColor) {
     gameMessageElement.style.display = 'none';
   }
 
+  function showPromotionDialog(x: number, y: number, board: BoardInterface) {
+    const promotionDialog = document.getElementById('promotionDialog');
+    promotionDialog.style.display = 'block';
+
+    // Définir le callback de promotion pour gérer la sélection de pièce
+    window.promote = (pieceType: string) => {
+      board.promotePawn(x, y, pieceType); // Promouvoir le pion
+      promotionDialog.style.display = 'none'; // Masquer la boîte de dialogue
+
+      // Met à jour l'affichage de l'historique et du plateau après la promotion
+      addMoveToHistory(x, y, x, y, PieceType[pieceType.toUpperCase()]);
+      renderer.drawBoard();
+      updateTurn();
+    };
+  }
+
   async function updateTurn() {
     clearMessage();
     currentPlayer =
@@ -228,9 +244,15 @@ export async function initializeGame(playerColor: PieceColor) {
           updateCapturedPieces(targetPiece.type, targetPiece.color);
         }
 
-        addMoveToHistory(fromX, fromY, toX, toY, piece.type);
-        renderer.animateMove(fromX, fromY, toX, toY, piece);
-        await updateTurn();
+        // Gestion de la promotion
+        if (piece.type === PieceType.PAWN && (toY === 0 || toY === 7)) {
+          showPromotionDialog(toX, toY, board);
+          await updateTurn();
+        } else {
+          addMoveToHistory(fromX, fromY, toX, toY, piece.type);
+          renderer.animateMove(fromX, fromY, toX, toY, piece);
+          await updateTurn();
+        }
         return true;
       }
       showMessage('Mouvement invalide !');

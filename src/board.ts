@@ -497,8 +497,12 @@ export class Board implements BoardInterface {
       for (let fromX = 0; fromX < 8; fromX++) {
         const piece = this.getPiece(fromX, fromY);
         if (piece && piece.color !== color) {
-          // Vérifie si la pièce adverse peut se déplacer sur la case (x, y)
-          if (piece.isValidMove(fromX, fromY, x, y, this)) {
+          // Utilise `isThreatenedMove` pour éviter la récursion infinie
+          if (piece instanceof King) {
+            if (piece.isThreatenedMove(fromX, fromY, x, y)) {
+              return true;
+            }
+          } else if (piece.isValidMove(fromX, fromY, x, y, this)) {
             return true;
           }
         }
