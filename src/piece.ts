@@ -58,7 +58,8 @@ export abstract class Piece {
   protected constructor(
     public color: PieceColor,
     public type: PieceType,
-  ) {}
+  ) {
+  }
 
   abstract isValidMove(
     fromX: number,
@@ -107,5 +108,17 @@ export abstract class Piece {
 
   static async fromData(data: any): Promise<Piece> {
     return await createPiece(data.type, data.color);
+  }
+
+  // Nouvelle méthode pour vérifier les menaces sans règles spécifiques du roi
+  public isThreatenedMove(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+  ): boolean {
+    const dx = Math.abs(toX - fromX);
+    const dy = Math.abs(toY - fromY);
+    return dx <= 1 && dy <= 1;
   }
 }

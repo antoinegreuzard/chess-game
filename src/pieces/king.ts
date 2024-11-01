@@ -58,16 +58,4 @@ export class King extends Piece {
 
     return false;
   }
-
-  // Nouvelle méthode pour vérifier les menaces sans règles spécifiques du roi
-  public static isThreatenedMove(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-  ): boolean {
-    const dx = Math.abs(toX - fromX);
-    const dy = Math.abs(toY - fromY);
-    return dx <= 1 && dy <= 1;
-  }
 }
