@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
@@ -136,9 +136,10 @@ export function evaluateBoard(
         pieceScore += centerControlBonus[positionKey];
       }
 
-      // Évalue les pions pour structure et bonus de pion passé
+      // Évalue les pions pour la structure et les chaînes protégées
       if (piece.type === PieceType.PAWN) {
         pieceScore += evaluatePawnStructure(board, x, y, piece.color);
+        pieceScore += evaluatePawnChains(board, x, y, piece.color); // Bonus pour chaînes de pions
       }
 
       // Pénalise les rois exposés
@@ -154,6 +155,34 @@ export function evaluateBoard(
   }
 
   return parseFloat(score.toFixed(2));
+}
+
+// Fonction pour évaluer les chaînes de pions
+function evaluatePawnChains(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  const direction = color === PieceColor.WHITE ? -1 : 1;
+  let score = 0;
+
+  // Vérifie les pions sur les diagonales avant (chaînes protégées)
+  const leftDiagonal = board.getPiece(x - 1, y + direction);
+  const rightDiagonal = board.getPiece(x + 1, y + direction);
+
+  if (
+    (leftDiagonal &&
+      leftDiagonal.color === color &&
+      leftDiagonal.type === PieceType.PAWN) ||
+    (rightDiagonal &&
+      rightDiagonal.color === color &&
+      rightDiagonal.type === PieceType.PAWN)
+  ) {
+    score += 0.5; // Bonus pour les pions protégés dans une chaîne
+  }
+
+  return score;
 }
 
 // Évaluer la structure des pions
