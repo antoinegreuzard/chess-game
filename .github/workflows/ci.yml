@@ -14,35 +14,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout du dépôt
+      # Checkout du dépôt
       - name: Checkout code
         uses: actions/checkout@v4
 
-    # Configuration de Node.js
+      # Configuration de Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20 # Assurez-vous d'utiliser une version compatible avec votre projet
 
-    # Installation des dépendances
+      # Cache Node modules
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Run Security Audit
+      - name: Run Security Audit
+        run: npm audit
+
+      # Installation des dépendances
       - name: Install dependencies
         run: npm install
 
-    # Test de la compilation TypeScript
+      # Test de la compilation TypeScript
       - name: Build TypeScript
         run: npm run build
 
-    # Lancer les tests unitaires
+      # Lancer les tests unitaires
       - name: Run Unit Tests
         run: npm test
 
-    # Lancer Prettier pour formater le code
+      # Coverage tests
+      - name: Generate Coverage Report
+        run: npm run test -- --coverage
+
+      # Lancer Prettier pour formater le code
       - name: Run Prettier
         run: npm run prettier-check
 
-    # Lancer ESLint pour vérifier la qualité du code
+      # Lancer ESLint pour vérifier la qualité du code
       - name: Run ESLint
         run: npm run lint
+
+      # Check bundle size
+      - name: Check bundle size
+        uses: andresz1/size-limit-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -52,25 +75,25 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     needs: build-and-test
     steps:
-    # Checkout du dépôt
+      # Checkout du dépôt
       - name: Checkout code
         uses: actions/checkout@v4
 
-    # Configuration de Node.js
+      # Configuration de Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-    # Installation des dépendances
+      # Installation des dépendances
       - name: Install dependencies
         run: npm install
 
-    # Construction de l'application
+      # Construction de l'application
       - name: Build TypeScript
         run: npm run build
 
-    # Déploiement sur GitHub Pages
+      # Déploiement sur GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
