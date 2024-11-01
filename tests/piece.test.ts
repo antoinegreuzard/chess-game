@@ -16,7 +16,8 @@ class MockBoard implements BoardInterface {
     this.board[y][x] = piece;
   }
 
-  updateEnPassantTarget(): void {}
+  updateEnPassantTarget(): void {
+  }
 
   isEnPassantMove(): boolean {
     return false;
@@ -63,15 +64,20 @@ describe('Piece', () => {
     blackRook = await createPiece(PieceType.ROOK, PieceColor.BLACK);
   });
 
-  test('isPathClear returns true for a clear path', () => {
+  test('isPathClear returns true for a clear vertical path', () => {
     board.setPiece(3, 3, whiteRook);
     expect(whiteRook.isPathClear(3, 3, 3, 6, board)).toBe(true);
   });
 
-  test('isPathClear returns false when path is blocked', () => {
+  test('isPathClear returns true for a clear horizontal path', () => {
     board.setPiece(3, 3, whiteRook);
-    board.setPiece(3, 5, blackRook);
-    expect(whiteRook.isPathClear(3, 3, 3, 6, board)).toBe(false);
+    expect(whiteRook.isPathClear(3, 3, 6, 3, board)).toBe(true);
+  });
+
+  test('isPathClear returns false when path is blocked horizontally', () => {
+    board.setPiece(3, 3, whiteRook);
+    board.setPiece(5, 3, blackRook);
+    expect(whiteRook.isPathClear(3, 3, 6, 3, board)).toBe(false);
   });
 
   test('canCapture returns true for opponent piece', () => {
@@ -92,7 +98,7 @@ describe('Piece', () => {
     expect(data).toEqual({
       color: PieceColor.WHITE,
       type: PieceType.ROOK,
-      hasMoved: false,
+      hasMoved: false, // Inclure le champ hasMoved avec sa valeur initiale
     });
   });
 
@@ -102,5 +108,35 @@ describe('Piece', () => {
     expect(piece).toBeInstanceOf(King);
     expect(piece.color).toBe(PieceColor.BLACK);
     expect(piece.type).toBe(PieceType.KING);
+  });
+
+  test('isKing correctly identifies a King piece', () => {
+    const blackKing = new King(PieceColor.BLACK);
+    expect(Piece.isKing(blackKing)).toBe(true);
+    expect(Piece.isKing(whiteRook)).toBe(false);
+  });
+
+  test('isPathClear for diagonal movement', () => {
+    board.setPiece(2, 2, whiteRook);
+    expect(whiteRook.isPathClear(2, 2, 5, 5, board)).toBe(true);
+
+    // Blocking piece
+    board.setPiece(3, 3, blackRook);
+    expect(whiteRook.isPathClear(2, 2, 5, 5, board)).toBe(false);
+  });
+
+  test('canCapture returns true if target square is empty', () => {
+    board.setPiece(4, 4, whiteRook);
+    expect(whiteRook.canCapture(5, 5, board)).toBe(true);
+  });
+
+  test('toData correctly serializes piece data with hasMoved property', () => {
+    whiteRook.hasMoved = true;
+    const data = whiteRook.toData();
+    expect(data).toEqual({
+      color: PieceColor.WHITE,
+      type: PieceType.ROOK,
+      hasMoved: true,
+    });
   });
 });
