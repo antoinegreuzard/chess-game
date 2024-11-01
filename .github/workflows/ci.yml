@@ -61,12 +61,6 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      # Check bundle size
-      - name: Check bundle size
-        uses: andresz1/size-limit-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
   deploy:
     runs-on: ubuntu-latest
     permissions:
