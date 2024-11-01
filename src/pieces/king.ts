@@ -60,7 +60,7 @@ export class King extends Piece {
   }
 
   // Nouvelle méthode pour vérifier les menaces sans règles spécifiques du roi
-  public isThreatenedMove(
+  public static isThreatenedMove(
     fromX: number,
     fromY: number,
     toX: number,

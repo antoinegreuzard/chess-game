@@ -498,8 +498,8 @@ export class Board implements BoardInterface {
         const piece = this.getPiece(fromX, fromY);
         if (piece && piece.color !== color) {
           // Utilise `isThreatenedMove` pour éviter la récursion infinie
-          if (piece instanceof King) {
-            if (piece.isThreatenedMove(fromX, fromY, x, y)) {
+          if (piece.type === PieceType.KING) {
+            if (King.isThreatenedMove(fromX, fromY, x, y)) {
               return true;
             }
           } else if (piece.isValidMove(fromX, fromY, x, y, this)) {
