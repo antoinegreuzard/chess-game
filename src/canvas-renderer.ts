@@ -114,6 +114,8 @@ export class CanvasRenderer {
 
   // Dessiner les cases de l'échiquier
   private drawTiles(): void {
+    const letters = 'abcdefgh';
+
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const { x: newX, y: newY } = this.getCoordinates(x, y);
@@ -137,6 +139,25 @@ export class CanvasRenderer {
           this.tileSize,
         );
       }
+    }
+
+    // Dessiner les indicateurs a-h et 1-8
+    this.context.font = '16px Arial';
+    this.context.fillStyle = 'black';
+    for (let i = 0; i < 8; i++) {
+      // Afficher les lettres a-h en bas
+      const letterX =
+        this.getCoordinates(i, 0).x * this.tileSize + this.tileSize / 2;
+      const letterY = this.canvas.height - 5;
+      this.context.textAlign = 'center';
+      this.context.fillText(letters[i], letterX, letterY);
+
+      // Afficher les numéros 1-8 sur le côté
+      const numberX = 5;
+      const numberY =
+        this.getCoordinates(0, i).y * this.tileSize + this.tileSize / 2;
+      this.context.textBaseline = 'middle';
+      this.context.fillText(`${8 - i}`, numberX, numberY);
     }
   }
 

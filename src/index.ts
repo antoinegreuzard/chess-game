@@ -176,7 +176,8 @@ export async function initializeGame(playerColor: PieceColor) {
     toY: number,
     pieceType: PieceType,
   ) {
-    const moveText = `${getPieceSymbol(pieceType, currentPlayer)} de (${fromX}, ${fromY}) à (${toX}, ${toY})`;
+    const letters = 'abcdefgh';
+    const moveText = `${getPieceSymbol(pieceType, currentPlayer)} de (${letters[fromX]}${8 - fromY}) à (${letters[toX]}${8 - toY})`;
     const listItem = document.createElement('li');
     listItem.textContent = moveText;
 
