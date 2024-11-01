@@ -1,2 +1,0 @@
-import{P as c,a as t,c as o}from"./ai.worker-CXU6DqCI.js";class v extends c{type=t.ROOK;hasMoved=!1;constructor(e){super(e,t.ROOK)}isValidMove(e,a,s,r,i){return s<0||s>=8||r<0||r>=8||!(e===s||a===r)||!this.isPathClear(e,a,s,r,i)?!1:this.canCapture(s,r,i)}toData(){return{...super.toData(),hasMoved:this.hasMoved}}static async fromData(e){const a=await o(t.ROOK,e.color);return a.hasMoved=e.hasMoved,a}}export{v as Rook};
-//# sourceMappingURL=rook-DlCUXjDn.js.map
