@@ -273,7 +273,6 @@ export class AI {
       .map((move) => `${move.fromX}${move.fromY}${move.toX}${move.toY}`)
       .join(' ');
 
-    console.log(key);
     const openingMove = getNextOpeningMove(key, this.openingMoves);
 
     if (openingMove) {

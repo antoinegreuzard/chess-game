@@ -219,15 +219,9 @@ function evaluatePawnStructure(
 
   if (isPassed) {
     score += 4.5; // Bonus pour pion passé
-    console.log(
-      `Passed Pawn at (${x},${y}) | Passed bonus: 4.5, Score: ${score}`,
-    );
   }
 
   score -= doubledPenalty + isolatedPenalty;
-  console.log(
-    `Pawn at (${x},${y}) | Doubled penalty: ${doubledPenalty}, Isolated penalty: ${isolatedPenalty}, Score: ${score}`,
-  );
 
   return score;
 }
