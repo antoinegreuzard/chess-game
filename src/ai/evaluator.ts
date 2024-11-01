@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
@@ -105,11 +105,19 @@ function getPieceSquareValue(
   x: number,
   y: number,
   flipBoard: boolean,
+  board: Board,
+  color: PieceColor,
 ): number {
   const table = pieceSquareTables[type];
   if (!table) return 0;
 
-  // Inversion de la table pour les pièces noires si flipBoard est activé
+  // Empêcher les pions isolés de recevoir un bonus de position
+  if (type === PieceType.PAWN) {
+    const isIsolated = checkIsolatedPawns(board, x, y, color) > 0;
+    return isIsolated ? 0 : flipBoard ? table[7 - y][7 - x] : table[y][x];
+  }
+
+  // Retourne la valeur de position pour les autres pièces
   return flipBoard ? table[7 - y][7 - x] : table[y][x];
 }
 
@@ -124,16 +132,28 @@ export function evaluateBoard(
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board.getPiece(x, y);
+      const positionKey = `${x},${y}`;
       if (!piece) continue;
 
       // Applique la valeur de base et la table de position
       let pieceScore = pieceValues[piece.type];
-      pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard);
+      pieceScore += getPieceSquareValue(
+        piece.type,
+        x,
+        y,
+        flipBoard,
+        board,
+        piece.color,
+      );
 
       // Ajoute le bonus pour le contrôle du centre
-      const positionKey = `${x},${y}`;
-      if (centerControlBonus[positionKey]) {
-        pieceScore += centerControlBonus[positionKey];
+      if (
+        piece.type === PieceType.PAWN &&
+        checkIsolatedPawns(board, x, y, piece.color) === 0
+      ) {
+        if (centerControlBonus[positionKey]) {
+          pieceScore += centerControlBonus[positionKey];
+        }
       }
 
       // Évalue les pions pour la structure et les chaînes protégées
@@ -185,7 +205,6 @@ function evaluatePawnChains(
   return score;
 }
 
-// Évaluer la structure des pions
 function evaluatePawnStructure(
   board: Board,
   x: number,
@@ -194,16 +213,19 @@ function evaluatePawnStructure(
 ): number {
   let score = 0;
 
-  // Pénalise les pions doublés
-  score -= checkDoubledPawns(board, x, y, color) * 1.5;
+  const isPassed = isPassedPawn(board, x, y, color);
+  const doubledPenalty = checkDoubledPawns(board, x, y, color) * 0.25;
+  const isolatedPenalty = checkIsolatedPawns(board, x, y, color) * 4.0;
 
-  // Pénalise les pions isolés
-  score -= checkIsolatedPawns(board, x, y, color) * 1.5;
-
-  // Bonus pour les pions passés
-  if (isPassedPawn(board, x, y, color)) {
-    score += 1.0;
+  if (isPassed) {
+    score += 4.5; // Bonus pour pion passé
+    console.log(`Passed Pawn at (${x},${y}) | Passed bonus: 4.5, Score: ${score}`);
   }
+
+  score -= doubledPenalty + isolatedPenalty;
+  console.log(
+    `Pawn at (${x},${y}) | Doubled penalty: ${doubledPenalty}, Isolated penalty: ${isolatedPenalty}, Score: ${score}`,
+  );
 
   return score;
 }
@@ -235,18 +257,15 @@ function checkIsolatedPawns(
   const leftColumn = x - 1 >= 0 ? board.getPiece(x - 1, y) : null;
   const rightColumn = x + 1 < 8 ? board.getPiece(x + 1, y) : null;
 
-  if (
-    (!leftColumn ||
-      leftColumn.type !== PieceType.PAWN ||
-      leftColumn.color !== color) &&
-    (!rightColumn ||
-      rightColumn.type !== PieceType.PAWN ||
-      rightColumn.color !== color)
-  ) {
-    return 1.5; // Augmentation de la pénalité pour les pions isolés
-  }
+  const hasAdjacentSameColorPawns =
+    (leftColumn &&
+      leftColumn.type === PieceType.PAWN &&
+      leftColumn.color === color) ||
+    (rightColumn &&
+      rightColumn.type === PieceType.PAWN &&
+      rightColumn.color === color);
 
-  return 0;
+  return hasAdjacentSameColorPawns ? 0 : 1.5; // Retourne une pénalité si le pion est isolé
 }
 
 // Gère les cases hors limites pour éviter des expositions de roi mal calculées
@@ -291,8 +310,9 @@ function isPassedPawn(
   y: number,
   color: PieceColor,
 ): boolean {
-  const direction = color === PieceColor.WHITE ? -1 : 1;
+  const direction = color === PieceColor.WHITE ? 1 : -1;
 
+  // Vérifie s'il y a des pions adverses devant le pion sur la même colonne
   for (let i = y + direction; i >= 0 && i < 8; i += direction) {
     const pieceInFront = board.getPiece(x, i);
     if (
@@ -304,20 +324,22 @@ function isPassedPawn(
     }
   }
 
-  // Vérifier s'il y a des pions alliés sur les colonnes adjacentes
+  // Vérifie les colonnes adjacentes pour s'assurer qu'il n'y a pas de pions adverses bloquant
   const adjacentColumns = [x - 1, x + 1];
-  return adjacentColumns.every((col) => {
-    if (col < 0 || col >= 8) return true;
-    for (let i = 0; i < 8; i++) {
-      const adjacentPiece = board.getPiece(col, i);
-      if (
-        adjacentPiece &&
-        adjacentPiece.type === PieceType.PAWN &&
-        adjacentPiece.color === color
-      ) {
-        return false;
+  for (const col of adjacentColumns) {
+    if (col >= 0 && col < 8) {
+      for (let i = y + direction; i >= 0 && i < 8; i += direction) {
+        const adjacentPiece = board.getPiece(col, i);
+        if (
+          adjacentPiece &&
+          adjacentPiece.type === PieceType.PAWN &&
+          adjacentPiece.color !== color
+        ) {
+          return false;
+        }
       }
     }
-    return true;
-  });
+  }
+
+  return true;
 }
