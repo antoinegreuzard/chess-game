@@ -1,7 +1,7 @@
 // tests/endgameTablebase.test.ts
 import { Board } from '../src/board';
 import { PieceColor, PieceType } from '../src/piece';
-import { getEndgameMove } from '../src/endgameTablebase';
+import { getEndgameMove } from '../src/ai/endgameTablebase';
 import { createPiece } from '../src/utils/pieceFactory';
 
 // Fonction d'aide pour placer une pièce à une position donnée

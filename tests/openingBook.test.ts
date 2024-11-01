@@ -1,5 +1,5 @@
 // tests/openingBook.test.ts
-import { openingBook } from '../src/openingBook';
+import { openingBook } from '../src/ai/openingBook';
 
 describe('Opening Book Tests', () => {
   test('Ruy Lopez Opening', () => {

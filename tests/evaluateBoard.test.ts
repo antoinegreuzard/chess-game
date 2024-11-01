@@ -7,7 +7,7 @@ import { Bishop } from '../src/pieces/bishop';
 import { Rook } from '../src/pieces/rook';
 import { Queen } from '../src/pieces/queen';
 import { King } from '../src/pieces/king';
-import { evaluateBoard } from '../src/evaluator';
+import { evaluateBoard } from '../src/ai/evaluator';
 
 describe('evaluateBoard', () => {
   let board: Board;
