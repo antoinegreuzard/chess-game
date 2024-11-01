@@ -4,6 +4,12 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
+  "size-limit": [
+    {
+      "path": "dist/**/*.js",
+      "limit": "200 KB"
+    }
+  ],
   "scripts": {
     "build": "vite build",
     "start": "vite",
