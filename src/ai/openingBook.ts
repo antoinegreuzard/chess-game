@@ -119,11 +119,10 @@ export function flipMove(
 }
 
 export function getNextOpeningMove(
-  moves: string[],
+  key: string,
   openingBook: OpeningBook,
 ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-  const key = moves.join(' ');
-  return openingBook[key]?.[moves.length] ?? null;
+  return openingBook[key]?.[0] ?? null;
 }
 
 export type OpeningBook = {

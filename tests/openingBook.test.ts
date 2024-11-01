@@ -1,5 +1,5 @@
 // tests/openingBook.test.ts
-import { openingBook } from '../src/ai/openingBook';
+import { flipMove, getNextOpeningMove, openingBook } from '../src/ai/openingBook';
 
 describe('Opening Book Tests', () => {
   test('Ruy Lopez Opening', () => {
@@ -21,6 +21,16 @@ describe('Opening Book Tests', () => {
     ]);
   });
 
+  test('Extended Sicilian Defense', () => {
+    const moves = openingBook['e2e4 c7c5 g1f3 d7d6'];
+    expect(moves).toEqual([
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
+      { fromX: 2, fromY: 1, toX: 2, toY: 3 },
+      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
+      { fromX: 3, fromY: 1, toX: 3, toY: 2 },
+    ]);
+  });
+
   test('Queen\'s Gambit', () => {
     const moves = openingBook['d2d4 d7d5 c2c4'];
     expect(moves).toEqual([
@@ -38,11 +48,31 @@ describe('Opening Book Tests', () => {
     ]);
   });
 
+  test('Extended Caro-Kann Defense', () => {
+    const moves = openingBook['e2e4 c7c6 d2d4 d7d5'];
+    expect(moves).toEqual([
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
+      { fromX: 2, fromY: 1, toX: 2, toY: 2 },
+      { fromX: 3, fromY: 6, toX: 3, toY: 4 },
+      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
+    ]);
+  });
+
   test('French Defense', () => {
     const moves = openingBook['e2e4 e7e6'];
     expect(moves).toEqual([
       { fromX: 4, fromY: 6, toX: 4, toY: 4 },
       { fromX: 4, fromY: 1, toX: 4, toY: 2 },
+    ]);
+  });
+
+  test('Extended French Defense', () => {
+    const moves = openingBook['e2e4 e7e6 d2d4 d7d5'];
+    expect(moves).toEqual([
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
+      { fromX: 4, fromY: 1, toX: 4, toY: 2 },
+      { fromX: 3, fromY: 6, toX: 3, toY: 4 },
+      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
     ]);
   });
 
@@ -87,5 +117,34 @@ describe('Opening Book Tests', () => {
       { fromX: 6, fromY: 7, toX: 5, toY: 5 },
       { fromX: 3, fromY: 1, toX: 3, toY: 3 },
     ]);
+  });
+
+  test('Réti Opening', () => {
+    const moves = openingBook['g1f3 d7d5'];
+    expect(moves).toEqual([
+      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
+      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
+    ]);
+  });
+
+  test('Pirc Defense', () => {
+    const moves = openingBook['e2e4 d7d6'];
+    expect(moves).toEqual([
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
+      { fromX: 3, fromY: 1, toX: 3, toY: 2 },
+    ]);
+  });
+
+
+  test('flipMove without flipping', () => {
+    const move = { fromX: 4, fromY: 6, toX: 4, toY: 4 };
+    const result = flipMove(move, false);
+    expect(result).toEqual({ fromX: 4, fromY: 6, toX: 4, toY: 4 });
+  });
+
+  test('flipMove with flipping', () => {
+    const move = { fromX: 4, fromY: 6, toX: 4, toY: 4 };
+    const result = flipMove(move, true);
+    expect(result).toEqual({ fromX: 3, fromY: 1, toX: 3, toY: 3 });
   });
 });
