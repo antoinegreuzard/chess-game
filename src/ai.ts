@@ -5,9 +5,9 @@ import {
   centerControlBonus,
   evaluateBoard,
   evaluateKingSafety,
-} from './evaluator';
-import { getEndgameMove } from './endgameTablebase';
-import { flipMove, getNextOpeningMove, openingBook } from './openingBook';
+} from './ai/evaluator';
+import { getEndgameMove } from './ai/endgameTablebase';
+import { flipMove, getNextOpeningMove, openingBook } from './ai/openingBook';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
