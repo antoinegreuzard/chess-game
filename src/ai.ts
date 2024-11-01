@@ -321,7 +321,7 @@ export class AI {
     beta: number,
     depth: number = 0,
   ): number {
-    const maxQuiescenceDepth = 5;
+    const maxQuiescenceDepth = this.getAdaptiveQuiescenceDepth(board);
 
     if (depth >= maxQuiescenceDepth) {
       return evaluateBoard(board, this.color);
@@ -335,7 +335,19 @@ export class AI {
       board.isCapture(move.fromX, move.fromY, move.toX, move.toY),
     );
 
-    for (const move of captureMoves) {
+    // Non-capture moves : Inclut quelques mouvements non capturants comme les poussées de pions
+    const nonCaptureMoves = this.getAllValidMoves(board).filter((move) => {
+      const piece = board.getPiece(move.fromX, move.fromY);
+      return (
+        !board.isCapture(move.fromX, move.fromY, move.toX, move.toY) &&
+        piece &&
+        (piece.type === PieceType.PAWN || piece.type === PieceType.KNIGHT)
+      );
+    });
+
+    const moves = [...captureMoves, ...nonCaptureMoves];
+
+    for (const move of moves) {
       const fromPiece = board.getPiece(move.fromX, move.fromY);
       const toPiece = board.getPiece(move.toX, move.toY);
 
@@ -511,6 +523,14 @@ export class AI {
 
     const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);
     return { fromX, fromY, toX, toY };
+  }
+
+  // Adaptation de la profondeur de quiescence en fonction de la situation
+  private getAdaptiveQuiescenceDepth(board: Board): number {
+    const pieceCount = board.getPieceCount();
+    if (pieceCount <= 6) return 7; // Profondeur plus élevée en fin de partie
+    if (pieceCount <= 12) return 5; // Moyenne en milieu de partie
+    return 3; // Réduit en début de partie
   }
 
   private evaluatePositionWithKingSafety(
