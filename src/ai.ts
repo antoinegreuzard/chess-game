@@ -5,6 +5,7 @@ import {
   centerControlBonus,
   evaluateBoard,
   evaluateKingSafety,
+  pieceValues,
 } from './ai/evaluator';
 import { getEndgameMove } from './ai/endgameTablebase';
 import { flipMove, getNextOpeningMove, openingBook } from './ai/openingBook';
@@ -30,6 +31,7 @@ export class AI {
     toX: number;
     toY: number;
   }[] = [];
+  private readonly historicalMoveScores: Map<string, number> = new Map(); // Stockage des scores historiques des mouvements
 
   constructor(
     private readonly color: PieceColor,
@@ -54,7 +56,7 @@ export class AI {
 
     // Vérifie si un mouvement d'ouverture basé sur les coups passés est disponible
     const pastMoves = this.getPastMoves();
-    const chosenMove = this.chooseMove(pastMoves);
+    const chosenMove = this.chooseMove(pastMoves, board);
     if (chosenMove) {
       this.moveHistory.push(chosenMove); // Ajoute à l'historique des coups
       return chosenMove;
@@ -129,9 +131,22 @@ export class AI {
     // Ajoute le meilleur mouvement trouvé à l'historique des coups si existant
     if (bestMove) {
       this.moveHistory.push(bestMove);
+      this.updateHistoricalScore(bestMove);
     }
 
     return bestMove;
+  }
+
+  // Fonction pour augmenter le score historique d'un mouvement après son utilisation
+  private updateHistoricalScore(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }) {
+    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
+    const currentScore = this.historicalMoveScores.get(moveKey) || 0;
+    this.historicalMoveScores.set(moveKey, currentScore + 1);
   }
 
   // Fonction pour récupérer les coups passés en format abrégé
@@ -261,11 +276,35 @@ export class AI {
 
   private chooseMove(
     pastMoves: string[],
+    board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const openingMove = getNextOpeningMove(pastMoves, openingBook);
+    const openingMove = getNextOpeningMove(pastMoves, this.openingMoves);
 
     if (openingMove) {
-      return openingMove;
+      const flippedMove = flipMove(
+        openingMove,
+        this.color === PieceColor.BLACK,
+      );
+
+      // Évaluation de la position pour ajuster le choix de l'ouverture
+      board.movePiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        flippedMove.toX,
+        flippedMove.toY,
+      );
+      const evaluation = evaluateBoard(board, this.color);
+      board.setPiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        board.getPiece(flippedMove.toX, flippedMove.toY),
+      );
+      board.setPiece(flippedMove.toX, flippedMove.toY, null);
+
+      const threshold = 0.3;
+      if (evaluation >= threshold) {
+        return flippedMove;
+      }
     }
 
     return null;
@@ -306,7 +345,7 @@ export class AI {
     beta: number,
     depth: number = 0,
   ): number {
-    const maxQuiescenceDepth = 5;
+    const maxQuiescenceDepth = this.getAdaptiveQuiescenceDepth(board);
 
     if (depth >= maxQuiescenceDepth) {
       return evaluateBoard(board, this.color);
@@ -320,7 +359,19 @@ export class AI {
       board.isCapture(move.fromX, move.fromY, move.toX, move.toY),
     );
 
-    for (const move of captureMoves) {
+    // Non-capture moves : Inclut quelques mouvements non capturants comme les poussées de pions
+    const nonCaptureMoves = this.getAllValidMoves(board).filter((move) => {
+      const piece = board.getPiece(move.fromX, move.fromY);
+      return (
+        !board.isCapture(move.fromX, move.fromY, move.toX, move.toY) &&
+        piece &&
+        (piece.type === PieceType.PAWN || piece.type === PieceType.KNIGHT)
+      );
+    });
+
+    const moves = [...captureMoves, ...nonCaptureMoves];
+
+    for (const move of moves) {
       const fromPiece = board.getPiece(move.fromX, move.fromY);
       const toPiece = board.getPiece(move.toX, move.toY);
 
@@ -395,29 +446,51 @@ export class AI {
     depth: number,
   ): { fromX: number; fromY: number; toX: number; toY: number }[] {
     return moves.sort((a, b) => {
-      const killerMovesAtDepth = this.killerMoves.get(depth);
+      // 1. Priorité aux mouvements capturant des pièces de valeur plus élevée
+      const pieceA = board.getPiece(a.toX, a.toY);
+      const pieceB = board.getPiece(b.toX, b.toY);
 
+      const valueA = pieceA ? pieceValues[pieceA.type] : 0;
+      const valueB = pieceB ? pieceValues[pieceB.type] : 0;
+
+      if (valueA !== valueB) {
+        return valueB - valueA; // Tri décroissant par valeur de capture
+      }
+
+      // 2. Bonus pour le contrôle des cases centrales
+      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
+      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
+
+      if (centerControlA !== centerControlB) {
+        return centerControlB - centerControlA; // Tri par contrôle du centre
+      }
+
+      // 3. Priorité aux mouvements dans les killer moves pour cette profondeur
+      const killerMovesAtDepth = this.killerMoves.get(depth);
       if (
         killerMovesAtDepth &&
         killerMovesAtDepth.some(
-          (move: {
-            move: { fromX: number; fromY: number; toX: number; toY: number };
-          }) => move.move.fromX === a.fromX && move.move.fromY === a.fromY,
+          (move) =>
+            move.move.fromX === a.fromX &&
+            move.move.fromY === a.fromY &&
+            move.move.toX === a.toX &&
+            move.move.toY === a.toY,
         )
       ) {
         return -1;
       }
 
-      const pieceA = board.getPiece(a.toX, a.toY);
-      const pieceB = board.getPiece(b.toX, b.toY);
+      // 4. Score historique pour le mouvement, favorise les coups réussis dans le passé
+      const scoreA =
+        this.historicalMoveScores.get(
+          `${a.fromX},${a.fromY},${a.toX},${a.toY}`,
+        ) || 0;
+      const scoreB =
+        this.historicalMoveScores.get(
+          `${b.fromX},${b.fromY},${b.toX},${b.toY}`,
+        ) || 0;
 
-      if (pieceA && !pieceB) return -1;
-      if (!pieceA && pieceB) return 1;
-
-      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
-      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
-
-      return centerControlB - centerControlA;
+      return scoreB - scoreA; // Tri par score historique décroissant
     });
   }
 
@@ -474,6 +547,14 @@ export class AI {
 
     const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);
     return { fromX, fromY, toX, toY };
+  }
+
+  // Adaptation de la profondeur de quiescence en fonction de la situation
+  private getAdaptiveQuiescenceDepth(board: Board): number {
+    const pieceCount = board.getPieceCount();
+    if (pieceCount <= 6) return 7; // Profondeur plus élevée en fin de partie
+    if (pieceCount <= 12) return 5; // Moyenne en milieu de partie
+    return 3; // Réduit en début de partie
   }
 
   private evaluatePositionWithKingSafety(
@@ -582,11 +663,33 @@ export class AI {
     const boardHash = this.getBoardHash(board);
 
     if (this.openingMoves[boardHash]) {
+      // Sélectionne le premier coup suggéré par défaut
       const move = this.openingMoves[boardHash][0];
-      return flipMove(move, this.color === PieceColor.BLACK); // Applique flipMove si c'est les Noirs
+      const flippedMove = flipMove(move, this.color === PieceColor.BLACK);
+
+      // Évalue la position après le coup d'ouverture
+      board.movePiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        flippedMove.toX,
+        flippedMove.toY,
+      );
+      const evaluation = evaluateBoard(board, this.color);
+      board.setPiece(
+        flippedMove.fromX,
+        flippedMove.fromY,
+        board.getPiece(flippedMove.toX, flippedMove.toY),
+      );
+      board.setPiece(flippedMove.toX, flippedMove.toY, null);
+
+      // Seuil pour sortir du livre d'ouvertures si la position est défavorable
+      const exitThreshold = -0.5;
+      if (evaluation > exitThreshold) {
+        return flippedMove; // Choisit le coup d'ouverture par défaut si l'évaluation est favorable
+      }
     }
 
-    return null;
+    return null; // Sort du livre si aucune ouverture valide n'est trouvée ou si l'évaluation est inférieure au seuil
   }
 
   // Génération d'un identifiant de position simplifié pour le dictionnaire d'ouverture
