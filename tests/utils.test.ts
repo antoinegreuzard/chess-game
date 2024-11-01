@@ -14,7 +14,7 @@ describe('utils', () => {
     capturedWhite.length = 0;
     capturedBlack.length = 0;
 
-    // Mock de l'élément DOM pour les messages de jeu
+    // Mock de l'élément DOM pour les messages de jeu et les captures
     document.body.innerHTML = `
       <div id="gameMessage"></div>
       <div id="capturedWhite"></div>
@@ -32,7 +32,6 @@ describe('utils', () => {
   });
 
   it('should update captured pieces for white and black', () => {
-    // Ajouter des pièces capturées
     updateCapturedPieces(PieceType.PAWN, PieceColor.WHITE);
     updateCapturedPieces(PieceType.QUEEN, PieceColor.BLACK);
 
@@ -41,7 +40,6 @@ describe('utils', () => {
   });
 
   it('should update the captured pieces in the DOM', () => {
-    // Ajouter des pièces capturées
     updateCapturedPieces(PieceType.KNIGHT, PieceColor.WHITE);
     updateCapturedPieces(PieceType.ROOK, PieceColor.BLACK);
     updateCapturedPiecesDOM();
@@ -65,5 +63,38 @@ describe('utils', () => {
 
     expect(capturedWhiteElement.textContent).toBe('♗ ♙');
     expect(capturedBlackElement.textContent).toBe('♜ ♞');
+  });
+
+  it('should not display captured pieces if none are captured', () => {
+    updateCapturedPiecesDOM();
+
+    const capturedWhiteElement = document.getElementById('capturedWhite')!;
+    const capturedBlackElement = document.getElementById('capturedBlack')!;
+
+    expect(capturedWhiteElement.textContent).toBe('');
+    expect(capturedBlackElement.textContent).toBe('');
+  });
+
+  it('should clear captured pieces when reset', () => {
+    updateCapturedPieces(PieceType.QUEEN, PieceColor.WHITE);
+    updateCapturedPieces(PieceType.ROOK, PieceColor.BLACK);
+
+    // Réinitialiser
+    capturedWhite.length = 0;
+    capturedBlack.length = 0;
+    updateCapturedPiecesDOM();
+
+    const capturedWhiteElement = document.getElementById('capturedWhite')!;
+    const capturedBlackElement = document.getElementById('capturedBlack')!;
+
+    expect(capturedWhiteElement.textContent).toBe('');
+    expect(capturedBlackElement.textContent).toBe('');
+  });
+
+  it('should only show the game message element when there is a message', () => {
+    const gameMessageElement = document.getElementById('gameMessage')!;
+
+    showMessage('New game started');
+    expect(gameMessageElement.style.display).toBe('block');
   });
 });
