@@ -10,6 +10,7 @@ import {
 import { EndgameTablebase } from './ai/endgameTablebase';
 import { OpeningBook } from './ai/openingBook';
 import { GamesAnalyzer } from './ai/gamesAnalyzer';
+import { ContextualMoveDatabase } from './ai/contextualMoveDatabase';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
@@ -35,21 +36,30 @@ export class AI {
   private readonly historicalMoveScores: Map<string, number> = new Map();
   private gamesAnalyzer: GamesAnalyzer;
   private gamesLoaded: boolean = false;
+  private contextualMoveDatabase: ContextualMoveDatabase;
 
   constructor(
     private readonly color: PieceColor,
-    maxTime: number = 5000,
+    maxTime: number = 30000,
   ) {
     this.transpositionTable = new Map();
     this.maxTime = maxTime;
     this.killerMoves = new Map();
     this.startTime = 0;
     this.gamesAnalyzer = new GamesAnalyzer();
+    this.contextualMoveDatabase = new ContextualMoveDatabase();
   }
 
   async loadGamesData() {
     await this.gamesAnalyzer.loadGamesData();
     this.gamesLoaded = true;
+  }
+
+  private recordMoveInContextualDatabase(
+    positionKey: string,
+    move: { fromX: number; fromY: number; toX: number; toY: number },
+  ): void {
+    this.contextualMoveDatabase.recordMove(positionKey, move);
   }
 
   public makeMove(
@@ -71,6 +81,10 @@ export class AI {
       'toY' in openingMove
     ) {
       this.moveHistory.push(openingMove);
+      this.recordMoveInContextualDatabase(
+        this.getPositionKey(board),
+        openingMove,
+      ); // Enregistrement du mouvement
       return openingMove;
     }
 
@@ -84,6 +98,10 @@ export class AI {
       'toY' in endgameMove
     ) {
       this.moveHistory.push(endgameMove);
+      this.recordMoveInContextualDatabase(
+        this.getPositionKey(board),
+        endgameMove,
+      ); // Enregistrement du mouvement
       return endgameMove;
     }
 
@@ -98,6 +116,7 @@ export class AI {
       'toY' in analyzedMove
     ) {
       this.moveHistory.push(analyzedMove);
+      this.recordMoveInContextualDatabase(positionKey, analyzedMove); // Enregistrement du mouvement
       return analyzedMove;
     }
 
@@ -111,6 +130,7 @@ export class AI {
       'toY' in bestMove
     ) {
       this.moveHistory.push(bestMove);
+      this.recordMoveInContextualDatabase(positionKey, bestMove); // Enregistrement du mouvement
       return bestMove;
     }
 
@@ -431,12 +451,40 @@ export class AI {
     depth: number,
     phase: 'opening' | 'midgame' | 'endgame',
   ): { fromX: number; fromY: number; toX: number; toY: number }[] {
+    const positionKey = this.getPositionKey(board);
+    const contextualMoves =
+      this.contextualMoveDatabase.getMovesByFrequency(positionKey);
+
     return moves.sort((a, b) => {
       const pieceA = board.getPiece(a.toX, a.toY);
       const pieceB = board.getPiece(b.toX, b.toY);
 
       const valueA = pieceA ? pieceValues[pieceA.type] : 0;
       const valueB = pieceB ? pieceValues[pieceB.type] : 0;
+
+      // Prioriser les mouvements contextuels basés sur les données
+      const moveAContextScore = contextualMoves.findIndex(
+        (m) =>
+          m.move.fromX === a.fromX &&
+          m.move.fromY === a.fromY &&
+          m.move.toX === a.toX &&
+          m.move.toY === a.toY,
+      );
+      const moveBContextScore = contextualMoves.findIndex(
+        (m) =>
+          m.move.fromX === b.fromX &&
+          m.move.fromY === b.fromY &&
+          m.move.toX === b.toX &&
+          m.move.toY === b.toY,
+      );
+
+      // Prioriser les mouvements qui apparaissent plus fréquemment
+      if (moveAContextScore !== -1 || moveBContextScore !== -1) {
+        return (
+          (moveAContextScore !== -1 ? moveAContextScore : Infinity) -
+          (moveBContextScore !== -1 ? moveBContextScore : Infinity)
+        );
+      }
 
       if (phase === 'opening') {
         const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
