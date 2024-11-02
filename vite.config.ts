@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import json from '@rollup/plugin-json';
 
 export default defineConfig({
+  plugins: [json()],
   base: '/chess-game/',
   build: {
     outDir: 'dist',

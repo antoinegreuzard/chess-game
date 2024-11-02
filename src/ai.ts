@@ -8,7 +8,8 @@ import {
   pieceValues,
 } from './ai/evaluator';
 import { getEndgameMove } from './ai/endgameTablebase';
-import { flipMove, getNextOpeningMove, openingBook } from './ai/openingBook';
+import { flipMove, openingBook } from './ai/openingBook';
+import { GamesAnalyzer } from './ai/gamesAnalyzer';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
@@ -32,6 +33,8 @@ export class AI {
     toY: number;
   }[] = [];
   private readonly historicalMoveScores: Map<string, number> = new Map(); // Stockage des scores historiques des mouvements
+  private gamesAnalyzer: GamesAnalyzer;
+  private gamesLoaded: boolean = false;
 
   constructor(
     private readonly color: PieceColor,
@@ -41,111 +44,55 @@ export class AI {
     this.maxTime = maxTime;
     this.killerMoves = new Map();
     this.startTime = 0;
+    this.gamesAnalyzer = new GamesAnalyzer();
+  }
+
+  async loadGamesData() {
+    await this.gamesAnalyzer.loadGamesData();
+    this.gamesLoaded = true;
   }
 
   // Méthode principale pour faire un mouvement
   public makeMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    // Vérifie si un mouvement d'ouverture est disponible
+    if (!this.gamesLoaded) {
+      throw new Error('Games data not loaded. Call loadGamesData() first.');
+    }
+
+    // Définir le temps de départ pour la gestion du temps de calcul
+    this.startTime = Date.now();
+
+    // 1. Vérifie si un coup optimal existe dans l'analyse des parties
+    const positionKey = this.getPositionKey(board);
+    const analyzedMove = this.getAnalyzedMove(positionKey);
+    if (analyzedMove) {
+      this.moveHistory.push(analyzedMove); // Ajoute à l'historique des coups
+      return analyzedMove;
+    }
+
+    // 2. Vérifie si un coup d'ouverture est disponible
     const openingMove = this.getOpeningMove(board);
     if (openingMove) {
       this.moveHistory.push(openingMove); // Ajoute à l'historique des coups
       return openingMove;
     }
 
-    // Vérifie si un mouvement d'ouverture basé sur les coups passés est disponible
-    const chosenMove = this.chooseMove(board);
-    if (chosenMove) {
-      this.moveHistory.push(chosenMove);
-      return chosenMove;
-    }
+    // 3. Vérifie si un coup de fin de partie est possible
     const endgameMove = this.useEndgameTablebase(board);
     if (endgameMove) {
-      this.moveHistory.push(endgameMove); // Ajoute à l'historique des coups
+      this.moveHistory.push(endgameMove);
       return endgameMove;
     }
 
-    // Utilise MCTS pour les positions complexes ou de fin de partie
-    if (this.shouldUseMCTS(board)) {
-      const mctsMove = this.mcts(board);
-      if (mctsMove) {
-        this.moveHistory.push(mctsMove); // Ajoute à l'historique des coups
-      }
-      return mctsMove;
-    }
-
-    // Utilise Minimax avec Alpha-Beta Pruning si aucun autre mouvement n'est trouvé
-    let bestMove = null;
-    let bestValue = -Infinity;
-    const maxDepth = 10; // Profondeur maximale de recherche pour Minimax
-    this.startTime = Date.now();
-
-    for (let depth = 1; depth <= maxDepth; depth++) {
-      let moves = this.getAllValidMoves(board);
-
-      // Trie les mouvements pour optimiser la recherche
-      moves = this.sortMoves(moves, board, depth);
-
-      for (const move of moves) {
-        const piece = board.getPiece(move.fromX, move.fromY);
-        if (!piece) continue;
-        const originalPiece = board.getPiece(move.toX, move.toY);
-        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-
-        const isCritical =
-          board.isKingInCheck(this.color) ||
-          this.isCriticalMove(piece, move, board);
-        const adjustedDepth = isCritical ? depth + 1 : depth;
-
-        // Appelle la recherche Minimax avec Alpha-Beta Pruning
-        const boardValue = this.minimax(
-          board,
-          adjustedDepth - 1,
-          -Infinity,
-          Infinity,
-          false,
-        );
-
-        board.setPiece(move.fromX, move.fromY, piece);
-        board.setPiece(move.toX, move.toY, originalPiece);
-
-        if (boardValue > bestValue) {
-          bestValue = boardValue;
-          bestMove = move;
-        }
-
-        // Vérifie le temps de réflexion et arrête si le maximum est atteint
-        if (Date.now() - this.startTime > this.maxTime) {
-          break;
-        }
-      }
-
-      // Vérifie encore une fois le temps de réflexion à la fin de chaque profondeur
-      if (Date.now() - this.startTime > this.maxTime) {
-        break;
-      }
-    }
-
-    // Ajoute le meilleur mouvement trouvé à l'historique des coups si existant
+    // 4. Utilise Minimax avec Alpha-Beta Pruning si aucun autre coup n'est trouvé
+    const bestMove = this.getBestMoveUsingMinimax(board);
     if (bestMove) {
       this.moveHistory.push(bestMove);
-      this.updateHistoricalScore(bestMove);
+      return bestMove;
     }
 
-    return bestMove;
-  }
-
-  // Fonction pour augmenter le score historique d'un mouvement après son utilisation
-  private updateHistoricalScore(move: {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-  }) {
-    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
-    const currentScore = this.historicalMoveScores.get(moveKey) || 0;
-    this.historicalMoveScores.set(moveKey, currentScore + 1);
+    return null;
   }
 
   // Fonction Minimax avec Alpha-Beta Pruning et table de transposition
@@ -264,45 +211,6 @@ export class AI {
       this.transpositionTable.set(boardKey, minEval);
       return minEval;
     }
-  }
-
-  private chooseMove(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const key = this.moveHistory
-      .map((move) => `${move.fromX}${move.fromY}${move.toX}${move.toY}`)
-      .join(' ');
-
-    const openingMove = getNextOpeningMove(key, this.openingMoves);
-
-    if (openingMove) {
-      const flippedMove = flipMove(
-        openingMove,
-        this.color === PieceColor.BLACK,
-      );
-
-      // Évaluation de la position pour ajuster le choix de l'ouverture
-      board.movePiece(
-        flippedMove.fromX,
-        flippedMove.fromY,
-        flippedMove.toX,
-        flippedMove.toY,
-      );
-      const evaluation = evaluateBoard(board, this.color);
-      board.setPiece(
-        flippedMove.fromX,
-        flippedMove.fromY,
-        board.getPiece(flippedMove.toX, flippedMove.toY),
-      );
-      board.setPiece(flippedMove.toX, flippedMove.toY, null);
-
-      const threshold = 0.3;
-      if (evaluation >= threshold) {
-        return flippedMove;
-      }
-    }
-
-    return null;
   }
 
   // Ajout des killer moves avec meilleure gestion de cache
@@ -489,62 +397,7 @@ export class AI {
     });
   }
 
-  // Algorithme MCTS pour évaluer des positions complexes ou de fin de partie
-  private mcts(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const iterations = 1000; // Nombre de simulations
-    const moveScores: Map<string, number> = new Map();
-
-    // Filtre les mouvements valides pour la simulation
-    const validMoves = this.getAllValidMoves(board).filter(
-      (move) =>
-        move.fromX !== undefined &&
-        move.fromY !== undefined &&
-        move.toX !== undefined &&
-        move.toY !== undefined,
-    );
-
-    if (validMoves.length === 0) return null;
-
-    for (let i = 0; i < iterations; i++) {
-      const move = validMoves[Math.floor(Math.random() * validMoves.length)];
-
-      // Vérifie que toutes les propriétés de move sont bien définies
-      if (
-        !move ||
-        move.fromX === undefined ||
-        move.fromY === undefined ||
-        move.toX === undefined ||
-        move.toY === undefined
-      ) {
-        continue;
-      }
-
-      const simulationResult = this.simulateRandomGame(board, move);
-
-      const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
-      moveScores.set(
-        moveKey,
-        (moveScores.get(moveKey) ?? 0) + simulationResult,
-      );
-
-      // Vérifie le temps de réflexion pour arrêter les itérations si nécessaire
-      if (Date.now() - this.startTime > this.maxTime) {
-        break;
-      }
-    }
-
-    // Trouve le mouvement avec la meilleure note moyenne
-    const bestMoveKey = Array.from(moveScores.entries()).reduce(
-      (best, current) => (current[1] > best[1] ? current : best),
-    )[0];
-
-    const [fromX, fromY, toX, toY] = bestMoveKey.split(',').map(Number);
-    return { fromX, fromY, toX, toY };
-  }
-
-  // Adaptation de la profondeur de quiescence en fonction de la situation
+// Adaptation de la profondeur de quiescence en fonction de la situation
   private getAdaptiveQuiescenceDepth(board: Board): number {
     const pieceCount = board.getPieceCount();
     if (pieceCount <= 6) return 7; // Profondeur plus élevée en fin de partie
@@ -562,70 +415,7 @@ export class AI {
     return score;
   }
 
-  // Simule une partie aléatoire pour obtenir une estimation du résultat
-  private simulateRandomGame(
-    board: Board,
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-  ): number {
-    // Vérifie que toutes les propriétés de move sont définies
-    if (
-      !move ||
-      move.fromX === undefined ||
-      move.fromY === undefined ||
-      move.toX === undefined ||
-      move.toY === undefined
-    ) {
-      console.error('Invalid move:', move);
-      return 0; // Retourne 0 ou une autre valeur par défaut si le mouvement est invalide
-    }
-
-    const tempBoard = board.clone();
-    tempBoard.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-    let currentPlayer = this.color;
-    let moves = this.getAllValidMoves(tempBoard);
-
-    while (!tempBoard.isGameOver() && moves.length > 0) {
-      const randomMove = moves[Math.floor(Math.random() * moves.length)];
-
-      // Vérifie que le mouvement aléatoire est valide
-      if (
-        !randomMove ||
-        randomMove.fromX === undefined ||
-        randomMove.fromY === undefined ||
-        randomMove.toX === undefined ||
-        randomMove.toY === undefined
-      ) {
-        console.error('Invalid random move:', randomMove);
-        break;
-      }
-
-      tempBoard.movePiece(
-        randomMove.fromX,
-        randomMove.fromY,
-        randomMove.toX,
-        randomMove.toY,
-      );
-      currentPlayer =
-        currentPlayer === PieceColor.WHITE
-          ? PieceColor.BLACK
-          : PieceColor.WHITE;
-      moves = this.getAllValidMoves(tempBoard);
-    }
-
-    // Retourne un score basé sur le résultat de la partie simulée
-    return tempBoard.getWinner() === this.color
-      ? 1
-      : tempBoard.getWinner() === null
-        ? 0.5
-        : 0;
-  }
-
-  // Détermine quand utiliser MCTS
-  private shouldUseMCTS(board: Board): boolean {
-    return board.getPieceCount() <= 10; // Par exemple, utilise MCTS pour la fin de partie
-  }
-
-  // Fonction de détection et d'application des tables de fin de partie
+// Fonction de détection et d'application des tables de fin de partie
   private useEndgameTablebase(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
@@ -703,5 +493,88 @@ export class AI {
       }
     }
     return hash.trim();
+  }
+
+  private getPositionKey(board: Board): string {
+    return board.toString();
+  }
+
+  private convertMoveToCoords(move: string): {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  } {
+    const [fromX, fromY, toX, toY] = move.match(/\d+/g)!.map(Number);
+    return { fromX, fromY, toX, toY };
+  }
+
+  private getAnalyzedMove(
+    position: string,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    // Exemple de vérification
+    const bestMove = this.gamesAnalyzer.getBestMove(position);
+    return bestMove ? this.convertMoveToCoords(bestMove) : null;
+  }
+
+  // Méthode pour obtenir le meilleur coup avec Minimax et Alpha-Beta Pruning
+  private getBestMoveUsingMinimax(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    let bestMove = null;
+    let bestValue = -Infinity;
+    const maxDepth = 10; // Profondeur maximale de recherche pour Minimax
+    this.startTime = Date.now();
+
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      // Récupère tous les mouvements valides pour le niveau de profondeur actuel
+      let moves = this.getAllValidMoves(board);
+      moves = this.sortMoves(moves, board, depth);
+
+      for (const move of moves) {
+        // Effectuer le mouvement sur le plateau temporairement
+        const piece = board.getPiece(move.fromX, move.fromY);
+        if (!piece) continue;
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+
+        // Vérifier si le mouvement est critique (échec, échec et mat)
+        const isCritical =
+          board.isKingInCheck(this.color) ||
+          this.isCriticalMove(piece, move, board);
+        const adjustedDepth = isCritical ? depth + 1 : depth;
+
+        // Appelle Minimax avec élagage Alpha-Beta pour évaluer le mouvement
+        const boardValue = this.minimax(
+          board,
+          adjustedDepth - 1,
+          -Infinity,
+          Infinity,
+          false,
+        );
+
+        // Annuler le mouvement
+        board.setPiece(move.fromX, move.fromY, piece);
+        board.setPiece(move.toX, move.toY, originalPiece);
+
+        // Mémoriser le meilleur mouvement et sa valeur
+        if (boardValue > bestValue) {
+          bestValue = boardValue;
+          bestMove = move;
+        }
+
+        // Vérifie le temps écoulé et arrête la recherche si le temps est écoulé
+        if (Date.now() - this.startTime > this.maxTime) {
+          break;
+        }
+      }
+
+      // Vérifie le temps de réflexion à la fin de chaque profondeur
+      if (Date.now() - this.startTime > this.maxTime) {
+        break;
+      }
+    }
+
+    return bestMove;
   }
 }
