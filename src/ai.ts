@@ -149,10 +149,11 @@ export class AI {
     alpha: number,
     beta: number,
     isMaximizing: boolean,
-    multiCutThreshold: number = 2, // Nombre de coupures permises avant d’élaguer la branche
-    multiCutDepth: number = 3, // Profondeur des multi-coupures pour l'évaluation rapide
+    multiCutThreshold: number = 2,
+    multiCutDepth: number = 3,
   ): number {
-    const boardKey = `${board.toString()}|${depth}`;
+    const phase = this.determineGamePhase(board);
+    const boardKey = `${board.toString()}|${depth}|${phase}`;
 
     if (Date.now() - this.startTime > this.maxTime) {
       return this.evaluatePositionWithKingSafety(board, this.color);
@@ -169,14 +170,14 @@ export class AI {
       board.isCheckmate(this.color) ||
       board.isCheckmate(this.getOpponentColor())
     ) {
-      const evaluation = this.quiescenceSearch(board, alpha, beta);
+      const evaluation = this.quiescenceSearch(board, alpha, beta, phase);
       this.transpositionTable.set(boardKey, { value: evaluation, depth });
       return evaluation;
     }
 
     let bestEval = isMaximizing ? -Infinity : Infinity;
     let moves = this.getAllValidMoves(board);
-    moves = this.sortMoves(moves, board, depth);
+    moves = this.sortMoves(moves, board, depth, phase);
 
     let cutCount = 0;
 
@@ -186,7 +187,7 @@ export class AI {
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      // Multi-Cut Pruning: Évaluation rapide à une profondeur réduite
+      // Multi-Cut Pruning avec prise en compte de la phase de jeu
       let evaluation: number;
       if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
         evaluation = -this.minimax(
@@ -200,11 +201,11 @@ export class AI {
           cutCount++;
           board.setPiece(move.fromX, move.fromY, fromPiece);
           board.setPiece(move.toX, move.toY, toPiece);
-          continue; // Coupe cette branche
+          continue;
         }
       }
 
-      // Poursuit l'évaluation complète si la coupe n'a pas eu lieu
+      // Évaluation normale après Multi-Cut Pruning
       evaluation = this.minimax(board, depth - 1, alpha, beta, !isMaximizing);
 
       board.setPiece(move.fromX, move.fromY, fromPiece);
@@ -226,6 +227,13 @@ export class AI {
 
     this.transpositionTable.set(boardKey, { value: bestEval, depth });
     return bestEval;
+  }
+
+  private determineGamePhase(board: Board): 'opening' | 'midgame' | 'endgame' {
+    const pieceCount = board.getPieceCount();
+    if (pieceCount > 24) return 'opening';
+    if (pieceCount > 12) return 'midgame';
+    return 'endgame';
   }
 
   private addKillerMove(
@@ -253,6 +261,7 @@ export class AI {
     board: Board,
     alpha: number,
     beta: number,
+    phase: 'opening' | 'midgame' | 'endgame',
     depth: number = 0,
   ): number {
     const maxQuiescenceDepth = this.getAdaptiveQuiescenceDepth(board);
@@ -273,7 +282,19 @@ export class AI {
       const toPiece = board.getPiece(move.toX, move.toY);
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-      const score = -this.quiescenceSearch(board, -beta, -alpha, depth + 1);
+      let score = -this.quiescenceSearch(
+        board,
+        -beta,
+        -alpha,
+        phase,
+        depth + 1,
+      );
+
+      // En fin de partie, accorder plus d'importance aux captures critiques
+      if (phase === 'endgame' && this.isCriticalMove(fromPiece!, move, board)) {
+        score += 20;
+      }
+
       board.setPiece(move.fromX, move.fromY, fromPiece);
       board.setPiece(move.toX, move.toY, toPiece);
 
@@ -330,6 +351,7 @@ export class AI {
     moves: { fromX: number; fromY: number; toX: number; toY: number }[],
     board: Board,
     depth: number,
+    phase: 'opening' | 'midgame' | 'endgame',
   ): { fromX: number; fromY: number; toX: number; toY: number }[] {
     return moves.sort((a, b) => {
       const pieceA = board.getPiece(a.toX, a.toY);
@@ -338,13 +360,19 @@ export class AI {
       const valueA = pieceA ? pieceValues[pieceA.type] : 0;
       const valueB = pieceB ? pieceValues[pieceB.type] : 0;
 
+      if (phase === 'opening') {
+        // Priorité au contrôle du centre en ouverture
+        const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
+        const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
+        if (centerControlA !== centerControlB)
+          return centerControlB - centerControlA;
+      } else if (phase === 'endgame') {
+        // Priorité aux mouvements de promotion ou attaques du roi en fin de partie
+        if (pieceA && pieceA.type === PieceType.PAWN && a.toY === 7) return -1;
+        if (pieceB && pieceB.type === PieceType.PAWN && b.toY === 7) return 1;
+      }
+
       if (valueA !== valueB) return valueB - valueA;
-
-      const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
-      const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
-
-      if (centerControlA !== centerControlB)
-        return centerControlB - centerControlA;
 
       const killerMovesAtDepth = this.killerMoves.get(depth);
       if (
@@ -442,11 +470,12 @@ export class AI {
     let bestMove = null;
     let bestValue = -Infinity;
     const maxDepth = 10;
+    const phase = this.determineGamePhase(board);
     this.startTime = Date.now();
 
     for (let depth = 1; depth <= maxDepth; depth++) {
       let moves = this.getAllValidMoves(board);
-      moves = this.sortMoves(moves, board, depth);
+      moves = this.sortMoves(moves, board, depth, phase);
 
       for (const move of moves) {
         const piece = board.getPiece(move.fromX, move.fromY);
