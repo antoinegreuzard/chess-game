@@ -7,15 +7,12 @@ import {
   evaluateKingSafety,
   pieceValues,
 } from './ai/evaluator';
-import { getEndgameMove } from './ai/endgameTablebase';
-import { flipMove, openingBook } from './ai/openingBook';
+import { EndgameTablebase } from './ai/endgameTablebase';
+import { OpeningBook } from './ai/openingBook';
 import { GamesAnalyzer } from './ai/gamesAnalyzer';
 
 // Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
 export class AI {
-  private readonly openingMoves: {
-    [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
-  } = openingBook;
   private readonly transpositionTable: Map<
     string,
     { value: number; depth: number }
@@ -122,6 +119,30 @@ export class AI {
 
     return null;
   }
+
+  private getOpeningMove(
+    board: Board,
+  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const boardHash = this.getBoardHash(board);
+    const openingMove = OpeningBook.getOpeningMove(boardHash);
+
+    return openingMove ? this.flipMoveIfBlack(openingMove) : null;
+  }
+
+  private flipMoveIfBlack(
+    move: { fromX: number; fromY: number; toX: number; toY: number },
+  ): { fromX: number; fromY: number; toX: number; toY: number } {
+    if (this.color === PieceColor.BLACK) {
+      return {
+        fromX: 7 - move.fromX,
+        fromY: 7 - move.fromY,
+        toX: 7 - move.toX,
+        toY: 7 - move.toY,
+      };
+    }
+    return move;
+  }
+
 
   private minimax(
     board: Board,
@@ -371,7 +392,8 @@ export class AI {
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     if (board.getPieceCount() <= 4) {
-      return getEndgameMove(board, this.color);
+      const positionKey = this.getBoardHash(board);
+      return EndgameTablebase.getEndgameMove(positionKey);
     }
     return null;
   }
@@ -388,41 +410,6 @@ export class AI {
         targetPiece.color !== piece.color &&
         targetPiece.type !== PieceType.PAWN)
     );
-  }
-
-  // Méthode pour trouver le mouvement d'ouverture
-
-  private getOpeningMove(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const boardHash = this.getBoardHash(board);
-    console.log(boardHash);
-
-    if (this.openingMoves[boardHash]) {
-      const move = this.openingMoves[boardHash][0];
-      const flippedMove = flipMove(move, this.color === PieceColor.BLACK);
-
-      board.movePiece(
-        flippedMove.fromX,
-        flippedMove.fromY,
-        flippedMove.toX,
-        flippedMove.toY,
-      );
-      const evaluation = evaluateBoard(board, this.color);
-      board.setPiece(
-        flippedMove.fromX,
-        flippedMove.fromY,
-        board.getPiece(flippedMove.toX, flippedMove.toY),
-      );
-      board.setPiece(flippedMove.toX, flippedMove.toY, null);
-
-      const exitThreshold = -0.5;
-      if (evaluation > exitThreshold) {
-        return flippedMove;
-      }
-    }
-
-    return null;
   }
 
   private getBoardHash(board: Board): string {

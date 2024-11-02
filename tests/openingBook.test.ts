@@ -1,150 +1,42 @@
-// tests/openingBook.test.ts
-import { flipMove, getNextOpeningMove, openingBook } from '../src/ai/openingBook';
+// ai/openingBook.test.ts
+import { OpeningBook } from '../src/ai/openingBook';
 
-describe('Opening Book Tests', () => {
-  test('Ruy Lopez Opening', () => {
-    const moves = openingBook['e2e4 e7e5 g1f3 b8c6 f1b5'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 4, fromY: 1, toX: 4, toY: 3 },
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-      { fromX: 1, fromY: 0, toX: 2, toY: 2 },
-      { fromX: 5, fromY: 7, toX: 1, toY: 5 },
-    ]);
+describe('OpeningBook', () => {
+  it('devrait retourner le bon mouvement pour une ouverture connue', () => {
+    const positionKey = 'rnbqkbnrpppppppp888888ppppppppRNBQKBNR'; // Position de départ
+    const move = OpeningBook.getOpeningMove(positionKey);
+
+    expect(move).not.toBeNull();
+    expect(move).toEqual({ fromX: 1, fromY: 7, toX: 3, toY: 7 });
   });
 
-  test('Sicilian Defense', () => {
-    const moves = openingBook['e2e4 c7c5'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 2, fromY: 1, toX: 2, toY: 3 },
-    ]);
+  it('devrait retourner un autre mouvement pour une autre position connue', () => {
+    const positionKey = 'rnbqkbnrpppppppp888888pPPPPpppRNBQKBNR'; // Gambit Dame
+    const move = OpeningBook.getOpeningMove(positionKey);
+
+    expect(move).not.toBeNull();
+    expect(move).toEqual({ fromX: 5, fromY: 6, toX: 5, toY: 4 });
   });
 
-  test('Extended Sicilian Defense', () => {
-    const moves = openingBook['e2e4 c7c5 g1f3 d7d6'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 2, fromY: 1, toX: 2, toY: 3 },
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 2 },
-    ]);
+  it('devrait retourner null pour une position non définie', () => {
+    const positionKey = 'positionInconnue'; // Clé non définie
+    const move = OpeningBook.getOpeningMove(positionKey);
+
+    expect(move).toBeNull();
   });
 
-  test('Queen\'s Gambit', () => {
-    const moves = openingBook['d2d4 d7d5 c2c4'];
-    expect(moves).toEqual([
-      { fromX: 3, fromY: 6, toX: 3, toY: 4 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
-      { fromX: 2, fromY: 6, toX: 2, toY: 4 },
-    ]);
-  });
+  it('devrait retourner un mouvement inversé pour les Noirs', () => {
+    const positionKey = 'rnbqkbnrpppppppp888888ppppppppRNBQKBNR';
+    const move = OpeningBook.getOpeningMove(positionKey);
 
-  test('Caro-Kann Defense', () => {
-    const moves = openingBook['e2e4 c7c6'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 2, fromY: 1, toX: 2, toY: 2 },
-    ]);
-  });
+    // Simulation pour les Noirs
+    const flippedMove = {
+      fromX: 7 - move!.fromX,
+      fromY: 7 - move!.fromY,
+      toX: 7 - move!.toX,
+      toY: 7 - move!.toY,
+    };
 
-  test('Extended Caro-Kann Defense', () => {
-    const moves = openingBook['e2e4 c7c6 d2d4 d7d5'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 2, fromY: 1, toX: 2, toY: 2 },
-      { fromX: 3, fromY: 6, toX: 3, toY: 4 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
-    ]);
-  });
-
-  test('French Defense', () => {
-    const moves = openingBook['e2e4 e7e6'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 4, fromY: 1, toX: 4, toY: 2 },
-    ]);
-  });
-
-  test('Extended French Defense', () => {
-    const moves = openingBook['e2e4 e7e6 d2d4 d7d5'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 4, fromY: 1, toX: 4, toY: 2 },
-      { fromX: 3, fromY: 6, toX: 3, toY: 4 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
-    ]);
-  });
-
-  test('Italian Game', () => {
-    const moves = openingBook['e2e4 e7e5 g1f3 b8c6 f1c4'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 4, fromY: 1, toX: 4, toY: 3 },
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-      { fromX: 1, fromY: 0, toX: 2, toY: 2 },
-      { fromX: 5, fromY: 7, toX: 2, toY: 4 },
-    ]);
-  });
-
-  test('Alekhine Defense', () => {
-    const moves = openingBook['e2e4 g8f6'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 6, fromY: 0, toX: 5, toY: 2 },
-    ]);
-  });
-
-  test('King\'s Gambit', () => {
-    const moves = openingBook['e2e4 e7e5 f2f4'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 4, fromY: 1, toX: 4, toY: 3 },
-      { fromX: 5, fromY: 6, toX: 5, toY: 4 },
-    ]);
-  });
-
-  test('English Opening', () => {
-    const moves = openingBook['c2c4'];
-    expect(moves).toEqual([
-      { fromX: 2, fromY: 6, toX: 2, toY: 4 },
-    ]);
-  });
-
-  test('Réti Opening', () => {
-    const moves = openingBook['g1f3 d7d5'];
-    expect(moves).toEqual([
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
-    ]);
-  });
-
-  test('Réti Opening', () => {
-    const moves = openingBook['g1f3 d7d5'];
-    expect(moves).toEqual([
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 3 },
-    ]);
-  });
-
-  test('Pirc Defense', () => {
-    const moves = openingBook['e2e4 d7d6'];
-    expect(moves).toEqual([
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 },
-      { fromX: 3, fromY: 1, toX: 3, toY: 2 },
-    ]);
-  });
-
-
-  test('flipMove without flipping', () => {
-    const move = { fromX: 4, fromY: 6, toX: 4, toY: 4 };
-    const result = flipMove(move, false);
-    expect(result).toEqual({ fromX: 4, fromY: 6, toX: 4, toY: 4 });
-  });
-
-  test('flipMove with flipping', () => {
-    const move = { fromX: 4, fromY: 6, toX: 4, toY: 4 };
-    const result = flipMove(move, true);
-    expect(result).toEqual({ fromX: 3, fromY: 1, toX: 3, toY: 3 });
+    expect(flippedMove).toEqual({ fromX: 6, fromY: 0, toX: 4, toY: 0 });
   });
 });

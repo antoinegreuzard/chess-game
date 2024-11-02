@@ -1,130 +1,44 @@
-// src/openingBook.ts
+// ai/openingBook.ts
 
-export const openingBook: {
-  [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
-} = {
-  // Ouverture Ruy Lopez
-  'e2e4 e7e5 g1f3 b8c6 f1b5': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 3 }, // e7e5
-    { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // g1f3
-    { fromX: 1, fromY: 0, toX: 2, toY: 2 }, // b8c6
-    { fromX: 5, fromY: 7, toX: 1, toY: 5 }, // f1b5
-  ],
-
-  // Défense Sicilienne
-  'e2e4 c7c5': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 2, fromY: 1, toX: 2, toY: 3 }, // c7c5
-  ],
-  'e2e4 c7c5 g1f3 d7d6': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 2, fromY: 1, toX: 2, toY: 3 }, // c7c5
-    { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // g1f3
-    { fromX: 3, fromY: 1, toX: 3, toY: 2 }, // d7d6
-  ],
-
-  // Gambit de la Reine
-  'd2d4 d7d5 c2c4': [
-    { fromX: 3, fromY: 6, toX: 3, toY: 4 }, // d2d4
-    { fromX: 3, fromY: 1, toX: 3, toY: 3 }, // d7d5
-    { fromX: 2, fromY: 6, toX: 2, toY: 4 }, // c2c4
-  ],
-
-  // Défense Caro-Kann
-  'e2e4 c7c6': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 2, fromY: 1, toX: 2, toY: 2 }, // c7c6
-  ],
-  'e2e4 c7c6 d2d4 d7d5': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 2, fromY: 1, toX: 2, toY: 2 }, // c7c6
-    { fromX: 3, fromY: 6, toX: 3, toY: 4 }, // d2d4
-    { fromX: 3, fromY: 1, toX: 3, toY: 3 }, // d7d5
-  ],
-
-  // Défense Française
-  'e2e4 e7e6': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 2 }, // e7e6
-  ],
-  'e2e4 e7e6 d2d4 d7d5': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 2 }, // e7e6
-    { fromX: 3, fromY: 6, toX: 3, toY: 4 }, // d2d4
-    { fromX: 3, fromY: 1, toX: 3, toY: 3 }, // d7d5
-  ],
-
-  // Partie Italienne
-  'e2e4 e7e5 g1f3 b8c6 f1c4': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 3 }, // e7e5
-    { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // g1f3
-    { fromX: 1, fromY: 0, toX: 2, toY: 2 }, // b8c6
-    { fromX: 5, fromY: 7, toX: 2, toY: 4 }, // f1c4
-  ],
-
-  // Défense Alekhine
-  'e2e4 g8f6': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 6, fromY: 0, toX: 5, toY: 2 }, // g8f6
-  ],
-
-  // Défense Pirc
-  'e2e4 d7d6': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 3, fromY: 1, toX: 3, toY: 2 }, // d7d6
-  ],
-
-  // Partie Écossaise
-  'e2e4 e7e5 g1f3 b8c6 d2d4': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 3 }, // e7e5
-    { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // g1f3
-    { fromX: 1, fromY: 0, toX: 2, toY: 2 }, // b8c6
-    { fromX: 3, fromY: 6, toX: 3, toY: 4 }, // d2d4
-  ],
-
-  // Gambit du Roi
-  'e2e4 e7e5 f2f4': [
-    { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // e2e4
-    { fromX: 4, fromY: 1, toX: 4, toY: 3 }, // e7e5
-    { fromX: 5, fromY: 6, toX: 5, toY: 4 }, // f2f4
-  ],
-
-  // Ouverture anglaise
-  c2c4: [
-    { fromX: 2, fromY: 6, toX: 2, toY: 4 }, // c2c4
-  ],
-
-  // Ouverture Réti
-  'g1f3 d7d5': [
-    { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // g1f3
-    { fromX: 3, fromY: 1, toX: 3, toY: 3 }, // d7d5
-  ],
-};
-
-export function flipMove(
-  move: { fromX: number; fromY: number; toX: number; toY: number },
-  flipBoard: boolean,
-): { fromX: number; fromY: number; toX: number; toY: number } {
-  if (!flipBoard) return move;
-
-  return {
-    fromX: 7 - move.fromX,
-    fromY: 7 - move.fromY,
-    toX: 7 - move.toX,
-    toY: 7 - move.toY,
+export class OpeningBook {
+  private static openings: {
+    [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
+  } = {
+    'rnbqkbnrpppppppp888888ppppppppRNBQKBNR': [
+      { fromX: 1, fromY: 7, toX: 3, toY: 7 }, // Pion roi du roi (1. e4)
+      { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // Pion roi de la dame (1. d4)
+    ],
+    'rnbqkbnrpppppppp888888pppPPpppRNBQKBNR': [
+      { fromX: 2, fromY: 7, toX: 4, toY: 7 }, // Pion vers 1.c4 (Ouverture anglaise)
+    ],
+    'rnbqkbnrpppppppp888888pPPPPpppRNBQKBNR': [
+      { fromX: 5, fromY: 6, toX: 5, toY: 4 }, // Gambit Dame (1.d4 d5 2.c4)
+    ],
+    'rnbqkbnrp1pppppp888888pppPPpppRNBQKBNR': [
+      { fromX: 4, fromY: 7, toX: 5, toY: 7 }, // Cavalier vers f3 (1. e4 e5 2. Nf3)
+    ],
+    'rnbqkb1rpppppppp888888pppnPPppRNBQKBNR': [
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // Défense sicilienne (1.e4 c5)
+      { fromX: 2, fromY: 7, toX: 3, toY: 5 }, // Ouverture écossaise (1.e4 e5 2. Nf3 Nc6 3.d4)
+    ],
+    'rnbqkbnrpp1ppppp888888ppp1PPppRNBQKBNR': [
+      { fromX: 5, fromY: 6, toX: 4, toY: 4 }, // Défense française (1.e4 e6)
+      { fromX: 5, fromY: 7, toX: 5, toY: 6 }, // Pion vers e3 (Début du pion roi)
+    ],
+    'rnbqkbnrppppp1pp888888ppPPpPppRNBQKBNR': [
+      { fromX: 5, fromY: 7, toX: 3, toY: 6 }, // Défense Alekhine (1.e4 Nf6)
+    ],
+    'rnbqkbnrpppppp1p888888ppPPpPppRNBQKBNR': [
+      { fromX: 6, fromY: 6, toX: 6, toY: 4 }, // Défense moderne (1.e4 g6)
+    ],
   };
-}
 
-export function getNextOpeningMove(
-  key: string,
-  openingBook: OpeningBook,
-): { fromX: number; fromY: number; toX: number; toY: number } | null {
-  return openingBook[key]?.[0] ?? null;
+  static getOpeningMove(positionKey: string): { fromX: number; fromY: number; toX: number; toY: number } | null {
+    const moves = this.openings[positionKey];
+    if (moves && moves.length > 0) {
+      // Ici, on peut choisir aléatoirement un mouvement parmi les options, ou garder le premier
+      return moves[0];
+    }
+    return null;
+  }
 }
-
-export type OpeningBook = {
-  [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
-};
