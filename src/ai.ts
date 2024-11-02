@@ -40,7 +40,7 @@ export class AI {
 
   constructor(
     private readonly color: PieceColor,
-    maxTime: number = 5000,
+    maxTime: number = 20000,
   ) {
     this.transpositionTable = new Map();
     this.maxTime = maxTime;
