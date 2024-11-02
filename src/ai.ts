@@ -187,7 +187,7 @@ export class AI {
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      // Multi-Cut Pruning avec prise en compte de la phase de jeu
+      // Multi-Cut Pruning
       let evaluation: number;
       if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
         evaluation = -this.minimax(
@@ -205,24 +205,28 @@ export class AI {
         }
       }
 
-      // Évaluation normale après Multi-Cut Pruning
       evaluation = this.minimax(board, depth - 1, alpha, beta, !isMaximizing);
 
       board.setPiece(move.fromX, move.fromY, fromPiece);
       board.setPiece(move.toX, move.toY, toPiece);
 
       if (isMaximizing) {
-        bestEval = Math.max(bestEval, evaluation);
+        if (evaluation > bestEval) {
+          bestEval = evaluation;
+          this.updateHistoricalMoveScore(move);
+          this.addKillerMove(depth, move);
+        }
         alpha = Math.max(alpha, evaluation);
       } else {
-        bestEval = Math.min(bestEval, evaluation);
+        if (evaluation < bestEval) {
+          bestEval = evaluation;
+          this.updateHistoricalMoveScore(move);
+          this.addKillerMove(depth, move);
+        }
         beta = Math.min(beta, evaluation);
       }
 
-      if (beta <= alpha) {
-        this.addKillerMove(depth, move);
-        break;
-      }
+      if (beta <= alpha) break;
     }
 
     this.transpositionTable.set(boardKey, { value: bestEval, depth });
@@ -241,20 +245,36 @@ export class AI {
     move: { fromX: number; fromY: number; toX: number; toY: number },
   ) {
     const killers = this.killerMoves.get(depth) ?? [];
-    const existingMove = killers.find(
-      (k) => k.move.fromX === move.fromX && k.move.fromY === move.fromY,
-    );
+    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
 
+    // Augmenter le score des killer moves pour ce mouvement
+    let existingMove = killers.find(
+      (k) =>
+        `${k.move.fromX},${k.move.fromY},${k.move.toX},${k.move.toY}` ===
+        moveKey,
+    );
     if (existingMove) {
-      existingMove.score += 1;
+      existingMove.score += 10;
     } else {
-      killers.push({ move, score: 1 });
+      killers.push({ move, score: 10 });
     }
 
+    // Trier par score et limiter le nombre de killer moves par profondeur
     this.killerMoves.set(
       depth,
       killers.sort((a, b) => b.score - a.score).slice(0, 2),
     );
+  }
+
+  private updateHistoricalMoveScore(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }) {
+    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
+    const currentScore = this.historicalMoveScores.get(moveKey) || 0;
+    this.historicalMoveScores.set(moveKey, currentScore + 1);
   }
 
   private quiescenceSearch(
@@ -361,13 +381,11 @@ export class AI {
       const valueB = pieceB ? pieceValues[pieceB.type] : 0;
 
       if (phase === 'opening') {
-        // Priorité au contrôle du centre en ouverture
         const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
         const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
         if (centerControlA !== centerControlB)
           return centerControlB - centerControlA;
       } else if (phase === 'endgame') {
-        // Priorité aux mouvements de promotion ou attaques du roi en fin de partie
         if (pieceA && pieceA.type === PieceType.PAWN && a.toY === 7) return -1;
         if (pieceB && pieceB.type === PieceType.PAWN && b.toY === 7) return 1;
       }
@@ -378,11 +396,11 @@ export class AI {
       if (
         killerMovesAtDepth &&
         killerMovesAtDepth.some(
-          (move) =>
-            move.move.fromX === a.fromX &&
-            move.move.fromY === a.fromY &&
-            move.move.toX === a.toX &&
-            move.move.toY === a.toY,
+          (km) =>
+            km.move.fromX === a.fromX &&
+            km.move.fromY === a.fromY &&
+            km.move.toX === a.toX &&
+            km.move.toY === a.toY,
         )
       ) {
         return -1;
