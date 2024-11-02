@@ -61,20 +61,6 @@ export class AI {
 
     this.startTime = Date.now();
 
-    const positionKey = this.getPositionKey(board);
-    const analyzedMove = this.getAnalyzedMove(positionKey);
-    if (
-      analyzedMove &&
-      typeof analyzedMove === 'object' &&
-      'fromX' in analyzedMove &&
-      'fromY' in analyzedMove &&
-      'toX' in analyzedMove &&
-      'toY' in analyzedMove
-    ) {
-      this.moveHistory.push(analyzedMove);
-      return analyzedMove;
-    }
-
     const openingMove = this.getOpeningMove(board);
     console.log(openingMove);
     if (
@@ -103,6 +89,20 @@ export class AI {
       return endgameMove;
     }
 
+    const positionKey = this.getPositionKey(board);
+    const analyzedMove = this.getAnalyzedMove(positionKey);
+    if (
+      analyzedMove &&
+      typeof analyzedMove === 'object' &&
+      'fromX' in analyzedMove &&
+      'fromY' in analyzedMove &&
+      'toX' in analyzedMove &&
+      'toY' in analyzedMove
+    ) {
+      this.moveHistory.push(analyzedMove);
+      return analyzedMove;
+    }
+
     const bestMove = this.getBestMoveUsingMinimax(board);
     console.log(bestMove);
     if (
@@ -129,9 +129,12 @@ export class AI {
     return openingMove ? this.flipMoveIfBlack(openingMove) : null;
   }
 
-  private flipMoveIfBlack(
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-  ): { fromX: number; fromY: number; toX: number; toY: number } {
+  private flipMoveIfBlack(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): { fromX: number; fromY: number; toX: number; toY: number } {
     if (this.color === PieceColor.BLACK) {
       return {
         fromX: 7 - move.fromX,
@@ -142,7 +145,6 @@ export class AI {
     }
     return move;
   }
-
 
   private minimax(
     board: Board,
@@ -428,8 +430,6 @@ export class AI {
         }
       }
     }
-
-    console.log(moves);
 
     return moves.trim();
   }

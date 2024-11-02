@@ -1,4 +1,4 @@
-// ai/endgameTablebase.test.ts
+// endgameTablebase.test.ts
 import { EndgameTablebase } from '../src/ai/endgameTablebase';
 
 describe('EndgameTablebase', () => {

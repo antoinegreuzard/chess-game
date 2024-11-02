@@ -643,10 +643,6 @@ export class Board implements BoardInterface {
     return this.grid.flat().filter((piece) => piece !== null).length;
   }
 
-  public getPieces(): Piece[] {
-    return this.grid.flat().filter((piece): piece is Piece => piece !== null);
-  }
-
   public setPlayerColor(color: PieceColor): void {
     this.currentPlayer = color;
   }

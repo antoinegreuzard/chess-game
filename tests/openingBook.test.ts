@@ -1,4 +1,4 @@
-// ai/openingBook.test.ts
+// openingBook.test.ts
 import { OpeningBook } from '../src/ai/openingBook';
 
 describe('OpeningBook', () => {
