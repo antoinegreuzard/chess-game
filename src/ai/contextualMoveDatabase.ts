@@ -32,9 +32,7 @@ export class ContextualMoveDatabase {
   }
 
   // Récupère les mouvements triés par fréquence pour une clé de position donnée
-  public getMovesByFrequency(
-    positionKey: string,
-  ): {
+  public getMovesByFrequency(positionKey: string): {
     move: { fromX: number; fromY: number; toX: number; toY: number };
     count: number;
   }[] {
