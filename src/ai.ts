@@ -18,7 +18,7 @@ export class AI {
     string,
     { value: number; depth: number }
   >; // Table de transposition avec profondeur
-  private readonly maxTime: number; // Temps maximum de réflexion en millisecondes
+  private maxTime: number;
   private startTime: number;
   private readonly killerMoves: Map<
     number,
@@ -70,6 +70,7 @@ export class AI {
     }
 
     this.startTime = Date.now();
+    this.maxTime = Math.floor(Math.random() * (50000 - 5000 + 1)) + 5000;
 
     const openingMove = this.getOpeningMove(board);
     if (
