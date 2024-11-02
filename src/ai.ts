@@ -397,7 +397,7 @@ export class AI {
     });
   }
 
-// Adaptation de la profondeur de quiescence en fonction de la situation
+  // Adaptation de la profondeur de quiescence en fonction de la situation
   private getAdaptiveQuiescenceDepth(board: Board): number {
     const pieceCount = board.getPieceCount();
     if (pieceCount <= 6) return 7; // Profondeur plus élevée en fin de partie
@@ -415,7 +415,7 @@ export class AI {
     return score;
   }
 
-// Fonction de détection et d'application des tables de fin de partie
+  // Fonction de détection et d'application des tables de fin de partie
   private useEndgameTablebase(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
