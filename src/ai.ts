@@ -151,7 +151,8 @@ export class AI {
     isMaximizing: boolean,
     multiCutThreshold: number = 2,
     multiCutDepth: number = 3,
-    probCutFactor: number = 0.9, // Facteur d'élagage probabiliste
+    probCutFactor: number = 0.9,
+    aspirationDelta: number = 25,
   ): number {
     const phase = this.determineGamePhase(board);
     const boardKey = `${board.toString()}|${depth}|${phase}`;
@@ -178,16 +179,51 @@ export class AI {
       return evaluation;
     }
 
-    // Élément ProbCut: Élagage probabiliste basé sur un facteur prédéfini
-    if (depth > 1 && Math.random() < probCutFactor) {
-      const probEval = this.evaluatePositionWithKingSafety(board, this.color);
-      if (isMaximizing && probEval < alpha) return probEval; // Élagage en cas de faible score
-      if (!isMaximizing && probEval > beta) return probEval; // Élagage en cas de fort score
+    // Aspiration Window
+    let evalGuess = this.evaluatePositionWithKingSafety(board, this.color);
+    let localAlpha = evalGuess - aspirationDelta;
+    let localBeta = evalGuess + aspirationDelta;
+    let result: number;
+
+    while (true) {
+      result = this.alphaBetaWithAspirationWindow(
+        board,
+        depth,
+        localAlpha,
+        localBeta,
+        isMaximizing,
+        multiCutThreshold,
+        multiCutDepth,
+        probCutFactor,
+      );
+
+      // Si le résultat est hors de la fenêtre, on l'élargit et on recommence
+      if (result <= localAlpha) {
+        localAlpha -= aspirationDelta; // Elargir en dessous
+      } else if (result >= localBeta) {
+        localBeta += aspirationDelta; // Elargir au-dessus
+      } else {
+        break; // Si le résultat est dans la fenêtre, on le garde
+      }
     }
 
+    this.transpositionTable.set(boardKey, { value: result, depth });
+    return result;
+  }
+
+  private alphaBetaWithAspirationWindow(
+    board: Board,
+    depth: number,
+    alpha: number,
+    beta: number,
+    isMaximizing: boolean,
+    multiCutThreshold: number,
+    multiCutDepth: number,
+    probCutFactor: number,
+  ): number {
     let bestEval = isMaximizing ? -Infinity : Infinity;
     let moves = this.getAllValidMoves(board);
-    moves = this.sortMoves(moves, board, depth, phase);
+    moves = this.sortMoves(moves, board, depth, this.determineGamePhase(board));
 
     let cutCount = 0;
 
@@ -197,8 +233,9 @@ export class AI {
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      // Multi-Cut Pruning combiné avec ProbCut
       let evaluation: number;
+
+      // Multi-Cut Pruning combiné avec ProbCut
       if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
         evaluation = -this.minimax(
           board,
@@ -251,7 +288,6 @@ export class AI {
       if (beta <= alpha) break;
     }
 
-    this.transpositionTable.set(boardKey, { value: bestEval, depth });
     return bestEval;
   }
 
