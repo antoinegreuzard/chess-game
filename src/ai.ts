@@ -159,29 +159,13 @@ export class AI {
     if (this.transpositionTable.has(boardKey)) {
       const { value, depth: storedDepth } =
         this.transpositionTable.get(boardKey)!;
-      if (storedDepth >= depth) {
-        return value;
-      }
-    }
-
-    if (depth > 1 && !board.isKingInCheck(this.color)) {
-      const nullMoveEval = -this.minimax(
-        board,
-        depth - 2,
-        -beta,
-        -alpha,
-        !isMaximizing,
-      );
-      if (nullMoveEval >= beta) {
-        return beta;
-      }
+      if (storedDepth >= depth) return value;
     }
 
     if (
       depth === 0 ||
       board.isCheckmate(this.color) ||
-      board.isCheckmate(this.getOpponentColor()) ||
-      Date.now() - this.startTime > this.maxTime
+      board.isCheckmate(this.getOpponentColor())
     ) {
       const evaluation = this.quiescenceSearch(board, alpha, beta);
       this.transpositionTable.set(boardKey, { value: evaluation, depth });
@@ -215,6 +199,7 @@ export class AI {
         beta = Math.min(beta, evaluation);
       }
 
+      // Fenêtre nulle pour les mouvements qui ont causé une coupure
       if (beta <= alpha) {
         this.addKillerMove(depth, move);
         break;
@@ -449,6 +434,7 @@ export class AI {
         const piece = board.getPiece(move.fromX, move.fromY);
         if (!piece) continue;
         const originalPiece = board.getPiece(move.toX, move.toY);
+
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
         const isCritical =
@@ -456,24 +442,25 @@ export class AI {
           this.isCriticalMove(piece, move, board);
         const adjustedDepth = isCritical ? depth + 1 : depth;
 
+        // Fenêtre nulle pour les mouvements de type "killer"
         const boardValue = this.minimax(
           board,
           adjustedDepth - 1,
+          -bestValue,
           -Infinity,
-          Infinity,
           false,
         );
 
         board.setPiece(move.fromX, move.fromY, piece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
-        if (boardValue > bestValue) {
-          bestValue = boardValue;
+        if (-boardValue > bestValue) {
+          bestValue = -boardValue;
           bestMove = move;
         }
 
         if (Date.now() - this.startTime > this.maxTime) {
-          break;
+          return bestMove;
         }
       }
 
