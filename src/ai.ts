@@ -62,7 +62,6 @@ export class AI {
     this.startTime = Date.now();
 
     const openingMove = this.getOpeningMove(board);
-    console.log(openingMove);
     if (
       openingMove &&
       typeof openingMove === 'object' &&
@@ -76,7 +75,6 @@ export class AI {
     }
 
     const endgameMove = this.useEndgameTablebase(board);
-    console.log(endgameMove);
     if (
       endgameMove &&
       typeof endgameMove === 'object' &&
@@ -104,7 +102,6 @@ export class AI {
     }
 
     const bestMove = this.getBestMoveUsingMinimax(board);
-    console.log(bestMove);
     if (
       bestMove &&
       typeof bestMove === 'object' &&
@@ -123,7 +120,7 @@ export class AI {
   private getOpeningMove(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const boardHash = this.getBoardHash(board);
+    const boardHash = board.getCurrentMovesHash();
     const openingMove = OpeningBook.getOpeningMove(boardHash);
 
     return openingMove ? this.flipMoveIfBlack(openingMove) : null;
@@ -394,8 +391,9 @@ export class AI {
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     if (board.getPieceCount() <= 4) {
-      const positionKey = this.getBoardHash(board);
-      return EndgameTablebase.getEndgameMove(positionKey);
+      const positionKey = board.getCurrentMovesHash();
+      const endgameMove = EndgameTablebase.getEndgameMove(positionKey);
+      return endgameMove ? this.flipMoveIfBlack(endgameMove) : null;
     }
     return null;
   }
@@ -412,26 +410,6 @@ export class AI {
         targetPiece.color !== piece.color &&
         targetPiece.type !== PieceType.PAWN)
     );
-  }
-
-  private getBoardHash(board: Board): string {
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    let moves = '';
-
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        const piece = board.getPiece(x, y);
-        if (piece && piece.hasMoved) {
-          const initialFile = files[x];
-          const initialRank = 8 - y;
-          const currentFile = files[x];
-          const currentRank = 8 - y;
-          moves += `${initialFile}${initialRank}${currentFile}${currentRank} `;
-        }
-      }
-    }
-
-    return moves.trim();
   }
 
   private getPositionKey(board: Board): string {

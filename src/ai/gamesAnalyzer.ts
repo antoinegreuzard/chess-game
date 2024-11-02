@@ -1,7 +1,8 @@
-// ai/gamesAnalyzer.ts
 export class GamesAnalyzer {
-  private gamePatterns: Map<string, { move: string; successRate: number }[]> =
-    new Map();
+  private gamePatterns: Map<
+    string,
+    { move: string; successRate: number; games: number }[]
+  > = new Map();
 
   async loadGamesData() {
     const response = await fetch('/chess-game/games.json');
@@ -15,7 +16,7 @@ export class GamesAnalyzer {
       const moves = game.Moves;
       const result = game.Result;
 
-      let currentPosition = '';
+      let currentPosition = ''; // Initial key for board state
       moves.forEach((move) => {
         if (!this.gamePatterns.has(currentPosition)) {
           this.gamePatterns.set(currentPosition, []);
@@ -26,12 +27,16 @@ export class GamesAnalyzer {
         const existingMove = moveData!.find((data) => data.move === move);
 
         if (existingMove) {
-          existingMove.successRate = (existingMove.successRate + success) / 2;
+          existingMove.successRate =
+            (existingMove.successRate * existingMove.games + success) /
+            (existingMove.games + 1);
+          existingMove.games += 1;
         } else {
-          moveData!.push({ move, successRate: success });
+          moveData!.push({ move, successRate: success, games: 1 });
         }
 
-        currentPosition += move;
+        // Update current position by appending the move
+        currentPosition += move + ' ';
       });
     });
   }

@@ -651,27 +651,52 @@ export class Board implements BoardInterface {
     return this.currentPlayer;
   }
 
-  // Méthode pour générer un hash basé sur les mouvements actuels sur le plateau
   public getCurrentMovesHash(): string {
     let hash = '';
 
-    // Crée un hash simplifié basé sur la position et le type de chaque pièce
     for (let y = 0; y < 8; y++) {
+      let emptyCount = 0;
       for (let x = 0; x < 8; x++) {
         const piece = this.getPiece(x, y);
         if (piece) {
-          // Utilise la couleur et le type pour représenter la pièce
-          hash += `${piece.color[0]}${piece.type[0]}`;
+          // If there were empty squares, add their count to the hash
+          if (emptyCount > 0) {
+            hash += emptyCount.toString();
+            emptyCount = 0;
+          }
+          // Use standard FEN notation for pieces
+          const pieceChar = this.getPieceSymbol(piece);
+          hash += pieceChar;
         } else {
-          hash += '__'; // Place vide pour chaque case
+          // Count empty squares
+          emptyCount++;
         }
       }
+      // Add any remaining empty squares in the row
+      if (emptyCount > 0) hash += emptyCount.toString();
+      // Add row separator, except for the last row
+      if (y < 7) hash += '/';
     }
 
-    // Ajoute le joueur actuel pour différencier les tours
-    hash += `p${this.currentPlayer[0]}`; // 'w' pour blanc, 'b' pour noir
+    // Append the current player's turn
+    hash += ` ${this.currentPlayer === PieceColor.WHITE ? 'w' : 'b'}`;
 
     return hash;
+  }
+
+  private getPieceSymbol(piece: Piece): string {
+    const symbolMap: { [key in PieceType]: string } = {
+      [PieceType.PAWN]: 'p',
+      [PieceType.ROOK]: 'r',
+      [PieceType.KNIGHT]: 'n', // Use 'n' for knight to avoid confusion with king
+      [PieceType.BISHOP]: 'b',
+      [PieceType.QUEEN]: 'q',
+      [PieceType.KING]: 'k',
+    };
+    // Return the symbol in uppercase for White, lowercase for Black
+    return piece.color === PieceColor.WHITE
+      ? symbolMap[piece.type].toUpperCase()
+      : symbolMap[piece.type];
   }
 
   // Méthode toString pour représenter le plateau et état de jeu actuel

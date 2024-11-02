@@ -1,35 +1,26 @@
-// ai/openingBook.ts
-
 export class OpeningBook {
   private static openings: {
     [key: string]: { fromX: number; fromY: number; toX: number; toY: number }[];
   } = {
-    rnbqkbnrpppppppp888888ppppppppRNBQKBNR: [
-      { fromX: 1, fromY: 7, toX: 3, toY: 7 }, // Pion roi du roi (1. e4)
-      { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // Pion roi de la dame (1. d4)
+    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w': [
+      { fromX: 1, fromY: 7, toX: 3, toY: 7 }, // King's pawn opening (1. e4)
+      { fromX: 6, fromY: 7, toX: 5, toY: 5 }, // Queen's pawn opening (1. d4)
     ],
-    rnbqkbnrpppppppp888888pppPPpppRNBQKBNR: [
-      { fromX: 2, fromY: 7, toX: 4, toY: 7 }, // Pion vers 1.c4 (Ouverture anglaise)
+    'rnbqkbnr/pppppppp/8/8/8/8/PPP1PPPP/RNBQKBNR w': [
+      { fromX: 2, fromY: 7, toX: 4, toY: 7 }, // English opening (1. c4)
+      { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // Queen's gambit (1. d4 d5 2. c4)
     ],
-    rnbqkbnrpppppppp888888pPPPPpppRNBQKBNR: [
-      { fromX: 5, fromY: 6, toX: 5, toY: 4 }, // Gambit Dame (1.d4 d5 2.c4)
+    'rnbqkbnr/pppppp1p/8/8/8/8/PPPP1PPP/RNBQKBNR w': [
+      { fromX: 4, fromY: 7, toX: 4, toY: 5 }, // Sicilian defense (1. e4 c5)
     ],
-    rnbqkbnrp1pppppp888888pppPPpppRNBQKBNR: [
-      { fromX: 4, fromY: 7, toX: 5, toY: 7 }, // Cavalier vers f3 (1. e4 e5 2. Nf3)
+    'rnbqkbnr/ppp1pppp/8/8/8/8/PPP1PPPP/RNBQKBNR w': [
+      { fromX: 5, fromY: 6, toX: 4, toY: 4 }, // French defense (1. e4 e6)
     ],
-    rnbqkb1rpppppppp888888pppnPPppRNBQKBNR: [
-      { fromX: 4, fromY: 6, toX: 4, toY: 4 }, // Défense sicilienne (1.e4 c5)
-      { fromX: 2, fromY: 7, toX: 3, toY: 5 }, // Ouverture écossaise (1.e4 e5 2. Nf3 Nc6 3.d4)
+    'rnbqkbnr/pppppppp/8/8/8/8/PP1PPPPP/RNBQKBNR w': [
+      { fromX: 4, fromY: 7, toX: 4, toY: 5 }, // Alekhine's defense (1. e4 Nf6)
     ],
-    rnbqkbnrpp1ppppp888888ppp1PPppRNBQKBNR: [
-      { fromX: 5, fromY: 6, toX: 4, toY: 4 }, // Défense française (1.e4 e6)
-      { fromX: 5, fromY: 7, toX: 5, toY: 6 }, // Pion vers e3 (Début du pion roi)
-    ],
-    rnbqkbnrppppp1pp888888ppPPpPppRNBQKBNR: [
-      { fromX: 5, fromY: 7, toX: 3, toY: 6 }, // Défense Alekhine (1.e4 Nf6)
-    ],
-    rnbqkbnrpppppp1p888888ppPPpPppRNBQKBNR: [
-      { fromX: 6, fromY: 6, toX: 6, toY: 4 }, // Défense moderne (1.e4 g6)
+    'rnbqkbnr/pppppppp/8/8/8/8/PPPP1PPP/RNBQKBNR w': [
+      { fromX: 6, fromY: 6, toX: 6, toY: 4 }, // Modern defense (1. e4 g6)
     ],
   };
 
@@ -38,8 +29,8 @@ export class OpeningBook {
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     const moves = this.openings[positionKey];
     if (moves && moves.length > 0) {
-      // Ici, on peut choisir aléatoirement un mouvement parmi les options, ou garder le premier
-      return moves[0];
+      // Select a random move from the list for variety
+      return moves[Math.floor(Math.random() * moves.length)];
     }
     return null;
   }
