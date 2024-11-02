@@ -439,7 +439,7 @@ export class AI {
   private useEndgameTablebase(
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    if (board.getPieceCount() <= 4) {
+    if (board.getPieceCount() <= 5) {
       const positionKey = board.getCurrentMovesHash();
       const endgameMove = EndgameTablebase.getEndgameMove(positionKey);
       return endgameMove ? this.flipMoveIfBlack(endgameMove) : null;
