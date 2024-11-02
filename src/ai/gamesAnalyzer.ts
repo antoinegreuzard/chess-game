@@ -27,17 +27,27 @@ export class GamesAnalyzer {
   }
 
   private analyzeGame(game: GameData) {
+    let cumulativePosition = '';
+
     game.Moves.forEach((move, index) => {
-      const key = `${move}-${index}`;
+      cumulativePosition += move;
+      const key = `${cumulativePosition}-${index}`;
       this.moveScores[key] = (this.moveScores[key] || 0) + 1;
     });
   }
 
+  // Méthode pour trouver le meilleur mouvement en filtrant les clés `moveScores` pour les correspondances
   public getBestMove(position: string): string | null {
-    const moves = Object.keys(this.moveScores)
+    // Filtre toutes les clés qui commencent par la position donnée
+    const matchingMoves = Object.keys(this.moveScores)
       .filter((key) => key.startsWith(position))
-      .sort((a, b) => this.moveScores[b] - this.moveScores[a]);
+      .map((key) => ({
+        move: key.split('-')[0],
+        score: this.moveScores[key],
+      }))
+      .sort((a, b) => b.score - a.score);
 
-    return moves.length > 0 ? moves[0].split('-')[0] : null;
+    // Retourner le mouvement le plus fréquent s'il existe
+    return matchingMoves.length > 0 ? matchingMoves[0].move : null;
   }
 }

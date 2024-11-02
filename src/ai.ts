@@ -66,25 +66,56 @@ export class AI {
 
     const positionKey = this.getPositionKey(board);
     const analyzedMove = this.getAnalyzedMove(positionKey);
-    if (analyzedMove) {
+    if (
+      analyzedMove &&
+      typeof analyzedMove === 'object' &&
+      'fromX' in analyzedMove &&
+      'fromY' in analyzedMove &&
+      'toX' in analyzedMove &&
+      'toY' in analyzedMove
+    ) {
       this.moveHistory.push(analyzedMove);
       return analyzedMove;
     }
 
     const openingMove = this.getOpeningMove(board);
-    if (openingMove) {
+    console.log(openingMove);
+    if (
+      openingMove &&
+      typeof openingMove === 'object' &&
+      'fromX' in openingMove &&
+      'fromY' in openingMove &&
+      'toX' in openingMove &&
+      'toY' in openingMove
+    ) {
       this.moveHistory.push(openingMove);
       return openingMove;
     }
 
     const endgameMove = this.useEndgameTablebase(board);
-    if (endgameMove) {
+    console.log(endgameMove);
+    if (
+      endgameMove &&
+      typeof endgameMove === 'object' &&
+      'fromX' in endgameMove &&
+      'fromY' in endgameMove &&
+      'toX' in endgameMove &&
+      'toY' in endgameMove
+    ) {
       this.moveHistory.push(endgameMove);
       return endgameMove;
     }
 
     const bestMove = this.getBestMoveUsingMinimax(board);
-    if (bestMove) {
+    console.log(bestMove);
+    if (
+      bestMove &&
+      typeof bestMove === 'object' &&
+      'fromX' in bestMove &&
+      'fromY' in bestMove &&
+      'toX' in bestMove &&
+      'toY' in bestMove
+    ) {
       this.moveHistory.push(bestMove);
       return bestMove;
     }
@@ -365,6 +396,7 @@ export class AI {
     board: Board,
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     const boardHash = this.getBoardHash(board);
+    console.log(boardHash);
 
     if (this.openingMoves[boardHash]) {
       const move = this.openingMoves[boardHash][0];
@@ -394,24 +426,29 @@ export class AI {
   }
 
   private getBoardHash(board: Board): string {
-    let hash = '';
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    let moves = '';
+
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = board.getPiece(x, y);
-        if (piece) {
-          const pieceCode =
-            piece.color === PieceColor.WHITE
-              ? piece.type
-              : piece.type.toLowerCase();
-          hash += pieceCode + x + y + ' ';
+        if (piece && piece.hasMoved) {
+          const initialFile = files[x];
+          const initialRank = 8 - y;
+          const currentFile = files[x];
+          const currentRank = 8 - y;
+          moves += `${initialFile}${initialRank}${currentFile}${currentRank} `;
         }
       }
     }
-    return hash.trim();
+
+    console.log(moves);
+
+    return moves.trim();
   }
 
   private getPositionKey(board: Board): string {
-    return board.toString();
+    return board.getCurrentMovesHash();
   }
 
   private convertMoveToCoords(move: string): {

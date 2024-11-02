@@ -125,6 +125,7 @@ export class Board implements BoardInterface {
     fromY: number,
     toX: number,
     toY: number,
+    isSimulation: boolean = true,
   ): boolean {
     if (
       !this.isWithinBounds(fromX, fromY) ||
@@ -166,6 +167,9 @@ export class Board implements BoardInterface {
       // Sauvegarde l'état avant de simuler le mouvement
       this.grid[toY][toX] = piece;
       this.grid[fromY][fromX] = null;
+      if (!isSimulation) {
+        piece.hasMoved = true;
+      }
 
       // Vérifie si le mouvement met le roi du joueur en échec
       if (this.isKingInCheck(piece.color)) {
@@ -635,78 +639,8 @@ export class Board implements BoardInterface {
     return false;
   }
 
-  public clone(): Board {
-    const clonedBoard = new Board();
-    clonedBoard.grid = this.grid.map((row) =>
-      row.map((piece) =>
-        piece
-          ? Object.create(
-              Object.getPrototypeOf(piece),
-              Object.getOwnPropertyDescriptors(piece),
-            )
-          : null,
-      ),
-    );
-    clonedBoard.enPassantTarget = this.enPassantTarget
-      ? { ...this.enPassantTarget }
-      : null;
-    clonedBoard.halfMoveCount = this.halfMoveCount;
-    return clonedBoard;
-  }
-
   public getPieceCount(): number {
     return this.grid.flat().filter((piece) => piece !== null).length;
-  }
-
-  public isGameOver(): boolean {
-    // Vérifie l'échec et mat pour chaque couleur
-    if (
-      this.isCheckmate(PieceColor.WHITE) ||
-      this.isCheckmate(PieceColor.BLACK)
-    ) {
-      return true;
-    }
-
-    // Vérifie le pat pour chaque couleur
-    if (
-      this.isStalemate(PieceColor.WHITE) ||
-      this.isStalemate(PieceColor.BLACK)
-    ) {
-      return true;
-    }
-
-    // Vérifie le matériel insuffisant pour chaque couleur
-    if (this.isInsufficientMaterial()) {
-      return true;
-    }
-
-    // Vérifie si la règle des 50 coups est atteinte
-    return this.isFiftyMoveRule();
-  }
-
-  public getWinner(): PieceColor | null {
-    // Vérifie si les Noirs sont en échec et mat, dans ce cas les Blancs gagnent
-    if (this.isCheckmate(PieceColor.BLACK)) {
-      return PieceColor.WHITE;
-    }
-
-    // Vérifie si les Blancs sont en échec et mat, dans ce cas les Noirs gagnent
-    if (this.isCheckmate(PieceColor.WHITE)) {
-      return PieceColor.BLACK;
-    }
-
-    // Vérifie les conditions de partie nulle : pat, matériel insuffisant ou règle des 50 coups
-    if (
-      this.isStalemate(PieceColor.WHITE) ||
-      this.isStalemate(PieceColor.BLACK) ||
-      this.isInsufficientMaterial() ||
-      this.isFiftyMoveRule()
-    ) {
-      return null; // Partie nulle, aucun gagnant
-    }
-
-    // Le jeu est en cours, retourne `null` pour indiquer qu'aucun gagnant n'est déterminé
-    return null;
   }
 
   public getPieces(): Piece[] {
@@ -719,5 +653,54 @@ export class Board implements BoardInterface {
 
   public getPlayerColor(): PieceColor {
     return this.currentPlayer;
+  }
+
+  // Méthode pour générer un hash basé sur les mouvements actuels sur le plateau
+  public getCurrentMovesHash(): string {
+    let hash = '';
+
+    // Crée un hash simplifié basé sur la position et le type de chaque pièce
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece) {
+          // Utilise la couleur et le type pour représenter la pièce
+          hash += `${piece.color[0]}${piece.type[0]}`;
+        } else {
+          hash += '__'; // Place vide pour chaque case
+        }
+      }
+    }
+
+    // Ajoute le joueur actuel pour différencier les tours
+    hash += `p${this.currentPlayer[0]}`; // 'w' pour blanc, 'b' pour noir
+
+    return hash;
+  }
+
+  // Méthode toString pour représenter le plateau et état de jeu actuel
+  public toString(): string {
+    let boardString = '';
+
+    // Inclure chaque pièce et sa position sur le plateau
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const piece = this.getPiece(x, y);
+        if (piece) {
+          boardString += `${piece.color[0]}${piece.type[0]}`;
+        } else {
+          boardString += '__'; // Place vide pour chaque case
+        }
+      }
+    }
+
+    // Ajouter l'état d'en passant, demi-coups, et joueur actuel
+    boardString += this.enPassantTarget
+      ? `e${this.enPassantTarget.x}${this.enPassantTarget.y}`
+      : 'e--';
+    boardString += `h${this.halfMoveCount}`;
+    boardString += `p${this.currentPlayer[0]}`;
+
+    return boardString;
   }
 }
