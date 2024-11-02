@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
@@ -156,18 +156,19 @@ export function evaluateBoard(
         }
       }
 
-      // Évalue les pions pour la structure et les chaînes protégées
+      // Évalue la structure de pions
       if (piece.type === PieceType.PAWN) {
         pieceScore += evaluatePawnStructure(board, x, y, piece.color);
         pieceScore += evaluatePawnChains(board, x, y, piece.color); // Bonus pour chaînes de pions
+        pieceScore += evaluateAdvancedPawnStructure(board, x, y, piece.color); // Heuristique avancée pour structure de pions
       }
 
-      // Pénalise les rois exposés
-      if (
-        piece.type === PieceType.KING &&
-        isKingExposed(board, x, y, piece.color)
-      ) {
-        pieceScore -= 0.5;
+      // Évalue le contrôle des cases clés
+      pieceScore += evaluateKeySquareControl(board, x, y, piece.color);
+
+      // Évalue la sécurité du roi
+      if (piece.type === PieceType.KING) {
+        pieceScore += evaluateKingSafetyAdvanced(board, x, y, piece.color);
       }
 
       score += piece.color === color ? pieceScore : -pieceScore;
@@ -175,6 +176,95 @@ export function evaluateBoard(
   }
 
   return parseFloat(score.toFixed(2));
+}
+
+function evaluateKeySquareControl(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  let score = 0;
+
+  // Bonus pour contrôler les cases devant les rois
+  const opponentKingPos = board.findKing(color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+  if (opponentKingPos) {
+    const dx = Math.abs(opponentKingPos.x - x);
+    const dy = Math.abs(opponentKingPos.y - y);
+    if ((dx <= 1 && dy <= 1) || (dx === 0 && dy <= 2)) {
+      score += 0.5; // Contrôle de la zone proche du roi adverse
+    }
+  }
+
+  const piece = board.getPiece(x, y);
+  if (piece && pieceValues[piece.type] > 3) {
+    if (x === 3 || x === 4 || y === 3 || y === 4) {
+      score += 0.25;
+    }
+  }
+
+  return score;
+}
+
+function evaluateKingSafetyAdvanced(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  let score = 0;
+
+  // Facteurs additionnels pour la sécurité du roi
+  const directionOffsets = [
+    { dx: -1, dy: 0 },
+    { dx: 1, dy: 0 },
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: 1 },
+    { dx: -1, dy: -1 },
+    { dx: 1, dy: 1 },
+    { dx: -1, dy: 1 },
+    { dx: 1, dy: -1 },
+  ];
+
+  for (const { dx, dy } of directionOffsets) {
+    const newX = x + dx;
+    const newY = y + dy;
+    if (!board.isWithinBounds(newX, newY)) continue;
+
+    const adjPiece = board.getPiece(newX, newY);
+    if (adjPiece && adjPiece.color !== color) {
+      const distanceFactor = Math.abs(newX - x) + Math.abs(newY - y);
+
+      // Ajoute un malus si le roi est entouré par des pièces ennemies puissantes
+      if (adjPiece.type === PieceType.ROOK || adjPiece.type === PieceType.QUEEN) {
+        score -= 0.5 / distanceFactor;
+      }
+    }
+  }
+
+  return score;
+}
+
+function evaluateAdvancedPawnStructure(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  let score = 0;
+
+  // Bonus pour pions connectés (même rangée ou colonne) sans obstruction
+  const leftPawn = x > 0 ? board.getPiece(x - 1, y) : null;
+  const rightPawn = x < 7 ? board.getPiece(x + 1, y) : null;
+
+  if (
+    (leftPawn && leftPawn.color === color && leftPawn.type === PieceType.PAWN) ||
+    (rightPawn && rightPawn.color === color && rightPawn.type === PieceType.PAWN)
+  ) {
+    score += 0.3;
+  }
+
+  return score;
 }
 
 // Fonction pour évaluer les chaînes de pions
@@ -262,42 +352,6 @@ function checkIsolatedPawns(
       rightColumn.color === color);
 
   return hasAdjacentSameColorPawns ? 0 : 1.5; // Retourne une pénalité si le pion est isolé
-}
-
-// Gère les cases hors limites pour éviter des expositions de roi mal calculées
-function isKingExposed(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): boolean {
-  const piece = board.getPiece(x, y);
-  if (piece && piece.type === PieceType.KING) {
-    const surroundingSquares = [
-      { dx: -1, dy: 0 },
-      { dx: 1, dy: 0 },
-      { dx: 0, dy: -1 },
-      { dx: 0, dy: 1 },
-      { dx: -1, dy: -1 },
-      { dx: 1, dy: 1 },
-      { dx: -1, dy: 1 },
-      { dx: 1, dy: -1 },
-    ];
-
-    return surroundingSquares.some(({ dx, dy }) => {
-      const newX = x + dx;
-      const newY = y + dy;
-
-      if (!board.isWithinBounds(newX, newY)) return false; // Case hors limites
-      const adjPiece = board.getPiece(newX, newY);
-      return (
-        !adjPiece || // Case vide
-        adjPiece.color !== color || // Pièce ennemie
-        adjPiece.type !== PieceType.PAWN // Pas de pion pour protéger
-      );
-    });
-  }
-  return false;
 }
 
 function isPassedPawn(
