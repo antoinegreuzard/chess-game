@@ -151,6 +151,7 @@ export class AI {
     isMaximizing: boolean,
     multiCutThreshold: number = 2,
     multiCutDepth: number = 3,
+    probCutFactor: number = 0.9, // Facteur d'élagage probabiliste
   ): number {
     const phase = this.determineGamePhase(board);
     const boardKey = `${board.toString()}|${depth}|${phase}`;
@@ -159,12 +160,14 @@ export class AI {
       return this.evaluatePositionWithKingSafety(board, this.color);
     }
 
+    // Vérification de la table de transposition
     if (this.transpositionTable.has(boardKey)) {
       const { value, depth: storedDepth } =
         this.transpositionTable.get(boardKey)!;
       if (storedDepth >= depth) return value;
     }
 
+    // Condition de fin de recherche
     if (
       depth === 0 ||
       board.isCheckmate(this.color) ||
@@ -173,6 +176,13 @@ export class AI {
       const evaluation = this.quiescenceSearch(board, alpha, beta, phase);
       this.transpositionTable.set(boardKey, { value: evaluation, depth });
       return evaluation;
+    }
+
+    // Élément ProbCut: Élagage probabiliste basé sur un facteur prédéfini
+    if (depth > 1 && Math.random() < probCutFactor) {
+      const probEval = this.evaluatePositionWithKingSafety(board, this.color);
+      if (isMaximizing && probEval < alpha) return probEval; // Élagage en cas de faible score
+      if (!isMaximizing && probEval > beta) return probEval; // Élagage en cas de fort score
     }
 
     let bestEval = isMaximizing ? -Infinity : Infinity;
@@ -187,7 +197,7 @@ export class AI {
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
 
-      // Multi-Cut Pruning
+      // Multi-Cut Pruning combiné avec ProbCut
       let evaluation: number;
       if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
         evaluation = -this.minimax(
@@ -196,6 +206,9 @@ export class AI {
           -beta,
           -alpha,
           !isMaximizing,
+          multiCutThreshold,
+          multiCutDepth,
+          probCutFactor,
         );
         if (evaluation <= alpha) {
           cutCount++;
@@ -205,7 +218,16 @@ export class AI {
         }
       }
 
-      evaluation = this.minimax(board, depth - 1, alpha, beta, !isMaximizing);
+      evaluation = this.minimax(
+        board,
+        depth - 1,
+        alpha,
+        beta,
+        !isMaximizing,
+        multiCutThreshold,
+        multiCutDepth,
+        probCutFactor,
+      );
 
       board.setPiece(move.fromX, move.fromY, fromPiece);
       board.setPiece(move.toX, move.toY, toPiece);

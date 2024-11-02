@@ -95,7 +95,7 @@ export const centerControlBonus: { [key: string]: number } = {
 export function evaluateKingSafety(board: Board, color: PieceColor): number {
   const kingPosition = board.findKing(color);
   return kingPosition &&
-  board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
+    board.isSquareUnderAttack(kingPosition.x, kingPosition.y, color)
     ? -0.5
     : 0;
 }
@@ -187,7 +187,9 @@ function evaluateKeySquareControl(
   let score = 0;
 
   // Bonus pour contrôler les cases devant les rois
-  const opponentKingPos = board.findKing(color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+  const opponentKingPos = board.findKing(
+    color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE,
+  );
   if (opponentKingPos) {
     const dx = Math.abs(opponentKingPos.x - x);
     const dy = Math.abs(opponentKingPos.y - y);
@@ -236,7 +238,10 @@ function evaluateKingSafetyAdvanced(
       const distanceFactor = Math.abs(newX - x) + Math.abs(newY - y);
 
       // Ajoute un malus si le roi est entouré par des pièces ennemies puissantes
-      if (adjPiece.type === PieceType.ROOK || adjPiece.type === PieceType.QUEEN) {
+      if (
+        adjPiece.type === PieceType.ROOK ||
+        adjPiece.type === PieceType.QUEEN
+      ) {
         score -= 0.5 / distanceFactor;
       }
     }
@@ -258,8 +263,12 @@ function evaluateAdvancedPawnStructure(
   const rightPawn = x < 7 ? board.getPiece(x + 1, y) : null;
 
   if (
-    (leftPawn && leftPawn.color === color && leftPawn.type === PieceType.PAWN) ||
-    (rightPawn && rightPawn.color === color && rightPawn.type === PieceType.PAWN)
+    (leftPawn &&
+      leftPawn.color === color &&
+      leftPawn.type === PieceType.PAWN) ||
+    (rightPawn &&
+      rightPawn.color === color &&
+      rightPawn.type === PieceType.PAWN)
   ) {
     score += 0.3;
   }
