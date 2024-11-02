@@ -149,6 +149,8 @@ export class AI {
     alpha: number,
     beta: number,
     isMaximizing: boolean,
+    multiCutThreshold: number = 2, // Nombre de coupures permises avant d’élaguer la branche
+    multiCutDepth: number = 3, // Profondeur des multi-coupures pour l'évaluation rapide
   ): number {
     const boardKey = `${board.toString()}|${depth}`;
 
@@ -176,18 +178,35 @@ export class AI {
     let moves = this.getAllValidMoves(board);
     moves = this.sortMoves(moves, board, depth);
 
+    let cutCount = 0;
+
     for (const move of moves) {
       const fromPiece = board.getPiece(move.fromX, move.fromY);
       const toPiece = board.getPiece(move.toX, move.toY);
 
       board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-      const evaluation = this.minimax(
-        board,
-        depth - 1,
-        alpha,
-        beta,
-        !isMaximizing,
-      );
+
+      // Multi-Cut Pruning: Évaluation rapide à une profondeur réduite
+      let evaluation: number;
+      if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
+        evaluation = -this.minimax(
+          board,
+          depth - multiCutDepth,
+          -beta,
+          -alpha,
+          !isMaximizing,
+        );
+        if (evaluation <= alpha) {
+          cutCount++;
+          board.setPiece(move.fromX, move.fromY, fromPiece);
+          board.setPiece(move.toX, move.toY, toPiece);
+          continue; // Coupe cette branche
+        }
+      }
+
+      // Poursuit l'évaluation complète si la coupe n'a pas eu lieu
+      evaluation = this.minimax(board, depth - 1, alpha, beta, !isMaximizing);
+
       board.setPiece(move.fromX, move.fromY, fromPiece);
       board.setPiece(move.toX, move.toY, toPiece);
 
@@ -199,7 +218,6 @@ export class AI {
         beta = Math.min(beta, evaluation);
       }
 
-      // Fenêtre nulle pour les mouvements qui ont causé une coupure
       if (beta <= alpha) {
         this.addKillerMove(depth, move);
         break;
