@@ -72,6 +72,7 @@ export class Game {
             bestMove.fromY,
             bestMove.toX,
             bestMove.toY,
+            false,
           );
 
           if (wasMoved && captureData) {

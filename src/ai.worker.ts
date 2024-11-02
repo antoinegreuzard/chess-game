@@ -9,7 +9,11 @@ let ai: AI;
 self.onmessage = async (event) => {
   const { boardData, aiColor } = event.data;
 
+  // Initialisez `ai` ici, après avoir reçu `aiColor`
   ai = new AI(aiColor);
+
+  // Charge les données JSON avant de continuer
+  await ai.loadGamesData();
 
   const board = await Board.fromData(boardData);
   const bestMove = ai.makeMove(board);

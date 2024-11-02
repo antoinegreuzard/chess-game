@@ -237,8 +237,9 @@ export async function initializeGame(playerColor: PieceColor) {
     }
 
     if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
-      if (board.movePiece(fromX, fromY, toX, toY)) {
+      if (board.movePiece(fromX, fromY, toX, toY, false)) {
         hasMoved = true;
+        piece.hasMoved = true;
 
         if (targetPiece) {
           updateCapturedPieces(targetPiece.type, targetPiece.color);
