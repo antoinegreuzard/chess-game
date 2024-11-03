@@ -18,7 +18,7 @@ export class AI {
     string,
     { value: number; depth: number }
   >; // Table de transposition avec profondeur
-  private maxTime: number;
+  private readonly maxTime: number;
   private startTime: number;
   private readonly killerMoves: Map<
     number,
@@ -40,7 +40,7 @@ export class AI {
 
   constructor(
     private readonly color: PieceColor,
-    maxTime: number = Math.floor(Math.random() * (50000 - 5000 + 1)) + 5000,
+    maxTime: number = 60000,
   ) {
     this.transpositionTable = new Map();
     this.maxTime = maxTime;
@@ -70,7 +70,6 @@ export class AI {
     }
 
     this.startTime = Date.now();
-    this.maxTime = Math.floor(Math.random() * (50000 - 5000 + 1)) + 5000;
 
     const openingMove = this.getOpeningMove(board);
     if (
@@ -242,6 +241,8 @@ export class AI {
     multiCutDepth: number,
     probCutFactor: number,
   ): number {
+    if (Date.now() - this.startTime > this.maxTime) return alpha;
+
     let bestEval = isMaximizing ? -Infinity : Infinity;
     let moves = this.getAllValidMoves(board);
     moves = this.sortMoves(moves, board, depth, this.determineGamePhase(board));
@@ -594,15 +595,19 @@ export class AI {
   ): { fromX: number; fromY: number; toX: number; toY: number } | null {
     let bestMove = null;
     let bestValue = -Infinity;
-    const maxDepth = 10;
+    const maxDepth = 16;
     const phase = this.determineGamePhase(board);
-    this.startTime = Date.now();
+    const THRESHOLD_VALUE = 600;
 
     for (let depth = 1; depth <= maxDepth; depth++) {
+      if (Date.now() - this.startTime > this.maxTime) break;
+
       let moves = this.getAllValidMoves(board);
       moves = this.sortMoves(moves, board, depth, phase);
 
       for (const move of moves) {
+        if (Date.now() - this.startTime > this.maxTime) return bestMove;
+
         const piece = board.getPiece(move.fromX, move.fromY);
         if (!piece) continue;
         const originalPiece = board.getPiece(move.toX, move.toY);
@@ -629,6 +634,8 @@ export class AI {
         if (-boardValue > bestValue) {
           bestValue = -boardValue;
           bestMove = move;
+
+          if (bestValue >= THRESHOLD_VALUE) return bestMove;
         }
 
         if (Date.now() - this.startTime > this.maxTime) {
