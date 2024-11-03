@@ -70,6 +70,7 @@ export class AI {
     }
 
     this.startTime = Date.now();
+    this.maxTime = Math.floor(Math.random() * (50000 - 5000 + 1)) + 5000;
 
     const openingMove = this.getOpeningMove(board);
     if (
