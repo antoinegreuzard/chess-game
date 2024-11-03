@@ -19,7 +19,7 @@ movements, and rules enforcement.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (version 16 or higher)
+- [Node.js](https://nodejs.org/en/) (version 20)
 - npm (comes with Node.js)
 
 ### Installation
