@@ -19,7 +19,7 @@
     "preview": "vite preview",
     "prettier": "prettier --write 'src/**/*.{js,ts,html,css}'",
     "prettier-check": "prettier --check 'src/**/*.{js,ts,html,css}'",
-    "lint": "eslint 'src/**/*.{js,ts}' --config ./eslint.config.js",
+    "lint": "eslint src/**/*.{js,ts} --config ./eslint.config.js",
     "test-server": "npm run start & sleep 5 && pkill -f vite",
     "test": "jest",
     "check-node-version": "node -e \"if (parseInt(process.versions.node.split('.')[0]) !== 20) throw new Error('This project requires Node.js v20. Please install it.');\"",
