@@ -13,31 +13,14 @@ export class Game {
     toX: number;
     toY: number;
   } | null = null;
-  private readonly moveHistory: {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-    pieceType: PieceType;
-  }[][];
 
-  constructor(
-    playerColor: PieceColor,
-    moveHistory: {
-      fromX: number;
-      fromY: number;
-      toX: number;
-      toY: number;
-      pieceType: PieceType;
-    }[][],
-  ) {
+  constructor(playerColor: PieceColor) {
     this.board = new Board();
     this.aiWorker = new Worker(new URL('./ai.worker.ts', import.meta.url), {
       type: 'module',
     });
     this.aiColor =
       playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
-    this.moveHistory = moveHistory;
   }
 
   public async getBoard(): Promise<Board> {

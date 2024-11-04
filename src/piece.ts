@@ -34,7 +34,11 @@ export interface BoardInterface {
     toY: number,
   ): boolean;
 
-  promotePawn(x: number, y: number, pieceType: PieceType): Promise<void>;
+  promotePawn(
+    x: number,
+    y: number,
+    pieceType: PieceType | string,
+  ): Promise<void>;
 
   isSquareUnderAttack(x: number, y: number, color: PieceColor): boolean;
 

@@ -18,7 +18,7 @@ export class AI {
     string,
     { value: number; depth: number }
   >; // Table de transposition avec profondeur
-  private readonly maxTime: number;
+  private maxTime: number;
   private startTime: number;
   private readonly killerMoves: Map<
     number,

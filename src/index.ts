@@ -2,7 +2,7 @@
 import { Game } from './game';
 import { CanvasRenderer } from './canvas-renderer';
 import { Timer } from './timer';
-import { PieceColor, PieceType } from './piece';
+import { BoardInterface, PieceColor, PieceType } from './piece';
 import {
   getPieceSymbol,
   showMessage,
@@ -18,7 +18,7 @@ export async function initializeGame(playerColor: PieceColor) {
     toY: number;
     pieceType: PieceType;
   }[][] = [[]];
-  const game = new Game(playerColor, moveHistory);
+  const game = new Game(playerColor);
   const board = await game.getBoard();
   board.setPlayerColor(playerColor);
 
@@ -105,18 +105,26 @@ export async function initializeGame(playerColor: PieceColor) {
 
   function showPromotionDialog(x: number, y: number, board: BoardInterface) {
     const promotionDialog = document.getElementById('promotionDialog');
-    promotionDialog.style.display = 'block';
+    if (promotionDialog) {
+      promotionDialog.style.display = 'block';
 
-    // Définir le callback de promotion pour gérer la sélection de pièce
-    window.promote = (pieceType: string) => {
-      board.promotePawn(x, y, pieceType); // Promouvoir le pion
-      promotionDialog.style.display = 'none'; // Masquer la boîte de dialogue
+      // Définir le callback de promotion pour gérer la sélection de pièce
+      window.promote = (pieceType: string) => {
+        board.promotePawn(x, y, pieceType); // Promouvoir le pion
+        promotionDialog.style.display = 'none'; // Masquer la boîte de dialogue
 
-      // Met à jour l'affichage de l'historique et du plateau après la promotion
-      addMoveToHistory(x, y, x, y, PieceType[pieceType.toUpperCase()]);
-      renderer.drawBoard();
-      updateTurn();
-    };
+        // Met à jour l'affichage de l'historique et du plateau après la promotion
+        addMoveToHistory(
+          x,
+          y,
+          x,
+          y,
+          PieceType[pieceType.toUpperCase() as keyof typeof PieceType],
+        );
+        renderer.drawBoard();
+        updateTurn();
+      };
+    }
   }
 
   async function updateTurn() {
