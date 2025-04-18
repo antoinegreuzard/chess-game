@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: https://antoinegreuzard.github.io/<ton-repo>/pr-${{ github.event.pull_request.number }}/
+      url: https://antoinegreuzard.github.io/chess-game/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Checkout
         uses: actions/checkout@v3
