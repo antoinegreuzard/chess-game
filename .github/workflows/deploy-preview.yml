@@ -8,7 +8,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
+      name: github-pages-preview
       url: https://antoinegreuzard.github.io/chess-game/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Checkout
