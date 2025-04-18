@@ -11,6 +11,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://antoinegreuzard.github.io/chess-game/
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
