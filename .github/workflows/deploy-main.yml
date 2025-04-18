@@ -1,13 +1,24 @@
-# .github/workflows/deploy-main.yml
-name: Deploy Main
+name: Deploy Main to GitHub Pages
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build-deploy:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,10 +35,11 @@ jobs:
       - name: Build site
         run: npm run build
 
-      - name: Deploy to GitHub Pages (root)
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          # deploy à la racine
-          destination_dir: .
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
