@@ -1,32 +1,36 @@
-# .github/workflows/deploy-preview.yml
-name: Deploy PR Preview
+name: Deploy Preview PR
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  preview:
+  deploy-preview:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://antoinegreuzard.github.io/chess-game/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build site with base path
-        run: npm run build -- --base=/pr-${{ github.event.pull_request.number }}/
-        # ⚠️ Adapter selon ton framework (Vite, Vue, etc.)
+      - name: Build with base path
+        run: |
+          export BASE_PATH=/chess-game/pr-${{ github.event.pull_request.number }}/
+          npm run build
 
-      - name: Deploy to GitHub Pages (PR folder)
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to GH Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           destination_dir: pr-${{ github.event.pull_request.number }}
+          publish_branch: gh-pages
