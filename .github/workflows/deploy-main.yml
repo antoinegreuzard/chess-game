@@ -15,10 +15,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://antoinegreuzard.github.io/chess-game/
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -31,18 +34,13 @@ jobs:
 
       - name: Build site
         run: npm run build
+        env:
+          BASE_PATH: /chess-game/
 
-      - name: Upload GitHub Pages artifact
+      - name: Upload artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: https://antoinegreuzard.github.io/chess-game/
-    steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
