@@ -10,18 +10,21 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (gh-pages branch)
+      - name: Checkout gh-pages branch
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           persist-credentials: false
 
-      - name: Remove PR folder
+      - name: Remove PR folder and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git rm -r --ignore-unmatch pr-${{ github.event.pull_request.number }}
-          git commit -m "Cleanup PR #${{ github.event.pull_request.number }} preview"
+          git commit -m "Cleanup PR #${{ github.event.pull_request.number }} preview" || echo "Nothing to delete"
+
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
