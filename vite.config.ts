@@ -1,10 +1,12 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import json from '@rollup/plugin-json';
+import { defineConfig } from 'vite'
+import { resolve } from 'path'
+import json from '@rollup/plugin-json'
+
+const basePath = process.env.BASE_PATH || '/chess-game/'
 
 export default defineConfig({
   plugins: [json()],
-  base: '/chess-game/',
+  base: basePath,
   build: {
     outDir: 'dist',
     minify: 'esbuild',
@@ -25,4 +27,4 @@ export default defineConfig({
     },
     extensions: ['.ts', '.js'],
   },
-});
+})
