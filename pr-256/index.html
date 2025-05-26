@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Jeu d'échecs en TypeScript</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+      }
+      header {
+        margin: 20px 0;
+        font-size: 28px;
+        font-weight: bold;
+        color: #4caf50;
+      }
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        max-width: 1200px;
+        width: 100%;
+      }
+      #sidebar, #capturedSidebar {
+        width: 220px;
+        padding: 20px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin: 0 15px;
+        font-size: 16px;
+      }
+      canvas {
+        border: 2px solid #333;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      button {
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.2s ease;
+        margin: 10px 0;
+        color: #ffffff;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      #replayButton {
+        display: none;
+        background-color: #4caf50;
+      }
+      #passTurnButton {
+        background-color: #ffa726;
+        width: 100%;
+      }
+      #promotionDialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background-color: #ffffff;
+        border: 2px solid #4caf50;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        z-index: 1000;
+      }
+      #promotionDialog button {
+        background-color: #4caf50;
+        margin: 5px;
+        color: #fff;
+      }
+      #gameMessage {
+        display: none;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+        margin-bottom: 20px;
+        width: 300px;
+        text-align: center;
+      }
+      #moveHistory ul {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border-top: 1px solid #ddd;
+      }
+      #moveHistory li {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+      }
+      #capturedSidebar h4 {
+        margin-bottom: 5px;
+      }
+      #capturedWhite, #capturedBlack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      #currentTurn, #timer {
+        margin: 10px 0;
+        font-weight: bold;
+      }
+
+
+
+      /* Styles pour la sélection de couleur */
+      #colorSelection {
+        text-align: center;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+      }
+
+      #colorSelection h3 {
+        font-size: 22px;
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .color-option {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 10px;
+        font-size: 18px;
+        color: #333;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+      }
+
+      .color-option input {
+        display: none;
+      }
+
+      .color-option span {
+        padding: 8px 15px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+
+      .color-option:hover span,
+      .color-option input:checked + span {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      #startGameButton {
+        background-color: #4caf50;
+        font-size: 18px;
+        padding: 12px 24px;
+        margin-top: 15px;
+        border-radius: 8px;
+        transition: background-color 0.3s;
+      }
+
+      #startGameButton:hover {
+        background-color: #43a047;
+      }
+    </style>
+    <script type="module" crossorigin src="/chess-game/pr-256/assets/index-CsLrjPzY.js"></script>
+  </head>
+  <body>
+    <header>Jeu d'échecs en TypeScript</header>
+
+    <!-- Zone de sélection de couleur avant de commencer la partie -->
+    <div id="colorSelection">
+      <h3>Choisissez votre couleur</h3>
+      <label class="color-option">
+        <input type="radio" name="playerColor" value="white" checked>
+        <span>Blancs</span>
+      </label>
+      <label class="color-option">
+        <input type="radio" name="playerColor" value="black">
+        <span>Noirs</span>
+      </label>
+      <button id="startGameButton">Commencer la Partie</button>
+    </div>
+
+    <!-- Zone de message pour les messages de jeu -->
+    <div id="gameMessage"></div>
+
+    <!-- Bouton Rejouer, visible uniquement en fin de partie -->
+    <button id="replayButton">Rejouer</button>
+
+    <div class="container" style="         display:none;" id="gameContainer">
+      <div id="sidebar">
+        <h3>Informations de Jeu</h3>
+        <div id="currentTurn">Tour actuel: Blanc</div>
+        <div id="timer">Temps restant: 60s</div>
+        <h4>Historique des Mouvements</h4>
+        <div id="moveHistory">
+          <div>
+            <h4>Mouvements Blancs</h4>
+            <ul id="whiteMoves"></ul>
+          </div>
+          <div>
+            <h4>Mouvements Noirs</h4>
+            <ul id="blackMoves"></ul>
+          </div>
+        </div>
+        <button id="passTurnButton">Passer son tour</button>
+      </div>
+
+      <!-- Plateau de jeu -->
+      <canvas id="chessBoard" width="640" height="640"></canvas>
+
+      <!-- Sidebar pour les pièces capturées -->
+      <div id="capturedSidebar">
+        <h3>Pièces Capturées</h3>
+        <div>
+          <h4>Blancs</h4>
+          <div id="capturedWhite"></div>
+        </div>
+        <div>
+          <h4>Noirs</h4>
+          <div id="capturedBlack"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fenêtre de dialogue pour la promotion des pions -->
+    <div id="promotionDialog">
+      <p>Choisissez une pièce pour la promotion :</p>
+      <button onclick="window.promote('queen')">Dame</button>
+      <button onclick="window.promote('rook')">Tour</button>
+      <button onclick="window.promote('bishop')">Fou</button>
+      <button onclick="window.promote('knight')">Cavalier</button>
+    </div>
+
+    <!-- Import du script principal -->
+    <script>
+      // JS pour gérer la sélection de couleur et le démarrage de la partie
+      document.getElementById('startGameButton').addEventListener('click', () => {
+        const selectedColor = document.querySelector('input[name="playerColor"]:checked').value;
+        startGame(selectedColor); // Fonction à ajouter dans index.ts pour démarrer la partie avec la couleur choisie
+        document.getElementById('colorSelection').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'flex';
+      });
+    </script>
+  </body>
+</html>
