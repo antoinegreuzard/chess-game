@@ -1,24 +1,50 @@
-// ai/endgameTablebase.ts
+import { Move } from './openingBook';
+
+interface Endgame {
+  moves: Move[];
+}
 
 export class EndgameTablebase {
-  private static endgames: {
-    [key: string]: { fromX: number; fromY: number; toX: number; toY: number };
-  } = {
-    kqkEndgame: { fromX: 7, fromY: 1, toX: 6, toY: 1 }, // Roi + Dame contre Roi
-    krkEndgame: { fromX: 7, fromY: 0, toX: 5, toY: 0 }, // Roi + Tour contre Roi
-    kbbkEndgame: { fromX: 5, fromY: 3, toX: 3, toY: 1 }, // Roi + 2 Fous contre Roi
-    kbnkEndgame: { fromX: 2, fromY: 6, toX: 4, toY: 4 }, // Roi + Fou + Cavalier contre Roi
-    kpEndgame: { fromX: 6, fromY: 5, toX: 6, toY: 6 }, // Roi + Pion contre Roi
-    kppkEndgame: { fromX: 5, fromY: 2, toX: 5, toY: 3 }, // Roi + 2 Pions contre Roi
-    krkpEndgame: { fromX: 6, fromY: 0, toX: 6, toY: 1 }, // Roi + Tour contre Roi + Pion
-    kqkrEndgame: { fromX: 7, fromY: 2, toX: 6, toY: 2 }, // Roi + Dame contre Roi + Tour
-    kbkpEndgame: { fromX: 3, fromY: 3, toX: 4, toY: 2 }, // Roi + Fou contre Roi + Pion
-    krrkEndgame: { fromX: 7, fromY: 4, toX: 5, toY: 4 }, // Roi + 2 Tours contre Roi
+  private static endgames: Record<string, Endgame> = {
+    'kqkEndgame': {
+      moves: [
+        { fromX: 7, fromY: 1, toX: 6, toY: 1 },
+        { fromX: 6, fromY: 1, toX: 5, toY: 1 },
+        // Ajoute une séquence complète optimale ici
+      ],
+    },
+    'krkEndgame': {
+      moves: [
+        { fromX: 7, fromY: 0, toX: 5, toY: 0 },
+        { fromX: 5, fromY: 0, toX: 4, toY: 0 },
+        // Séquence optimale
+      ],
+    },
+    // Ajoute d'autres finales si nécessaire
   };
 
-  static getEndgameMove(
-    positionKey: string,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    return this.endgames[positionKey] || null;
+  static getEndgameMoves(positionKey: string): Move[] | null {
+    return this.endgames[positionKey]?.moves || null;
+  }
+
+  static isEndgame(positionKey: string): boolean {
+    return !!this.endgames[positionKey];
+  }
+
+  static suggestNextMove(positionKey: string, moveIndex = 0): Move | null {
+    const moves = this.getEndgameMoves(positionKey);
+    return moves && moveIndex < moves.length ? moves[moveIndex] : null;
+  }
+
+  static validateEndgame(positionKey: string, piecesOnBoard: string[]): boolean {
+    switch (positionKey) {
+      case 'kqkEndgame':
+        return piecesOnBoard.sort().join('') === 'KkQ';
+      case 'krkEndgame':
+        return piecesOnBoard.sort().join('') === 'KkR';
+      // Ajoute d'autres validations spécifiques si nécessaire
+      default:
+        return false;
+    }
   }
 }

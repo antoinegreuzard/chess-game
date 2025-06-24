@@ -3,7 +3,7 @@ import { Board } from '../board';
 import { PieceColor, PieceType } from '../piece';
 
 // Valeurs des pièces (évaluation de base)
-export const pieceValues: { [key in PieceType]: number } = {
+export const pieceValues: Record<PieceType, number> = {
   [PieceType.PAWN]: 1,
   [PieceType.KNIGHT]: 3,
   [PieceType.BISHOP]: 3.25,
@@ -122,51 +122,30 @@ function getPieceSquareValue(
 }
 
 // Fonction d'évaluation principale
-export function evaluateBoard(
-  board: Board,
-  color: PieceColor,
-  flipBoard: boolean = false,
-): number {
+export function evaluateBoard(board: Board, color: PieceColor, flipBoard = false): number {
   let score = 0;
 
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board.getPiece(x, y);
-      const positionKey = `${x},${y}`;
       if (!piece) continue;
 
-      // Applique la valeur de base et la table de position
       let pieceScore = pieceValues[piece.type];
-      pieceScore += getPieceSquareValue(
-        piece.type,
-        x,
-        y,
-        flipBoard,
-        board,
-        piece.color,
-      );
+      pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard, board, piece.color);
 
-      // Ajoute le bonus pour le contrôle du centre
-      if (
-        piece.type === PieceType.PAWN &&
-        checkIsolatedPawns(board, x, y, piece.color) === 0
-      ) {
-        if (centerControlBonus[positionKey]) {
-          pieceScore += centerControlBonus[positionKey];
+      if (piece.type === PieceType.PAWN) {
+        pieceScore += evaluatePawnStructure(board, x, y, piece.color);
+        pieceScore += evaluatePawnChains(board, x, y, piece.color);
+        pieceScore += evaluateAdvancedPawnStructure(board, x, y, piece.color);
+
+        const centerBonus = centerControlBonus[`${x},${y}`];
+        if (centerBonus && checkIsolatedPawns(board, x, y, piece.color) === 0) {
+          pieceScore += centerBonus;
         }
       }
 
-      // Évalue la structure de pions
-      if (piece.type === PieceType.PAWN) {
-        pieceScore += evaluatePawnStructure(board, x, y, piece.color);
-        pieceScore += evaluatePawnChains(board, x, y, piece.color); // Bonus pour chaînes de pions
-        pieceScore += evaluateAdvancedPawnStructure(board, x, y, piece.color); // Heuristique avancée pour structure de pions
-      }
-
-      // Évalue le contrôle des cases clés
       pieceScore += evaluateKeySquareControl(board, x, y, piece.color);
 
-      // Évalue la sécurité du roi
       if (piece.type === PieceType.KING) {
         pieceScore += evaluateKingSafetyAdvanced(board, x, y, piece.color);
       }
@@ -178,151 +157,69 @@ export function evaluateBoard(
   return parseFloat(score.toFixed(2));
 }
 
-function evaluateKeySquareControl(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): number {
-  let score = 0;
+function evaluateKeySquareControl(board: Board, x: number, y: number, color: PieceColor): number {
+  const opponentKing = board.findKing(color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+  if (!opponentKing) return 0;
 
-  // Bonus pour contrôler les cases devant les rois
-  const opponentKingPos = board.findKing(
-    color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE,
-  );
-  if (opponentKingPos) {
-    const dx = Math.abs(opponentKingPos.x - x);
-    const dy = Math.abs(opponentKingPos.y - y);
-    if ((dx <= 1 && dy <= 1) || (dx === 0 && dy <= 2)) {
-      score += 0.5; // Contrôle de la zone proche du roi adverse
-    }
-  }
+  const dx = Math.abs(opponentKing.x - x);
+  const dy = Math.abs(opponentKing.y - y);
+
+  let score = (dx <= 1 && dy <= 1) || (dx === 0 && dy <= 2) ? 0.5 : 0;
 
   const piece = board.getPiece(x, y);
-  if (piece && pieceValues[piece.type] > 3) {
-    if (x === 3 || x === 4 || y === 3 || y === 4) {
-      score += 0.25;
-    }
+  if (piece && pieceValues[piece.type] > 3 && (x === 3 || x === 4 || y === 3 || y === 4)) {
+    score += 0.25;
   }
 
   return score;
 }
 
-function evaluateKingSafetyAdvanced(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): number {
-  let score = 0;
-
-  // Facteurs additionnels pour la sécurité du roi
-  const directionOffsets = [
-    { dx: -1, dy: 0 },
-    { dx: 1, dy: 0 },
-    { dx: 0, dy: -1 },
-    { dx: 0, dy: 1 },
-    { dx: -1, dy: -1 },
-    { dx: 1, dy: 1 },
-    { dx: -1, dy: 1 },
-    { dx: 1, dy: -1 },
+function evaluateKingSafetyAdvanced(board: Board, x: number, y: number, color: PieceColor): number {
+  const directions = [
+    [-1, 0], [1, 0], [0, -1], [0, 1],
+    [-1, -1], [1, 1], [-1, 1], [1, -1]
   ];
 
-  for (const { dx, dy } of directionOffsets) {
-    const newX = x + dx;
-    const newY = y + dy;
-    if (!board.isWithinBounds(newX, newY)) continue;
+  let score = 0;
 
-    const adjPiece = board.getPiece(newX, newY);
-    if (adjPiece && adjPiece.color !== color) {
-      const distanceFactor = Math.abs(newX - x) + Math.abs(newY - y);
+  for (const [dx, dy] of directions) {
+    const nx = x + dx, ny = y + dy;
+    if (!board.isWithinBounds(nx, ny)) continue;
 
-      // Ajoute un malus si le roi est entouré par des pièces ennemies puissantes
-      if (
-        adjPiece.type === PieceType.ROOK ||
-        adjPiece.type === PieceType.QUEEN
-      ) {
-        score -= 0.5 / distanceFactor;
-      }
+    const adjPiece = board.getPiece(nx, ny);
+    if (adjPiece && adjPiece.color !== color && (adjPiece.type === PieceType.ROOK || adjPiece.type === PieceType.QUEEN)) {
+      const dist = Math.abs(nx - x) + Math.abs(ny - y);
+      score -= 0.5 / dist;
     }
   }
 
   return score;
 }
 
-function evaluateAdvancedPawnStructure(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): number {
-  let score = 0;
+function evaluateAdvancedPawnStructure(board: Board, x: number, y: number, color: PieceColor): number {
+  const leftPawn = x > 0 && board.getPiece(x - 1, y);
+  const rightPawn = x < 7 && board.getPiece(x + 1, y);
 
-  // Bonus pour pions connectés (même rangée ou colonne) sans obstruction
-  const leftPawn = x > 0 ? board.getPiece(x - 1, y) : null;
-  const rightPawn = x < 7 ? board.getPiece(x + 1, y) : null;
-
-  if (
-    (leftPawn &&
-      leftPawn.color === color &&
-      leftPawn.type === PieceType.PAWN) ||
-    (rightPawn &&
-      rightPawn.color === color &&
-      rightPawn.type === PieceType.PAWN)
-  ) {
-    score += 0.3;
-  }
-
-  return score;
+  return ((leftPawn && leftPawn.color === color && leftPawn.type === PieceType.PAWN) ||
+          (rightPawn && rightPawn.color === color && rightPawn.type === PieceType.PAWN)) ? 0.3 : 0;
 }
 
 // Fonction pour évaluer les chaînes de pions
-function evaluatePawnChains(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): number {
+function evaluatePawnChains(board: Board, x: number, y: number, color: PieceColor): number {
   const direction = color === PieceColor.WHITE ? -1 : 1;
-  let score = 0;
+  const leftDiag = board.getPiece(x - 1, y + direction);
+  const rightDiag = board.getPiece(x + 1, y + direction);
 
-  // Vérifie les pions sur les diagonales avant (chaînes protégées)
-  const leftDiagonal = board.getPiece(x - 1, y + direction);
-  const rightDiagonal = board.getPiece(x + 1, y + direction);
-
-  if (
-    (leftDiagonal &&
-      leftDiagonal.color === color &&
-      leftDiagonal.type === PieceType.PAWN) ||
-    (rightDiagonal &&
-      rightDiagonal.color === color &&
-      rightDiagonal.type === PieceType.PAWN)
-  ) {
-    score += 0.5; // Bonus pour les pions protégés dans une chaîne
-  }
-
-  return score;
+  return ((leftDiag && leftDiag.color === color && leftDiag.type === PieceType.PAWN) ||
+          (rightDiag && rightDiag.color === color && rightDiag.type === PieceType.PAWN)) ? 0.5 : 0;
 }
 
-function evaluatePawnStructure(
-  board: Board,
-  x: number,
-  y: number,
-  color: PieceColor,
-): number {
-  let score = 0;
+function evaluatePawnStructure(board: Board, x: number, y: number, color: PieceColor): number {
+  const passed = isPassedPawn(board, x, y, color) ? 4.5 : 0;
+  const doubled = checkDoubledPawns(board, x, y, color) * 0.25;
+  const isolated = checkIsolatedPawns(board, x, y, color) * 4;
 
-  const isPassed = isPassedPawn(board, x, y, color);
-  const doubledPenalty = checkDoubledPawns(board, x, y, color) * 0.25;
-  const isolatedPenalty = checkIsolatedPawns(board, x, y, color) * 4.0;
-
-  if (isPassed) {
-    score += 4.5; // Bonus pour pion passé
-  }
-
-  score -= doubledPenalty + isolatedPenalty;
-
-  return score;
+  return passed - doubled - isolated;
 }
 
 function checkDoubledPawns(

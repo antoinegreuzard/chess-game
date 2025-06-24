@@ -1,43 +1,50 @@
-// src/ai/contextualMoveDatabase.ts
-export class ContextualMoveDatabase {
-  private moveData: Map<
-    string,
-    {
-      move: { fromX: number; fromY: number; toX: number; toY: number };
-      count: number;
-    }[]
-  > = new Map();
+import { Move } from './openingBook';
 
-  // Ajoute un mouvement dans la base de données pour la clé de position
-  public recordMove(
-    positionKey: string,
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-  ): void {
-    const moves = this.moveData.get(positionKey) || [];
-    const existingMove = moves.find(
-      (m) =>
-        m.move.fromX === move.fromX &&
-        m.move.fromY === move.fromY &&
-        m.move.toX === move.toX &&
-        m.move.toY === move.toY,
+export class ContextualMoveDatabase {
+  private moveData = new Map<string, { move: Move; count: number; lastUsed: number }[]>();
+  private maxMovesStored = 1000;
+
+  recordMove(positionKey: string, move: Move): void {
+    const key = this.normalizeKey(positionKey);
+    const moves = this.moveData.get(key) || [];
+    const existingMove = moves.find(m =>
+      m.move.fromX === move.fromX &&
+      m.move.fromY === move.fromY &&
+      m.move.toX === move.toX &&
+      m.move.toY === move.toY
     );
 
     if (existingMove) {
       existingMove.count++;
+      existingMove.lastUsed = Date.now();
     } else {
-      moves.push({ move, count: 1 });
+      moves.push({ move, count: 1, lastUsed: Date.now() });
     }
 
-    this.moveData.set(positionKey, moves);
+    moves.sort((a, b) => b.count - a.count);
+    if (moves.length > this.maxMovesStored) {
+      moves.pop(); // enlève le coup le moins fréquent/récent
+    }
+    this.moveData.set(key, moves);
   }
 
-  // Récupère les mouvements triés par fréquence pour une clé de position donnée
-  public getMovesByFrequency(positionKey: string): {
-    move: { fromX: number; fromY: number; toX: number; toY: number };
-    count: number;
-  }[] {
-    return (this.moveData.get(positionKey) || []).sort(
-      (a, b) => b.count - a.count,
-    );
+  getMovesByFrequency(positionKey: string): { move: Move; count: number }[] {
+    return this.moveData.get(this.normalizeKey(positionKey)) || [];
+  }
+
+  private normalizeKey(key: string): string {
+    return key.replace(/\s+/g, '');
+  }
+
+  pruneOldMoves(expirationTimeMs: number): void {
+    const now = Date.now();
+    for (const [key, moves] of this.moveData.entries()) {
+      const prunedMoves = moves.filter(m => now - m.lastUsed < expirationTimeMs);
+      if (prunedMoves.length > 0) {
+        this.moveData.set(key, prunedMoves);
+      } else {
+        this.moveData.delete(key);
+      }
+    }
   }
 }
