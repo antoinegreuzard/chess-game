@@ -76,11 +76,10 @@ export class AI {
     let bestValue = -Infinity;
 
     const moves = this.getAllValidMoves(board);
-    const timeLimit = Math.min(this.maxTime, 30000);
 
     for (let depth = 1; depth <= 4; depth++) {
       for (const move of moves) {
-        if (Date.now() - this.startTime > timeLimit) return bestMove;
+        if (Date.now() - this.startTime > this.maxTime) return bestMove;
 
         const originalPiece = board.getPiece(move.toX, move.toY);
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
@@ -102,8 +101,8 @@ export class AI {
     return bestMove;
   }
 
-  private minimax(board: Board, depth: number, alpha: number, beta: number, maximizing: boolean, timeLimit: number): number {
-    if (depth === 0 || Date.now() - this.startTime > timeLimit) {
+  private minimax(board: Board, depth: number, alpha: number, beta: number, maximizing: boolean): number {
+    if (depth === 0 || Date.now() - this.startTime > this.maxTime) {
       return evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color);
     }
 
@@ -116,7 +115,7 @@ export class AI {
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.max(value, -this.minimax(board, depth - 1, -beta, -alpha, false, timeLimit));
+        value = Math.max(value, -this.minimax(board, depth - 1, -beta, -alpha, false));
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
@@ -134,7 +133,7 @@ export class AI {
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.min(value, -this.minimax(board, depth - 1, -beta, -alpha, true, timeLimit));
+        value = Math.min(value, -this.minimax(board, depth - 1, -beta, -alpha, true));
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
@@ -146,7 +145,7 @@ export class AI {
       }
       return value;
     }
-    }
+  }
 
   private getAllValidMoves(board: Board): Move[] {
     const moves: Move[] = [];
