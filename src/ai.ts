@@ -22,7 +22,10 @@ export class AI {
   private gamesLoaded = false;
   private startTime: number = 0;
 
-  constructor(private color: PieceColor, private maxTime = 60000) {}
+  constructor(
+    private color: PieceColor,
+    private maxTime = 60000,
+  ) {}
 
   async loadGamesData() {
     await this.gamesAnalyzer.loadGamesData();
@@ -55,14 +58,18 @@ export class AI {
 
   private getEndgameMove(board: Board): Move | null {
     if (board.getPieceCount() <= 5) {
-      const moves = EndgameTablebase.getEndgameMoves(board.getCurrentMovesHash());
+      const moves = EndgameTablebase.getEndgameMoves(
+        board.getCurrentMovesHash(),
+      );
       return moves ? moves[0] : null;
     }
     return null;
   }
 
   private getAnalyzedMove(board: Board): Move | null {
-    const bestMove = this.gamesAnalyzer.getBestMove(board.getCurrentMovesHash());
+    const bestMove = this.gamesAnalyzer.getBestMove(
+      board.getCurrentMovesHash(),
+    );
     return bestMove ? this.convertMove(bestMove) : null;
   }
 
@@ -85,7 +92,13 @@ export class AI {
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        const value = -this.minimax(board, depth - 1, -Infinity, Infinity, false);
+        const value = -this.minimax(
+          board,
+          depth - 1,
+          -Infinity,
+          Infinity,
+          false,
+        );
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
@@ -101,9 +114,17 @@ export class AI {
     return bestMove;
   }
 
-  private minimax(board: Board, depth: number, alpha: number, beta: number, maximizing: boolean): number {
+  private minimax(
+    board: Board,
+    depth: number,
+    alpha: number,
+    beta: number,
+    maximizing: boolean,
+  ): number {
     if (depth === 0 || Date.now() - this.startTime > this.maxTime) {
-      return evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color);
+      return (
+        evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color)
+      );
     }
 
     const moves = this.getAllValidMoves(board);
@@ -115,13 +136,19 @@ export class AI {
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.max(value, -this.minimax(board, depth - 1, -beta, -alpha, false));
+        value = Math.max(
+          value,
+          -this.minimax(board, depth - 1, -beta, -alpha, false),
+        );
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
         alpha = Math.max(alpha, value);
         if (alpha >= beta) {
-          this.killerMoves.set(depth, (this.killerMoves.get(depth) || []).slice(0, 1).concat(move));
+          this.killerMoves.set(
+            depth,
+            (this.killerMoves.get(depth) || []).slice(0, 1).concat(move),
+          );
           break;
         }
       }
@@ -133,13 +160,19 @@ export class AI {
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.min(value, -this.minimax(board, depth - 1, -beta, -alpha, true));
+        value = Math.min(
+          value,
+          -this.minimax(board, depth - 1, -beta, -alpha, true),
+        );
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
         beta = Math.min(beta, value);
         if (alpha >= beta) {
-          this.killerMoves.set(depth, (this.killerMoves.get(depth) || []).slice(0, 1).concat(move));
+          this.killerMoves.set(
+            depth,
+            (this.killerMoves.get(depth) || []).slice(0, 1).concat(move),
+          );
           break;
         }
       }

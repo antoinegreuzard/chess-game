@@ -122,7 +122,11 @@ function getPieceSquareValue(
 }
 
 // Fonction d'évaluation principale
-export function evaluateBoard(board: Board, color: PieceColor, flipBoard = false): number {
+export function evaluateBoard(
+  board: Board,
+  color: PieceColor,
+  flipBoard = false,
+): number {
   let score = 0;
 
   for (let y = 0; y < 8; y++) {
@@ -131,7 +135,14 @@ export function evaluateBoard(board: Board, color: PieceColor, flipBoard = false
       if (!piece) continue;
 
       let pieceScore = pieceValues[piece.type];
-      pieceScore += getPieceSquareValue(piece.type, x, y, flipBoard, board, piece.color);
+      pieceScore += getPieceSquareValue(
+        piece.type,
+        x,
+        y,
+        flipBoard,
+        board,
+        piece.color,
+      );
 
       if (piece.type === PieceType.PAWN) {
         pieceScore += evaluatePawnStructure(board, x, y, piece.color);
@@ -157,8 +168,15 @@ export function evaluateBoard(board: Board, color: PieceColor, flipBoard = false
   return parseFloat(score.toFixed(2));
 }
 
-function evaluateKeySquareControl(board: Board, x: number, y: number, color: PieceColor): number {
-  const opponentKing = board.findKing(color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+function evaluateKeySquareControl(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
+  const opponentKing = board.findKing(
+    color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE,
+  );
   if (!opponentKing) return 0;
 
   const dx = Math.abs(opponentKing.x - x);
@@ -167,27 +185,47 @@ function evaluateKeySquareControl(board: Board, x: number, y: number, color: Pie
   let score = (dx <= 1 && dy <= 1) || (dx === 0 && dy <= 2) ? 0.5 : 0;
 
   const piece = board.getPiece(x, y);
-  if (piece && pieceValues[piece.type] > 3 && (x === 3 || x === 4 || y === 3 || y === 4)) {
+  if (
+    piece &&
+    pieceValues[piece.type] > 3 &&
+    (x === 3 || x === 4 || y === 3 || y === 4)
+  ) {
     score += 0.25;
   }
 
   return score;
 }
 
-function evaluateKingSafetyAdvanced(board: Board, x: number, y: number, color: PieceColor): number {
+function evaluateKingSafetyAdvanced(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
   const directions = [
-    [-1, 0], [1, 0], [0, -1], [0, 1],
-    [-1, -1], [1, 1], [-1, 1], [1, -1]
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+    [-1, -1],
+    [1, 1],
+    [-1, 1],
+    [1, -1],
   ];
 
   let score = 0;
 
   for (const [dx, dy] of directions) {
-    const nx = x + dx, ny = y + dy;
+    const nx = x + dx,
+      ny = y + dy;
     if (!board.isWithinBounds(nx, ny)) continue;
 
     const adjPiece = board.getPiece(nx, ny);
-    if (adjPiece && adjPiece.color !== color && (adjPiece.type === PieceType.ROOK || adjPiece.type === PieceType.QUEEN)) {
+    if (
+      adjPiece &&
+      adjPiece.color !== color &&
+      (adjPiece.type === PieceType.ROOK || adjPiece.type === PieceType.QUEEN)
+    ) {
       const dist = Math.abs(nx - x) + Math.abs(ny - y);
       score -= 0.5 / dist;
     }
@@ -196,25 +234,52 @@ function evaluateKingSafetyAdvanced(board: Board, x: number, y: number, color: P
   return score;
 }
 
-function evaluateAdvancedPawnStructure(board: Board, x: number, y: number, color: PieceColor): number {
+function evaluateAdvancedPawnStructure(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
   const leftPawn = x > 0 && board.getPiece(x - 1, y);
   const rightPawn = x < 7 && board.getPiece(x + 1, y);
 
-  return ((leftPawn && leftPawn.color === color && leftPawn.type === PieceType.PAWN) ||
-          (rightPawn && rightPawn.color === color && rightPawn.type === PieceType.PAWN)) ? 0.3 : 0;
+  return (leftPawn &&
+    leftPawn.color === color &&
+    leftPawn.type === PieceType.PAWN) ||
+    (rightPawn &&
+      rightPawn.color === color &&
+      rightPawn.type === PieceType.PAWN)
+    ? 0.3
+    : 0;
 }
 
 // Fonction pour évaluer les chaînes de pions
-function evaluatePawnChains(board: Board, x: number, y: number, color: PieceColor): number {
+function evaluatePawnChains(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
   const direction = color === PieceColor.WHITE ? -1 : 1;
   const leftDiag = board.getPiece(x - 1, y + direction);
   const rightDiag = board.getPiece(x + 1, y + direction);
 
-  return ((leftDiag && leftDiag.color === color && leftDiag.type === PieceType.PAWN) ||
-          (rightDiag && rightDiag.color === color && rightDiag.type === PieceType.PAWN)) ? 0.5 : 0;
+  return (leftDiag &&
+    leftDiag.color === color &&
+    leftDiag.type === PieceType.PAWN) ||
+    (rightDiag &&
+      rightDiag.color === color &&
+      rightDiag.type === PieceType.PAWN)
+    ? 0.5
+    : 0;
 }
 
-function evaluatePawnStructure(board: Board, x: number, y: number, color: PieceColor): number {
+function evaluatePawnStructure(
+  board: Board,
+  x: number,
+  y: number,
+  color: PieceColor,
+): number {
   const passed = isPassedPawn(board, x, y, color) ? 4.5 : 0;
   const doubled = checkDoubledPawns(board, x, y, color) * 0.25;
   const isolated = checkIsolatedPawns(board, x, y, color) * 4;

@@ -6,38 +6,38 @@ interface Endgame {
 
 export class EndgameTablebase {
   private static endgames: Record<string, Endgame> = {
-    'kqkEndgame': {
+    kqkEndgame: {
       moves: [
         { fromX: 7, fromY: 1, toX: 6, toY: 1 },
         { fromX: 6, fromY: 1, toX: 5, toY: 1 },
         // Ajoute une séquence complète optimale ici
       ],
     },
-    'krkEndgame': {
+    krkEndgame: {
       moves: [
         { fromX: 7, fromY: 0, toX: 5, toY: 0 },
         { fromX: 5, fromY: 0, toX: 4, toY: 0 },
         // Séquence optimale
       ],
     },
-    'kpEndgame': {
+    kpEndgame: {
       moves: [{ fromX: 6, fromY: 5, toX: 6, toY: 6 }],
     },
-    'krkpEndgame': {
+    krkpEndgame: {
       moves: [{ fromX: 6, fromY: 0, toX: 6, toY: 1 }],
     },
-    'kqkrEndgame': {
+    kqkrEndgame: {
       moves: [{ fromX: 7, fromY: 2, toX: 6, toY: 2 }],
     },
-    'kbkpEndgame': {
+    kbkpEndgame: {
       moves: [{ fromX: 3, fromY: 3, toX: 4, toY: 2 }],
     },
-    'krrkEndgame': {
+    krrkEndgame: {
       moves: [{ fromX: 7, fromY: 4, toX: 5, toY: 4 }],
     },
-    'kbbkEndgame': {
+    kbbkEndgame: {
       moves: [{ fromX: 5, fromY: 3, toX: 3, toY: 1 }],
-    },    
+    },
   };
 
   static getEndgameMoves(positionKey: string): Move[] | null {
@@ -53,7 +53,10 @@ export class EndgameTablebase {
     return moves && moveIndex < moves.length ? moves[moveIndex] : null;
   }
 
-  static validateEndgame(positionKey: string, piecesOnBoard: string[]): boolean {
+  static validateEndgame(
+    positionKey: string,
+    piecesOnBoard: string[],
+  ): boolean {
     switch (positionKey) {
       case 'kqkEndgame':
         return piecesOnBoard.sort().join('') === 'KkQ';

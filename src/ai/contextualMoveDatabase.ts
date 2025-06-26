@@ -1,17 +1,21 @@
 import { Move } from './openingBook';
 
 export class ContextualMoveDatabase {
-  private moveData = new Map<string, { move: Move; count: number; lastUsed: number }[]>();
+  private moveData = new Map<
+    string,
+    { move: Move; count: number; lastUsed: number }[]
+  >();
   private maxMovesStored = 1000;
 
   recordMove(positionKey: string, move: Move): void {
     const key = this.normalizeKey(positionKey);
     const moves = this.moveData.get(key) || [];
-    const existingMove = moves.find(m =>
-      m.move.fromX === move.fromX &&
-      m.move.fromY === move.fromY &&
-      m.move.toX === move.toX &&
-      m.move.toY === move.toY
+    const existingMove = moves.find(
+      (m) =>
+        m.move.fromX === move.fromX &&
+        m.move.fromY === move.fromY &&
+        m.move.toX === move.toX &&
+        m.move.toY === move.toY,
     );
 
     if (existingMove) {
@@ -39,7 +43,9 @@ export class ContextualMoveDatabase {
   pruneOldMoves(expirationTimeMs: number): void {
     const now = Date.now();
     for (const [key, moves] of this.moveData.entries()) {
-      const prunedMoves = moves.filter(m => now - m.lastUsed < expirationTimeMs);
+      const prunedMoves = moves.filter(
+        (m) => now - m.lastUsed < expirationTimeMs,
+      );
       if (prunedMoves.length > 0) {
         this.moveData.set(key, prunedMoves);
       } else {

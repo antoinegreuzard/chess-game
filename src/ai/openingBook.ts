@@ -27,7 +27,10 @@ export class OpeningBook {
   static getOpeningMove(positionKey: string): Move | null {
     const moves = this.openings[positionKey];
     if (moves && moves.length > 0) {
-      const totalWeight = moves.reduce((acc, move) => acc + (move.weight ?? 1), 0);
+      const totalWeight = moves.reduce(
+        (acc, move) => acc + (move.weight ?? 1),
+        0,
+      );
       let randomValue = Math.random() * totalWeight;
       for (const move of moves) {
         randomValue -= move.weight ?? 1;
