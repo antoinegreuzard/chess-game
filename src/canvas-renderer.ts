@@ -261,31 +261,32 @@ export class CanvasRenderer {
     if (!this.draggingPiece || this.startX === null || this.startY === null)
       return;
 
+    // Sauvegarde les coordonnées de départ
+    const fromX = this.startX;
+    const fromY = this.startY;
+
+    // Stop dragging immédiatement
+    this.draggingPiece = null;
+    this.startX = null;
+    this.startY = null;
+    this.canvas.style.cursor = 'default';
+
+    this.drawBoard();
+
     const rect = this.canvas.getBoundingClientRect();
     const rawX = Math.floor((event.clientX - rect.left) / this.tileSize);
     const rawY = Math.floor((event.clientY - rect.top) / this.tileSize);
     const boardX = this.flipBoard ? 7 - rawX : rawX;
     const boardY = this.flipBoard ? 7 - rawY : rawY;
 
-    const moveSuccessful = await this.moveHandler(
-      this.startX,
-      this.startY,
-      boardX,
-      boardY,
-    );
+    const moveSuccessful = await this.moveHandler(fromX, fromY, boardX, boardY);
 
-    this.draggingPiece = null;
-    this.startX = null;
-    this.startY = null;
-    this.canvas.style.cursor = 'default';
     this.highlightedMoves = [];
-    this.drawBoard();
 
-    if (moveSuccessful) {
-      this.drawBoard();
-    } else {
-      console.warn("Échec movePiece alors que moveSuccessful est false");
+    if (!moveSuccessful) {
       showMessage('Mouvement non autorisé.');
     }
+
+    this.drawBoard();
   }
 }
