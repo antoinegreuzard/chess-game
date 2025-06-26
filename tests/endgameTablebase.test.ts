@@ -20,10 +20,10 @@ describe('EndgameTablebase', () => {
 
   it('devrait retourner le bon mouvement pour une fin de partie Roi + 2 Fous contre Roi', () => {
     const positionKey = 'kbbkEndgame';
-    const move = EndgameTablebase.getEndgameMoves(positionKey);
+    const moves = EndgameTablebase.getEndgameMoves(positionKey);
 
-    expect(move).not.toBeNull();
-    expect(move).toEqual({ fromX: 5, fromY: 3, toX: 3, toY: 1 });
+    expect(moves).not.toBeNull();
+    expect(moves).toEqual([{ fromX: 5, fromY: 3, toX: 3, toY: 1 }]);
   });
 
   it('devrait retourner null pour une position non définie', () => {
