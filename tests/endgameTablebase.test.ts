@@ -28,9 +28,9 @@ describe('EndgameTablebase', () => {
 
   it('devrait retourner null pour une position non définie', () => {
     const positionKey = 'unknownEndgame';
-    const move = EndgameTablebase.getEndgameMoves(positionKey)?.[0];
-
-    expect(move).toBeNull();
+    const moves = EndgameTablebase.getEndgameMoves(positionKey);
+    
+    expect(moves).toBeNull();
   });
 
   it('devrait retourner le bon mouvement pour une fin de partie Roi et Pion contre Roi', () => {
