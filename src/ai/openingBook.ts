@@ -19,7 +19,9 @@ export class OpeningBook {
     'rnbqkbnr/pppppp1p/8/8/8/8/PPPP1PPP/RNBQKBNR w': [
       { fromX: 4, fromY: 7, toX: 4, toY: 5, weight: 1 }, // Sicilian defense
     ],
-    // Ajoute ici d'autres ouvertures si nécessaire
+    'rnbqkbnr/pppppppp/8/8/8/8/PP1PPPPP/RNBQKBNR w': [
+      { fromX: 4, fromY: 7, toX: 4, toY: 5 }, // e4
+    ],
   };
 
   static getOpeningMove(positionKey: string): Move | null {

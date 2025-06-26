@@ -20,7 +20,24 @@ export class EndgameTablebase {
         // Séquence optimale
       ],
     },
-    // Ajoute d'autres finales si nécessaire
+    'kpEndgame': {
+      moves: [{ fromX: 6, fromY: 5, toX: 6, toY: 6 }],
+    },
+    'krkpEndgame': {
+      moves: [{ fromX: 6, fromY: 0, toX: 6, toY: 1 }],
+    },
+    'kqkrEndgame': {
+      moves: [{ fromX: 7, fromY: 2, toX: 6, toY: 2 }],
+    },
+    'kbkpEndgame': {
+      moves: [{ fromX: 3, fromY: 3, toX: 4, toY: 2 }],
+    },
+    'krrkEndgame': {
+      moves: [{ fromX: 7, fromY: 4, toX: 5, toY: 4 }],
+    },
+    'kbbkEndgame': {
+      moves: [{ fromX: 5, fromY: 3, toX: 3, toY: 1 }],
+    },    
   };
 
   static getEndgameMoves(positionKey: string): Move[] | null {
