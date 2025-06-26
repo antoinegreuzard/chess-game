@@ -12,6 +12,8 @@ export class Board implements BoardInterface {
   private halfMoveCount: number = 0; // Compteur pour la règle des 50 coups
   private currentPlayer: PieceColor = PieceColor.WHITE;
 
+  public flipBoard: boolean = false;
+
   constructor() {
     this.grid = Array(8)
       .fill(null)
@@ -22,30 +24,17 @@ export class Board implements BoardInterface {
     this.grid = await this.initializeBoard();
   }
 
+  public setFlipBoard(flip: boolean): void {
+    this.flipBoard = flip;
+  }
+
   private async initializeBoard(): Promise<(Piece | null)[][]> {
     const board: (Piece | null)[][] = Array(8)
       .fill(null)
       .map(() => Array(8).fill(null));
 
-    // Ajouter les pièces blanches
+    // Pièces noires en haut (rangée 8 = y=0)
     board[0] = [
-      await createPiece(PieceType.ROOK, PieceColor.WHITE),
-      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
-      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
-      await createPiece(PieceType.QUEEN, PieceColor.WHITE),
-      await createPiece(PieceType.KING, PieceColor.WHITE),
-      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
-      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
-      await createPiece(PieceType.ROOK, PieceColor.WHITE),
-    ];
-    board[1] = await Promise.all(
-      Array(8)
-        .fill(null)
-        .map(() => createPiece(PieceType.PAWN, PieceColor.WHITE)),
-    );
-
-    // Ajouter les pièces noires
-    board[7] = [
       await createPiece(PieceType.ROOK, PieceColor.BLACK),
       await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
       await createPiece(PieceType.BISHOP, PieceColor.BLACK),
@@ -55,10 +44,27 @@ export class Board implements BoardInterface {
       await createPiece(PieceType.KNIGHT, PieceColor.BLACK),
       await createPiece(PieceType.ROOK, PieceColor.BLACK),
     ];
-    board[6] = await Promise.all(
+    board[1] = await Promise.all(
       Array(8)
         .fill(null)
         .map(() => createPiece(PieceType.PAWN, PieceColor.BLACK)),
+    );
+
+    // Pièces blanches en bas (rangée 1 = y=7)
+    board[7] = [
+      await createPiece(PieceType.ROOK, PieceColor.WHITE),
+      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
+      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
+      await createPiece(PieceType.QUEEN, PieceColor.WHITE),
+      await createPiece(PieceType.KING, PieceColor.WHITE),
+      await createPiece(PieceType.BISHOP, PieceColor.WHITE),
+      await createPiece(PieceType.KNIGHT, PieceColor.WHITE),
+      await createPiece(PieceType.ROOK, PieceColor.WHITE),
+    ];
+    board[6] = await Promise.all(
+      Array(8)
+        .fill(null)
+        .map(() => createPiece(PieceType.PAWN, PieceColor.WHITE)),
     );
 
     return board;

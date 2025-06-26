@@ -22,19 +22,18 @@ export class Pawn extends Piece {
       return false;
     }
 
-    const playerColor = board.getPlayerColor();
-    const direction = this.color === PieceColor.WHITE ? 1 : -1;
-    const startRow = this.color === PieceColor.WHITE ? 1 : 6;
+    const direction = this.color === PieceColor.WHITE ? -1 : 1;
+    const startRow = this.color === PieceColor.WHITE ? 6 : 1;
     const distanceY = (toY - fromY) * direction;
     const distanceX = Math.abs(toX - fromX);
-
-    const promotionRow = playerColor === PieceColor.WHITE ? 7 : 0;
+    const promotionRow = this.color === PieceColor.WHITE ? 0 : 7;
 
     if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
       // Vérifie la rangée de promotion et déclenche la promotion uniquement à cette rangée
       if (toY === promotionRow) {
         return this.handlePromotion(toX, toY, board);
       }
+
       return true;
     }
 

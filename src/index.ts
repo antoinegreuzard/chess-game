@@ -66,19 +66,15 @@ export async function initializeGame(playerColor: PieceColor) {
     }
   }
 
+  board.setPlayerColor(playerColor);
+  board.flipBoard = playerColor === PieceColor.BLACK;
+
   const renderer = new CanvasRenderer(
     board,
     'chessBoard',
-    (fromX, fromY, toX, toY) => {
-      // Appeler `handleMove` sans attendre, pour gérer l'asynchronisme
-      handleMove(fromX, fromY, toX, toY).then((result) => {
-        if (!result) {
-          showMessage('Mouvement non autorisé.');
-        }
-      });
-      return true;
-    },
-    playerColor === PieceColor.WHITE,
+    async (fromX, fromY, toX, toY) => {
+      return await handleMove(fromX, fromY, toX, toY);
+    }
   );
   renderer.drawBoard();
 
@@ -227,15 +223,19 @@ export async function initializeGame(playerColor: PieceColor) {
     toX: number,
     toY: number,
   ): Promise<boolean> {
+    const realFromX = board.flipBoard ? 7 - fromX : fromX;
+    const realFromY = board.flipBoard ? 7 - fromY : fromY;
+    const realToX = board.flipBoard ? 7 - toX : toX;
+    const realToY = board.flipBoard ? 7 - toY : toY;
+
     if (gameState === 'waiting' || hasMoved || isGameEnded) {
       showMessage('Veuillez attendre le prochain tour !');
       return false;
     }
 
-    const piece = board.getPiece(fromX, fromY);
-    const targetPiece = board.getPiece(toX, toY);
+    const piece = board.getPiece(realFromX, realFromY);
 
-    if (!piece || piece.color !== currentPlayer) {
+    if (!piece || piece.color !== playerColor || currentPlayer !== playerColor) {
       if (!isAITurn) {
         showMessage(
           `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
@@ -244,29 +244,37 @@ export async function initializeGame(playerColor: PieceColor) {
       return false;
     }
 
-    if (piece.isValidMove(fromX, fromY, toX, toY, board)) {
-      if (board.movePiece(fromX, fromY, toX, toY, false)) {
-        hasMoved = true;
-        piece.hasMoved = true;
+    const isValid = piece.isValidMove(realFromX, realFromY, realToX, realToY, board);
 
-        if (targetPiece) {
-          updateCapturedPieces(targetPiece.type, targetPiece.color);
-        }
-
-        // Gestion de la promotion
-        if (piece.type === PieceType.PAWN && (toY === 0 || toY === 7)) {
-          showPromotionDialog(toX, toY, board);
-          await updateTurn();
-        } else {
-          addMoveToHistory(fromX, fromY, toX, toY, piece.type);
-          renderer.animateMove(fromX, fromY, toX, toY, piece);
-          await updateTurn();
-        }
-        return true;
-      }
+    if (!isValid) {
       showMessage('Mouvement invalide !');
+      return false;
     }
-    return false;
+
+    const moved = board.movePiece(realFromX, realFromY, realToX, realToY, false);
+    if (!moved) {
+      showMessage('Mouvement impossible !');
+      return false;
+    }
+
+    hasMoved = true;
+    piece.hasMoved = true;
+
+    const targetPiece = board.getPiece(realToX, realToY);
+    if (targetPiece && targetPiece !== piece) {
+      updateCapturedPieces(targetPiece.type, targetPiece.color);
+    }
+
+    if (piece.type === PieceType.PAWN && (realToY === 0 || realToY === 7)) {
+      showPromotionDialog(realToX, realToY, board);
+      await updateTurn();
+    } else {
+      addMoveToHistory(realFromX, realFromY, realToX, realToY, piece.type);
+      renderer.animateMove(realFromX, realFromY, realToX, realToY, piece);
+      await updateTurn();
+    }
+
+    return true;
   }
 
   if (passTurnButton) {
