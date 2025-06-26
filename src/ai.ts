@@ -6,6 +6,7 @@ import { EndgameTablebase } from './ai/endgameTablebase';
 import { OpeningBook } from './ai/openingBook';
 import { GamesAnalyzer } from './ai/gamesAnalyzer';
 import { ContextualMoveDatabase } from './ai/contextualMoveDatabase';
+import { describeMove } from './utils/utils';
 
 interface Move {
   fromX: number;
@@ -24,7 +25,7 @@ export class AI {
 
   constructor(
     private color: PieceColor,
-    private maxTime = 60000,
+    private maxTime = 30000,
   ) {}
 
   async loadGamesData() {
@@ -47,7 +48,28 @@ export class AI {
     if (analyzedMove) return this.finalizeMove(analyzedMove, board);
 
     const bestMove = this.iterativeDeepening(board);
-    return bestMove ? this.finalizeMove(bestMove, board) : null;
+
+    if (!bestMove) {
+      return null;
+    }
+
+    // 🛡️ Dernier filet de sécurité : vérifie si ce move est bien encore légal
+    const legalMoves = this.getAllValidMoves(board);
+    const isStillLegal = legalMoves.some(
+      (m) =>
+        m.fromX === bestMove.fromX &&
+        m.fromY === bestMove.fromY &&
+        m.toX === bestMove.toX &&
+        m.toY === bestMove.toY
+    );
+
+    if (!isStillLegal) {
+      console.warn('⚠️ Coup illégal détecté juste avant exécution.');
+      return null;
+    }
+
+    console.log(describeMove(board, bestMove));
+    return this.finalizeMove(bestMove, board);
   }
 
   private finalizeMove(move: Move, board: Board): Move {
@@ -82,11 +104,34 @@ export class AI {
     let bestMove: Move | null = null;
     let bestValue = -Infinity;
 
-    const moves = this.getAllValidMoves(board);
+    const deadline = this.startTime + this.maxTime;
 
-    for (let depth = 1; depth <= 4; depth++) {
+    let moves = this.getAllValidMoves(board);
+    if (moves.length === 0) return null;
+
+    // Profondeur dynamique : moins il y a de coups, plus on peut aller profond
+    const depthLimit = moves.length > 25 ? 2 : 4;
+
+    // Tri des coups selon évaluation rapide
+    moves = moves
+      .map(move => {
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        const score = evaluateBoard(board, this.color);
+        board.setPiece(move.fromX, move.fromY, movingPiece);
+        board.setPiece(move.toX, move.toY, originalPiece);
+
+        return { ...move, weight: score };
+      })
+      .sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
+
+    for (let depth = 1; depth <= depthLimit; depth++) {
+      if (Date.now() > deadline) break;
+
       for (const move of moves) {
-        if (Date.now() - this.startTime > this.maxTime) return bestMove;
+        if (Date.now() > deadline) return bestMove;
 
         const originalPiece = board.getPiece(move.toX, move.toY);
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
@@ -107,7 +152,7 @@ export class AI {
           bestMove = move;
         }
 
-        if (bestValue >= 10000) return bestMove; // arrêt anticipé si coup décisif trouvé
+        if (bestValue >= 10000) return bestMove; // arrêt anticipé
       }
     }
 
@@ -121,29 +166,36 @@ export class AI {
     beta: number,
     maximizing: boolean,
   ): number {
-    if (depth === 0 || Date.now() - this.startTime > this.maxTime) {
+    const now = Date.now();
+    if (depth === 0 || now - this.startTime >= this.maxTime) {
       return (
-        evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color)
+        evaluateBoard(board, this.color) +
+        evaluateKingSafety(board, this.color)
       );
     }
 
     const moves = this.getAllValidMoves(board);
+    if (moves.length === 0) return -9999; // aucun coup possible
+
+    let value: number;
 
     if (maximizing) {
-      let value = -Infinity;
+      value = -Infinity;
+
       for (const move of moves) {
+        if (Date.now() - this.startTime >= this.maxTime) break;
+
         const originalPiece = board.getPiece(move.toX, move.toY);
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.max(
-          value,
-          -this.minimax(board, depth - 1, -beta, -alpha, false),
-        );
+        const evalScore = -this.minimax(board, depth - 1, -beta, -alpha, false);
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
+        value = Math.max(value, evalScore);
         alpha = Math.max(alpha, value);
+
         if (alpha >= beta) {
           this.killerMoves.set(
             depth,
@@ -152,22 +204,24 @@ export class AI {
           break;
         }
       }
-      return value;
+
     } else {
-      let value = Infinity;
+      value = Infinity;
+
       for (const move of moves) {
+        if (Date.now() - this.startTime >= this.maxTime) break;
+
         const originalPiece = board.getPiece(move.toX, move.toY);
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
         board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-        value = Math.min(
-          value,
-          -this.minimax(board, depth - 1, -beta, -alpha, true),
-        );
+        const evalScore = -this.minimax(board, depth - 1, -beta, -alpha, true);
         board.setPiece(move.fromX, move.fromY, movingPiece);
         board.setPiece(move.toX, move.toY, originalPiece);
 
+        value = Math.min(value, evalScore);
         beta = Math.min(beta, value);
+
         if (alpha >= beta) {
           this.killerMoves.set(
             depth,
@@ -176,23 +230,63 @@ export class AI {
           break;
         }
       }
-      return value;
     }
+
+    return value;
   }
 
   private getAllValidMoves(board: Board): Move[] {
     const moves: Move[] = [];
+
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = board.getPiece(x, y);
         if (piece && piece.color === this.color) {
           const validMoves = board.getValidMoves(x, y);
+
+          // ➕ Déplace ceci ici AVANT de simuler le coup
+          const wasInCheck = board.isKingInCheck(this.color);
+
           for (const move of validMoves) {
-            moves.push({ fromX: x, fromY: y, toX: move.x, toY: move.y });
+            const { x: toX, y: toY } = move;
+
+            const originalPiece = board.getPiece(toX, toY);
+            const movingPiece = board.getPiece(x, y)!;
+
+            board.movePiece(x, y, toX, toY);
+
+            let kingX = -1, kingY = -1;
+            if (movingPiece.type === 'king') {
+              kingX = toX;
+              kingY = toY;
+            } else {
+              const king = board.findKing(this.color);
+              if (!king) {
+                board.setPiece(x, y, movingPiece);
+                board.setPiece(toX, toY, originalPiece);
+                continue;
+              }
+              kingX = king.x;
+              kingY = king.y;
+            }
+
+            const stillSafe =
+              board.isWithinBounds(kingX, kingY) &&
+              !board.isSquareUnderAttack(kingX, kingY, this.color);
+
+            board.setPiece(x, y, movingPiece);
+            board.setPiece(toX, toY, originalPiece);
+
+            // 🛡️ Si le roi était en échec, ce coup doit le sortir d’échec
+            // Sinon, juste s'assurer qu’il n’y entre pas
+            if ((!wasInCheck && stillSafe) || (wasInCheck && stillSafe)) {
+              moves.push({ fromX: x, fromY: y, toX, toY });
+            }
           }
         }
       }
     }
+
     return moves;
   }
 }

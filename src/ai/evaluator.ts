@@ -261,17 +261,36 @@ function evaluatePawnChains(
   color: PieceColor,
 ): number {
   const direction = color === PieceColor.WHITE ? -1 : 1;
-  const leftDiag = board.getPiece(x - 1, y + direction);
-  const rightDiag = board.getPiece(x + 1, y + direction);
 
-  return (leftDiag &&
-    leftDiag.color === color &&
-    leftDiag.type === PieceType.PAWN) ||
-    (rightDiag &&
+  let hasChain = false;
+
+  const leftX = x - 1;
+  const rightX = x + 1;
+  const forwardY = y + direction;
+
+  if (board.isWithinBounds(leftX, forwardY)) {
+    const leftDiag = board.getPiece(leftX, forwardY);
+    if (
+      leftDiag &&
+      leftDiag.color === color &&
+      leftDiag.type === PieceType.PAWN
+    ) {
+      hasChain = true;
+    }
+  }
+
+  if (board.isWithinBounds(rightX, forwardY)) {
+    const rightDiag = board.getPiece(rightX, forwardY);
+    if (
+      rightDiag &&
       rightDiag.color === color &&
-      rightDiag.type === PieceType.PAWN)
-    ? 0.5
-    : 0;
+      rightDiag.type === PieceType.PAWN
+    ) {
+      hasChain = true;
+    }
+  }
+
+  return hasChain ? 0.5 : 0;
 }
 
 function evaluatePawnStructure(
