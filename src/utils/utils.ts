@@ -1,6 +1,8 @@
 // src/utils/utils.ts
 
 import { PieceColor, PieceType } from '../piece';
+import { Board } from '../board';
+import { Move } from '../ai/openingBook';
 
 export let capturedWhite: string[] = [];
 export let capturedBlack: string[] = [];

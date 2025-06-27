@@ -20,7 +20,8 @@ export async function initializeGame(playerColor: PieceColor) {
   }[][] = [[]];
   const game = new Game(playerColor);
   const board = await game.getBoard();
-  board.setPlayerColor(playerColor);
+
+  board.flipBoard = playerColor === PieceColor.BLACK;
 
   const whiteMovesElement = document.getElementById(
     'whiteMoves',
@@ -66,15 +67,13 @@ export async function initializeGame(playerColor: PieceColor) {
     }
   }
 
-  board.setPlayerColor(playerColor);
   board.flipBoard = playerColor === PieceColor.BLACK;
 
   const renderer = new CanvasRenderer(
     board,
     'chessBoard',
-    async (fromX, fromY, toX, toY) => {
-      return await handleMove(fromX, fromY, toX, toY);
-    }
+    async (fromX, fromY, toX, toY) => await handleMove(fromX, fromY, toX, toY),
+    playerColor
   );
   renderer.drawBoard();
 
@@ -235,17 +234,24 @@ export async function initializeGame(playerColor: PieceColor) {
 
     const piece = board.getPiece(realFromX, realFromY);
 
-    if (!piece || piece.color !== playerColor || currentPlayer !== playerColor) {
+    if (!piece) {
+      return false;
+    }
+
+    if (piece.color !== playerColor) {
+      return false; // tu n'as pas cliqué sur une de tes pièces
+    }
+
+    if (currentPlayer !== playerColor) {
       if (!isAITurn) {
         showMessage(
           `C'est le tour de ${currentPlayer === PieceColor.WHITE ? 'Blanc' : 'Noir'}`,
         );
       }
       return false;
-    }
+    }    
 
     const isValid = piece.isValidMove(realFromX, realFromY, realToX, realToY, board);
-
     if (!isValid) {
       showMessage('Mouvement invalide !');
       return false;

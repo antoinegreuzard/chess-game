@@ -1,6 +1,5 @@
 import { Board } from './board';
 import { Piece, PieceColor } from './piece';
-import { showMessage } from './utils/utils';
 
 export class CanvasRenderer {
   private readonly canvas: HTMLCanvasElement;
@@ -23,7 +22,8 @@ export class CanvasRenderer {
       fromY: number,
       toX: number,
       toY: number,
-    ) => Promise<boolean>
+    ) => Promise<boolean>,
+    private readonly playerColor: PieceColor
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) throw new Error(`Canvas with id ${canvasId} not found`);
@@ -208,11 +208,11 @@ export class CanvasRenderer {
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
-    const boardX = x;
-    const boardY = y;    
+    const boardX = this.flipBoard ? 7 - x : x;
+    const boardY = this.flipBoard ? 7 - y : y;
 
     const piece = this.board.getPiece(boardX, boardY);
-    if (piece && piece.color === this.board.getPlayerColor()) {
+    if (piece && piece.color === this.playerColor) {
       this.draggingPiece = piece;
       this.startX = boardX;
       this.startY = boardY;
@@ -237,7 +237,9 @@ export class CanvasRenderer {
       piece = this.board.getPiece(x, y);
 
     this.canvas.style.cursor =
-      piece && !this.draggingPiece ? 'pointer' : 'default';
+      piece && piece.color === this.playerColor && !this.draggingPiece
+        ? 'pointer'
+        : 'default';    
 
     if (!this.draggingPiece) return;
 
@@ -282,10 +284,6 @@ export class CanvasRenderer {
     const moveSuccessful = await this.moveHandler(fromX, fromY, boardX, boardY);
 
     this.highlightedMoves = [];
-
-    if (!moveSuccessful) {
-      showMessage('Mouvement non autorisé.');
-    }
 
     this.drawBoard();
   }
