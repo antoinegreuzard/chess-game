@@ -22,11 +22,21 @@ self.onmessage = async (event) => {
 
   let bestMove = ai.makeMove(currentBoard);
 
-  let captureData: { capturedWhite: PieceType[]; capturedBlack: PieceType[] } | null = null;
+  let captureData: {
+    capturedWhite: PieceType[];
+    capturedBlack: PieceType[];
+  } | null = null;
   let promotionRequired = false;
 
   if (bestMove) {
-    if (currentBoard.isCapture(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY)) {
+    if (
+      currentBoard.isCapture(
+        bestMove.fromX,
+        bestMove.fromY,
+        bestMove.toX,
+        bestMove.toY,
+      )
+    ) {
       const targetPiece = currentBoard.getPiece(bestMove.toX, bestMove.toY);
       if (targetPiece) {
         captureData = {

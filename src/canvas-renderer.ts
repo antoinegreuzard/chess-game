@@ -23,7 +23,7 @@ export class CanvasRenderer {
       toX: number,
       toY: number,
     ) => Promise<boolean>,
-    private readonly playerColor: PieceColor
+    private readonly playerColor: PieceColor,
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) throw new Error(`Canvas with id ${canvasId} not found`);
@@ -233,13 +233,12 @@ export class CanvasRenderer {
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
     let piece = null;
-    if (this.board.isWithinBounds(x, y))
-      piece = this.board.getPiece(x, y);
+    if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
 
     this.canvas.style.cursor =
       piece && piece.color === this.playerColor && !this.draggingPiece
         ? 'pointer'
-        : 'default';    
+        : 'default';
 
     if (!this.draggingPiece) return;
 

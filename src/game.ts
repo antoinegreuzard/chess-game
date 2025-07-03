@@ -41,9 +41,9 @@ export class Game {
         while (!isMoveLegal && attempts < 50) {
           this.aiWorker.postMessage({ invalidMove: bestMove });
 
-          const newEvent = await new Promise((res) => {
+          const newEvent = (await new Promise((res) => {
             this.aiWorker.onmessage = res;
-          }) as MessageEvent;
+          })) as MessageEvent;
 
           bestMove = newEvent.data.bestMove;
           isMoveLegal = await this.isAIMoveLegal(bestMove);
@@ -51,17 +51,25 @@ export class Game {
         }
 
         if (isMoveLegal && bestMove) {
-        this.lastAIMove = bestMove;
+          this.lastAIMove = bestMove;
 
-        // Vérification et mise à jour des pièces capturées
-        const targetPiece = this.board.getPiece(bestMove.toX, bestMove.toY);
+          // Vérification et mise à jour des pièces capturées
+          const targetPiece = this.board.getPiece(bestMove.toX, bestMove.toY);
           if (targetPiece) {
             updateCapturedPieces(targetPiece.type, targetPiece.color);
           }
 
-          this.board.movePiece(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY, false);
+          this.board.movePiece(
+            bestMove.fromX,
+            bestMove.fromY,
+            bestMove.toX,
+            bestMove.toY,
+            false,
+          );
         } else {
-          console.warn("Aucun coup valide trouvé par l'IA après plusieurs tentatives.");
+          console.warn(
+            "Aucun coup valide trouvé par l'IA après plusieurs tentatives.",
+          );
         }
 
         resolve();
@@ -72,7 +80,12 @@ export class Game {
     });
   }
 
-  private async isAIMoveLegal(bestMove: { fromX: number, fromY: number, toX: number, toY: number }): Promise<boolean> {
+  private async isAIMoveLegal(bestMove: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): Promise<boolean> {
     const testBoard = await Board.fromData(this.board.toData());
 
     // Simuler le coup sur un plateau temporaire

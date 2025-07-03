@@ -60,7 +60,7 @@ export class AI {
         m.fromX === bestMove.fromX &&
         m.fromY === bestMove.fromY &&
         m.toX === bestMove.toX &&
-        m.toY === bestMove.toY
+        m.toY === bestMove.toY,
     );
 
     if (!isStillLegal) {
@@ -99,12 +99,24 @@ export class AI {
     return { fromX, fromY, toX, toY };
   }
 
-  public addInvalidMove(move: { fromX: number; fromY: number; toX: number; toY: number }): void {
+  public addInvalidMove(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): void {
     this.invalidMoves.add(`${move.fromX}${move.fromY}${move.toX}${move.toY}`);
   }
 
-  public isMoveInvalid(move: { fromX: number; fromY: number; toX: number; toY: number }): boolean {
-    return this.invalidMoves.has(`${move.fromX}${move.fromY}${move.toX}${move.toY}`);
+  public isMoveInvalid(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): boolean {
+    return this.invalidMoves.has(
+      `${move.fromX}${move.fromY}${move.toX}${move.toY}`,
+    );
   }
 
   private iterativeDeepening(board: Board): Move | null {
@@ -117,11 +129,11 @@ export class AI {
     if (moves.length === 0) return null;
 
     // Prioriser les coups sortant l'IA de l'échec
-    const movesOutOfCheck = moves.filter(move => {
-    const originalPiece = board.getPiece(move.toX, move.toY);
-    const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+    const movesOutOfCheck = moves.filter((move) => {
+      const originalPiece = board.getPiece(move.toX, move.toY);
+      const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
-    board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
       const kingSafe = !board.isKingInCheck(this.color);
       board.setPiece(move.fromX, move.fromY, movingPiece);
       board.setPiece(move.toX, move.toY, originalPiece);
@@ -138,7 +150,7 @@ export class AI {
 
     // Tri des coups selon évaluation rapide
     moves = moves
-      .map(move => {
+      .map((move) => {
         const originalPiece = board.getPiece(move.toX, move.toY);
         const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
@@ -193,8 +205,7 @@ export class AI {
     const now = Date.now();
     if (depth === 0 || now - this.startTime >= this.maxTime) {
       return (
-        evaluateBoard(board, this.color) +
-        evaluateKingSafety(board, this.color)
+        evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color)
       );
     }
 
@@ -228,7 +239,6 @@ export class AI {
           break;
         }
       }
-
     } else {
       value = Infinity;
 
@@ -278,7 +288,8 @@ export class AI {
 
             board.movePiece(x, y, toX, toY);
 
-            let kingX = -1, kingY = -1;
+            let kingX = -1,
+              kingY = -1;
             if (movingPiece.type === 'king') {
               kingX = toX;
               kingY = toY;

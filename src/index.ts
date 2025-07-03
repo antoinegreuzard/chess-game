@@ -73,7 +73,7 @@ export async function initializeGame(playerColor: PieceColor) {
     board,
     'chessBoard',
     async (fromX, fromY, toX, toY) => await handleMove(fromX, fromY, toX, toY),
-    playerColor
+    playerColor,
   );
   renderer.drawBoard();
 
@@ -246,7 +246,7 @@ export async function initializeGame(playerColor: PieceColor) {
         );
       }
       return false;
-    }    
+    }
 
     const isValid = piece.isValidMove(fromX, fromY, toX, toY, board);
     if (!isValid) {
