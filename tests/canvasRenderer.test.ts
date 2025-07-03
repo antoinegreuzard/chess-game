@@ -22,7 +22,7 @@ describe('CanvasRenderer Tests', () => {
     canvas = document.getElementById('testCanvas') as HTMLCanvasElement;
     board = new Board();
     await board.init(); // Initialise correctement board.grid avec une structure 8x8
-    renderer = new CanvasRenderer(board, 'testCanvas', jest.fn());
+    renderer = new CanvasRenderer(board, 'testCanvas', jest.fn(), PieceColor.WHITE);
 
     jest.spyOn(renderer, 'drawBoard');
     jest.spyOn(renderer, 'highlightValidMoves');
