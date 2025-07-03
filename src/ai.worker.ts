@@ -5,59 +5,56 @@ import { PieceColor, PieceType } from './piece';
 import { Pawn } from './pieces/pawn';
 
 let ai: AI;
+let currentBoard: Board;
 
 self.onmessage = async (event) => {
-  const { boardData, aiColor } = event.data;
+  const { boardData, aiColor, invalidMove } = event.data;
 
-  // Initialisez `ai` ici, après avoir reçu `aiColor`
-  ai = new AI(aiColor);
-
-  // Charge les données JSON avant de continuer
-  await ai.loadGamesData();
-
-  const board = await Board.fromData(boardData);
-  const bestMove = ai.makeMove(board);
-
-  // Définit explicitement le type de captureData
-  let captureData: {
-    capturedWhite: PieceType[];
-    capturedBlack: PieceType[];
-  } | null = null;
-
-  // Vérifie si une capture est effectuée
-  if (
-    bestMove &&
-    board.isCapture(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY)
-  ) {
-    const targetPiece = board.getPiece(bestMove.toX, bestMove.toY);
-    if (targetPiece) {
-      captureData = {
-        capturedWhite: [],
-        capturedBlack: [],
-      };
-      if (targetPiece.color === PieceColor.WHITE) {
-        captureData.capturedWhite.push(targetPiece.type);
-      } else {
-        captureData.capturedBlack.push(targetPiece.type);
-      }
-    }
+  if (boardData && aiColor) {
+    ai = new AI(aiColor);
+    await ai.loadGamesData();
+    currentBoard = await Board.fromData(boardData);
   }
 
-  // Vérifie si une promotion est nécessaire pour un pion
+  if (invalidMove) {
+    ai.addInvalidMove(invalidMove);
+  }
+
+  let bestMove = ai.makeMove(currentBoard);
+  let attempts = 0;
+
+  while (ai.isMoveInvalid(bestMove) && attempts < 50) {
+    bestMove = ai.makeMove(currentBoard);
+    attempts++;
+  }
+
+  let captureData: { capturedWhite: PieceType[]; capturedBlack: PieceType[] } | null = null;
   let promotionRequired = false;
-  if (
-    bestMove &&
-    board.getPiece(bestMove.fromX, bestMove.fromY)?.type === PieceType.PAWN
-  ) {
-    const piece = board.getPiece(bestMove.fromX, bestMove.fromY);
+
+  if (bestMove) {
+    if (currentBoard.isCapture(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY)) {
+      const targetPiece = currentBoard.getPiece(bestMove.toX, bestMove.toY);
+      if (targetPiece) {
+        captureData = {
+          capturedWhite: [],
+          capturedBlack: [],
+        };
+        if (targetPiece.color === PieceColor.WHITE) {
+          captureData.capturedWhite.push(targetPiece.type);
+        } else {
+          captureData.capturedBlack.push(targetPiece.type);
+        }
+      }
+    }
+
+    const piece = currentBoard.getPiece(bestMove.fromX, bestMove.fromY);
     if (piece instanceof Pawn) {
       const promotionRow = aiColor === PieceColor.WHITE ? 7 : 0;
-      // Vérifie si la pièce est un pion
       if (bestMove.toY === promotionRow) {
         promotionRequired = piece.handlePromotion(
           bestMove.toX,
           bestMove.toY,
-          board,
+          currentBoard,
         );
       }
     }

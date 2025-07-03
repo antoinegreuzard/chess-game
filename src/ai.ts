@@ -22,6 +22,7 @@ export class AI {
   private contextualDatabase = new ContextualMoveDatabase();
   private gamesLoaded = false;
   private startTime: number = 0;
+  private invalidMoves = new Set<string>();
 
   constructor(
     private color: PieceColor,
@@ -98,6 +99,14 @@ export class AI {
   private convertMove(moveStr: string): Move {
     const [fromX, fromY, toX, toY] = moveStr.match(/\d+/g)!.map(Number);
     return { fromX, fromY, toX, toY };
+  }
+
+  public addInvalidMove(move: { fromX: number; fromY: number; toX: number; toY: number }): void {
+    this.invalidMoves.add(`${move.fromX}${move.fromY}${move.toX}${move.toY}`);
+  }
+
+  public isMoveInvalid(move: { fromX: number; fromY: number; toX: number; toY: number }): boolean {
+    return this.invalidMoves.has(`${move.fromX}${move.fromY}${move.toX}${move.toY}`);
   }
 
   private iterativeDeepening(board: Board): Move | null {
@@ -244,7 +253,6 @@ export class AI {
         if (piece && piece.color === this.color) {
           const validMoves = board.getValidMoves(x, y);
 
-          // ➕ Déplace ceci ici AVANT de simuler le coup
           const wasInCheck = board.isKingInCheck(this.color);
 
           for (const move of validMoves) {
@@ -277,8 +285,6 @@ export class AI {
             board.setPiece(x, y, movingPiece);
             board.setPiece(toX, toY, originalPiece);
 
-            // 🛡️ Si le roi était en échec, ce coup doit le sortir d’échec
-            // Sinon, juste s'assurer qu’il n’y entre pas
             if ((!wasInCheck && stillSafe) || (wasInCheck && stillSafe)) {
               moves.push({ fromX: x, fromY: y, toX, toY });
             }
