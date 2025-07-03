@@ -59,10 +59,6 @@ class MockBoard implements BoardInterface {
     return false;
   }
 
-  getPlayerColor(): PieceColor {
-    return PieceColor.WHITE;
-  }
-
   captureEnPassantIfValid(
     fromX: number,
     fromY: number,
