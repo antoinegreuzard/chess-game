@@ -49,14 +49,15 @@ describe('Board', () => {
     board.setPiece(4, 1, pawn);
 
     const validMoves = board.getValidMoves(4, 1);
-    expect(validMoves).toContainEqual([{ x: 4, y: 2 }]);
-    expect(validMoves).toContainEqual([{ x: 4, y: 3 }]);
+    expect(validMoves).toContainEqual({ x: 4, y: 2 });
+    expect(validMoves).toContainEqual({ x: 4, y: 3 });
   });
 
   test('movePiece performs a valid move', () => {
     const pawn = new Pawn(PieceColor.WHITE);
     board.setPiece(4, 1, pawn);
 
+    board.setPlayerColor(PieceColor.BLACK); 
     const moved = board.movePiece(4, 1, 4, 3);
     expect(moved).toBe(true);
     expect(board.getPiece(4, 3)).toBe(pawn);
