@@ -49,19 +49,22 @@ describe('CanvasRenderer Tests', () => {
     const mockPiece = await createPiece(PieceType.PAWN, PieceColor.WHITE);
     board.setPiece(4, 4, mockPiece);
 
-    // Simule le clic initial sur la pièce
     const mouseDownEvent = new MouseEvent('mousedown', { clientX: 225, clientY: 225 });
     canvas.dispatchEvent(mouseDownEvent);
 
-    // Simule le déplacement de la pièce
     const mouseMoveEvent = new MouseEvent('mousemove', { clientX: 275, clientY: 275 });
     canvas.dispatchEvent(mouseMoveEvent);
 
-    // Simule le relâchement de la souris pour lâcher la pièce
     const mouseUpEvent = new MouseEvent('mouseup', { clientX: 275, clientY: 275 });
+
+    // Ajoute un délai pour attendre la fin du async moveHandler + draw
+    await new Promise((res) => setTimeout(res, 10));
     canvas.dispatchEvent(mouseUpEvent);
 
-    expect(renderer.drawBoard).toHaveBeenCalledTimes(3); // Initial, drag, drop
+    // Encore un petit délai si besoin
+    await new Promise((res) => setTimeout(res, 10));
+
+    expect(renderer.drawBoard).toHaveBeenCalledTimes(3); // initial, drag, drop
     expect(renderer['highlightedMoves']).toEqual([]);
   });
 
