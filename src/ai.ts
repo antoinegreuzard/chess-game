@@ -6,7 +6,6 @@ import { EndgameTablebase } from './ai/endgameTablebase';
 import { OpeningBook } from './ai/openingBook';
 import { GamesAnalyzer } from './ai/gamesAnalyzer';
 import { ContextualMoveDatabase } from './ai/contextualMoveDatabase';
-import { describeMove } from './utils/utils';
 
 interface Move {
   fromX: number;
