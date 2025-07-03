@@ -222,6 +222,8 @@ export async function initializeGame(playerColor: PieceColor) {
     toX: number,
     toY: number,
   ): Promise<boolean> {
+    const capturedPiece = board.getPiece(toX, toY);
+
     if (gameState === 'waiting' || hasMoved || isGameEnded) {
       showMessage('Veuillez attendre le prochain tour !');
       return false;
@@ -256,6 +258,10 @@ export async function initializeGame(playerColor: PieceColor) {
     if (!moved) {
       showMessage('Mouvement impossible !');
       return false;
+    } else {
+      if (capturedPiece) {
+        updateCapturedPieces(capturedPiece.type, capturedPiece.color);
+      }
     }
 
     hasMoved = true;
