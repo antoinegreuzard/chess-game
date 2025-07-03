@@ -22,7 +22,7 @@ export class Game {
     this.aiColor =
       playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
 
-    this.board.setFlipBoard(playerColor === PieceColor.BLACK);
+    this.board.setFlipBoard(false);
   }
 
   public async getBoard(): Promise<Board> {

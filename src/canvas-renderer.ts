@@ -6,7 +6,7 @@ export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly tileSize: number;
   private get flipBoard(): boolean {
-    return this.board.flipBoard;
+    return this.playerColor === PieceColor.BLACK;
   }
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
@@ -263,24 +263,21 @@ export class CanvasRenderer {
     if (!this.draggingPiece || this.startX === null || this.startY === null)
       return;
 
-    // Sauvegarde les coordonnées de départ
+    const rect = this.canvas.getBoundingClientRect();
+    const rawX = Math.floor((event.clientX - rect.left) / this.tileSize);
+    const rawY = Math.floor((event.clientY - rect.top) / this.tileSize);
+
     const fromX = this.startX;
     const fromY = this.startY;
+    const toX = this.flipBoard ? 7 - rawX : rawX;
+    const toY = this.flipBoard ? 7 - rawY : rawY;
 
-    // Stop dragging immédiatement
     this.draggingPiece = null;
     this.startX = null;
     this.startY = null;
     this.canvas.style.cursor = 'default';
 
-    this.drawBoard();
-
-    const rect = this.canvas.getBoundingClientRect();
-    const rawX = Math.floor((event.clientX - rect.left) / this.tileSize);
-    const rawY = Math.floor((event.clientY - rect.top) / this.tileSize);
-    const boardX = this.flipBoard ? 7 - rawX : rawX;
-    const boardY = this.flipBoard ? 7 - rawY : rawY;
-    await this.moveHandler(fromX, fromY, boardX, boardY);
+    await this.moveHandler(fromX, fromY, toX, toY);
     this.highlightedMoves = [];
 
     this.drawBoard();

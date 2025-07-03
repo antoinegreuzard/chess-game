@@ -21,7 +21,7 @@ export async function initializeGame(playerColor: PieceColor) {
   const game = new Game(playerColor);
   const board = await game.getBoard();
 
-  board.flipBoard = playerColor === PieceColor.BLACK;
+  board.flipBoard = false;
 
   const whiteMovesElement = document.getElementById(
     'whiteMoves',
@@ -67,7 +67,7 @@ export async function initializeGame(playerColor: PieceColor) {
     }
   }
 
-  board.flipBoard = playerColor === PieceColor.BLACK;
+  board.flipBoard = false;
 
   const renderer = new CanvasRenderer(
     board,
@@ -222,17 +222,12 @@ export async function initializeGame(playerColor: PieceColor) {
     toX: number,
     toY: number,
   ): Promise<boolean> {
-    const realFromX = board.flipBoard ? 7 - fromX : fromX;
-    const realFromY = board.flipBoard ? 7 - fromY : fromY;
-    const realToX = board.flipBoard ? 7 - toX : toX;
-    const realToY = board.flipBoard ? 7 - toY : toY;
-
     if (gameState === 'waiting' || hasMoved || isGameEnded) {
       showMessage('Veuillez attendre le prochain tour !');
       return false;
     }
 
-    const piece = board.getPiece(realFromX, realFromY);
+    const piece = board.getPiece(fromX, fromY);
 
     if (!piece) {
       return false;
@@ -251,13 +246,13 @@ export async function initializeGame(playerColor: PieceColor) {
       return false;
     }    
 
-    const isValid = piece.isValidMove(realFromX, realFromY, realToX, realToY, board);
+    const isValid = piece.isValidMove(fromX, fromY, toX, toY, board);
     if (!isValid) {
       showMessage('Mouvement invalide !');
       return false;
     }
 
-    const moved = board.movePiece(realFromX, realFromY, realToX, realToY, false);
+    const moved = board.movePiece(fromX, fromY, toX, toY, false);
     if (!moved) {
       showMessage('Mouvement impossible !');
       return false;
@@ -266,17 +261,17 @@ export async function initializeGame(playerColor: PieceColor) {
     hasMoved = true;
     piece.hasMoved = true;
 
-    const targetPiece = board.getPiece(realToX, realToY);
+    const targetPiece = board.getPiece(toX, toY);
     if (targetPiece && targetPiece !== piece) {
       updateCapturedPieces(targetPiece.type, targetPiece.color);
     }
 
-    if (piece.type === PieceType.PAWN && (realToY === 0 || realToY === 7)) {
-      showPromotionDialog(realToX, realToY, board);
+    if (piece.type === PieceType.PAWN && (toY === 0 || toY === 7)) {
+      showPromotionDialog(toX, toY, board);
       await updateTurn();
     } else {
-      addMoveToHistory(realFromX, realFromY, realToX, realToY, piece.type);
-      renderer.animateMove(realFromX, realFromY, realToX, realToY, piece);
+      addMoveToHistory(fromX, fromY, toX, toY, piece.type);
+      renderer.animateMove(fromX, fromY, toX, toY, piece);
       await updateTurn();
     }
 
