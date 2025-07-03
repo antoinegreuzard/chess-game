@@ -87,41 +87,41 @@ describe('Pawn', () => {
   });
 
   test('isValidMove returns true for a single step forward', () => {
-    board.setPiece(3, 1, whitePawn);
-    expect(whitePawn.isValidMove(3, 1, 3, 2, board)).toBe(true);
+    board.setPiece(3, 1, blackPawn);
+    expect(blackPawn.isValidMove(3, 1, 3, 2, board)).toBe(true);
   });
 
   test('isValidMove returns true for two steps forward from starting position', () => {
-    board.setPiece(3, 1, whitePawn);
-    expect(whitePawn.isValidMove(3, 1, 3, 3, board)).toBe(true);
+    board.setPiece(3, 1, blackPawn);
+    expect(blackPawn.isValidMove(3, 1, 3, 3, board)).toBe(true);
     expect(board.enPassantTarget).toEqual({ x: 3, y: 3 });
   });
 
   test('isValidMove returns false for two steps forward from non-starting position', () => {
-    board.setPiece(3, 2, whitePawn);
-    expect(whitePawn.isValidMove(3, 2, 3, 4, board)).toBe(false);
+    board.setPiece(3, 2, blackPawn);
+    expect(blackPawn.isValidMove(3, 2, 3, 4, board)).toBe(false);
   });
 
   test('isValidMove returns true for diagonal capture', () => {
-    board.setPiece(3, 1, whitePawn);
-    board.setPiece(4, 2, blackPawn);
-    expect(whitePawn.isValidMove(3, 1, 4, 2, board)).toBe(true);
+    board.setPiece(3, 1, blackPawn);
+    board.setPiece(4, 2, whitePawn);
+    expect(blackPawn.isValidMove(3, 1, 4, 2, board)).toBe(true);
   });
 
   test('isValidMove returns false for invalid diagonal move without capture', () => {
-    board.setPiece(3, 1, whitePawn);
-    expect(whitePawn.isValidMove(3, 1, 4, 2, board)).toBe(false);
+    board.setPiece(3, 1, blackPawn);
+    expect(blackPawn.isValidMove(3, 1, 4, 2, board)).toBe(false);
   });
 
   test('isValidMove returns true for en passant capture', () => {
-    board.setPiece(4, 4, whitePawn);
-    board.setPiece(5, 4, blackPawn);
+    board.setPiece(4, 4, blackPawn);
+    board.setPiece(5, 4, whitePawn);
 
     // Simulate a two-square move for the black pawn
-    board.updateEnPassantTarget(5, 4, 5, 5, blackPawn);
+    board.updateEnPassantTarget(5, 4, 5, 5, whitePawn);
 
     // Test en passant capture by white pawn
-    expect(whitePawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
+    expect(blackPawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
   });
 
   test('isValidMove returns true for promotion move', () => {
