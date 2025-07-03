@@ -11,7 +11,7 @@ export class Pawn extends Piece {
     super(color, PieceType.PAWN);
   }
 
-  public isValidMove(
+  isValidMove(
     fromX: number,
     fromY: number,
     toX: number,
@@ -20,64 +20,70 @@ export class Pawn extends Piece {
   ): boolean {
     if (!board.isWithinBounds(toX, toY)) return false;
 
-    const direction = this.color === PieceColor.WHITE ? 1 : -1;
-    const startRow = this.color === PieceColor.WHITE ? 1 : 6;
-    const dy = toY - fromY;
-    const dx = toX - fromX;
+    const direction = this.color === PieceColor.WHITE ? -1 : 1;
+    const startRow = this.color === PieceColor.WHITE ? 6 : 1;
+    const promotionRow = this.color === PieceColor.WHITE ? 0 : 7;
+    const deltaX = toX - fromX;
+    const deltaY = toY - fromY;
 
-    const targetPiece = board.getPiece(toX, toY);
+    const target = board.getPiece(toX, toY);
 
-    // Avance d'une case
-    if (dx === 0 && dy === direction && !targetPiece) {
+    // Avance simple
+    if (deltaX === 0 && deltaY === direction && !target) {
       return true;
     }
 
-    // Avance de deux cases depuis la ligne de départ
+    // Avance double depuis la position initiale
     if (
-      dx === 0 &&
-      dy === 2 * direction &&
+      deltaX === 0 &&
+      deltaY === 2 * direction &&
       fromY === startRow &&
-      !targetPiece &&
+      !target &&
       !board.getPiece(toX, fromY + direction)
     ) {
-      // Définir la cible en passant
       board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
       return true;
     }
 
-    // Capture diagonale
+    // Capture diagonale normale
     if (
-      Math.abs(dx) === 1 &&
-      dy === direction &&
-      targetPiece &&
-      targetPiece.color !== this.color
+      Math.abs(deltaX) === 1 &&
+      deltaY === direction &&
+      target &&
+      target.color !== this.color
     ) {
       return true;
     }
 
-    // En passant
+    // Capture en passant
     if (
-      Math.abs(dx) === 1 &&
-      dy === direction &&
-      !targetPiece &&
+      Math.abs(deltaX) === 1 &&
+      deltaY === direction &&
       board.isEnPassantMove(fromX, fromY, toX, toY)
     ) {
       return true;
     }
 
-    // Promotion (autorisé ici en tant que mouvement valide)
-    const promotionRow = this.color === PieceColor.WHITE ? 7 : 0;
-    if (toY === promotionRow && dx === 0 && dy === direction && !targetPiece) {
+    // Promotion (autorisé même sans capture)
+    if (
+      deltaX === 0 &&
+      toY === promotionRow &&
+      deltaY === direction &&
+      !target
+    ) {
+      return true;
+    }
+
+    if (
+      Math.abs(deltaX) === 1 &&
+      deltaY === direction &&
+      toY === promotionRow &&
+      ((target && target.color !== this.color) ||
+        board.isEnPassantMove(fromX, fromY, toX, toY))
+    ) {
       return true;
     }
 
     return false;
-  }
-
-  handlePromotion(toX: number, toY: number, board: BoardInterface): boolean {
-    this._toX = toX;
-    this._toY = toY;
-    this._board = board;
-    return true;
   }
 }
