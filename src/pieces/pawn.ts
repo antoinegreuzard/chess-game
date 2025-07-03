@@ -18,72 +18,59 @@ export class Pawn extends Piece {
     toY: number,
     board: BoardInterface,
   ): boolean {
-    if (!board.isWithinBounds(toX, toY)) return false;
+    if (toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+      return false;
+    }
 
     const direction = this.color === PieceColor.WHITE ? -1 : 1;
     const startRow = this.color === PieceColor.WHITE ? 6 : 1;
+    const distanceY = (toY - fromY) * direction;
+    const distanceX = Math.abs(toX - fromX);
     const promotionRow = this.color === PieceColor.WHITE ? 0 : 7;
-    const deltaX = toX - fromX;
-    const deltaY = toY - fromY;
 
-    const target = board.getPiece(toX, toY);
+    if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
+      // Vérifie la rangée de promotion et déclenche la promotion uniquement à cette rangée
+      if (toY === promotionRow) {
+        return this.handlePromotion(toX, toY, board);
+      }
 
-    // Avance simple
-    if (deltaX === 0 && deltaY === direction && !target) {
       return true;
     }
 
-    // Avance double depuis la position initiale
+    if (distanceX === 1 && distanceY === 1) {
+      if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
+        if (toY === promotionRow) {
+          return this.handlePromotion(toX, toY, board);
+        }
+        return true;
+      }
+
+      // Capture en passant
+      if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
+        board.captureEnPassantIfValid(fromX, fromY, toX, toY);
+        return true;
+      }
+    }
+
     if (
-      deltaX === 0 &&
-      deltaY === 2 * direction &&
+      distanceX === 0 &&
+      distanceY === 2 &&
       fromY === startRow &&
-      !target &&
-      !board.getPiece(toX, fromY + direction)
+      !board.getPiece(toX, toY) &&
+      !board.getPiece(fromX, fromY + direction)
     ) {
       board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
-      return true;
-    }
-
-    // Capture diagonale normale
-    if (
-      Math.abs(deltaX) === 1 &&
-      deltaY === direction &&
-      target &&
-      target.color !== this.color
-    ) {
-      return true;
-    }
-
-    // Capture en passant
-    if (
-      Math.abs(deltaX) === 1 &&
-      deltaY === direction &&
-      board.isEnPassantMove(fromX, fromY, toX, toY)
-    ) {
-      return true;
-    }
-
-    // Promotion (autorisé même sans capture)
-    if (
-      deltaX === 0 &&
-      toY === promotionRow &&
-      deltaY === direction &&
-      !target
-    ) {
-      return true;
-    }
-
-    if (
-      Math.abs(deltaX) === 1 &&
-      deltaY === direction &&
-      toY === promotionRow &&
-      ((target && target.color !== this.color) ||
-        board.isEnPassantMove(fromX, fromY, toX, toY))
-    ) {
+      this.hasMoved = true; // Marque que le pion a bougé
       return true;
     }
 
     return false;
+  }
+
+  handlePromotion(toX: number, toY: number, board: BoardInterface): boolean {
+    this._toX = toX;
+    this._toY = toY;
+    this._board = board;
+    return true;
   }
 }
