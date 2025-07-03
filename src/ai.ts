@@ -69,7 +69,6 @@ export class AI {
       return null;
     }
 
-    console.log(describeMove(board, bestMove));
     return this.finalizeMove(bestMove, board);
   }
 
