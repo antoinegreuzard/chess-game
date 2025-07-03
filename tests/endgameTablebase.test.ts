@@ -18,13 +18,18 @@ describe('EndgameTablebase', () => {
     expect(move).toEqual({ fromX: 7, fromY: 0, toX: 5, toY: 0 });
   });
 
-  it('devrait retourner le bon mouvement pour une fin de partie Roi + 2 Fous contre Roi', () => {
+  it('devrait retourner les bons mouvements pour une fin de partie Roi + 2 Fous contre Roi', () => {
     const positionKey = 'kbbkEndgame';
     const moves = EndgameTablebase.getEndgameMoves(positionKey);
 
     expect(moves).not.toBeNull();
-    expect(moves).toEqual([{ fromX: 5, fromY: 3, toX: 3, toY: 1 }]);
-  });
+    expect(moves).toEqual([
+      { fromX: 5, fromY: 3, toX: 3, toY: 1 },
+      { fromX: 3, fromY: 1, toX: 2, toY: 0 },
+      { fromX: 2, fromY: 0, toX: 1, toY: 1 },
+      { fromX: 1, fromY: 1, toX: 0, toY: 0 },
+    ]);
+  });  
 
   it('devrait retourner null pour une position non définie', () => {
     const positionKey = 'unknownEndgame';
