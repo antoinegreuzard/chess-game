@@ -41,7 +41,7 @@ export class OpeningBook {
 
     'rnbqkbnr/ppp1pppp/8/3p4/4P3/5N2/PPPP1PPP/RNBQKB1R w': [
       { fromX: 3, fromY: 7, toX: 3, toY: 6, weight: 1 }, // Queen's Gambit accepted
-    ],    
+    ],
   };
 
   static getOpeningMove(positionKey: string): Move | null {
