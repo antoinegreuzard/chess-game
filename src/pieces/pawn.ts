@@ -24,34 +24,20 @@ export class Pawn extends Piece {
 
     const direction = this.color === PieceColor.WHITE ? -1 : 1;
     const startRow = this.color === PieceColor.WHITE ? 6 : 1;
-    const distanceY = (toY - fromY) * direction;
-    const distanceX = Math.abs(toX - fromX);
     const promotionRow = this.color === PieceColor.WHITE ? 0 : 7;
 
+    const distanceY = (toY - fromY) * direction;
+    const distanceX = toX - fromX;
+
+    // Avance d'une case tout droit
     if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
-      // Vérifie la rangée de promotion et déclenche la promotion uniquement à cette rangée
       if (toY === promotionRow) {
         return this.handlePromotion(toX, toY, board);
       }
-
       return true;
     }
 
-    if (distanceX === 1 && distanceY === 1) {
-      if (board.getPiece(toX, toY) && this.canCapture(toX, toY, board)) {
-        if (toY === promotionRow) {
-          return this.handlePromotion(toX, toY, board);
-        }
-        return true;
-      }
-
-      // Capture en passant
-      if (board.isEnPassantMove(fromX, fromY, toX, toY)) {
-        board.captureEnPassantIfValid(fromX, fromY, toX, toY);
-        return true;
-      }
-    }
-
+    // Avance de deux cases depuis la ligne de départ
     if (
       distanceX === 0 &&
       distanceY === 2 &&
@@ -60,7 +46,29 @@ export class Pawn extends Piece {
       !board.getPiece(fromX, fromY + direction)
     ) {
       board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
-      this.hasMoved = true; // Marque que le pion a bougé
+      return true;
+    }
+
+    // Capture diagonale
+    if (
+      Math.abs(distanceX) === 1 &&
+      distanceY === 1 &&
+      board.getPiece(toX, toY) &&
+      this.canCapture(toX, toY, board)
+    ) {
+      if (toY === promotionRow) {
+        return this.handlePromotion(toX, toY, board);
+      }
+      return true;
+    }
+
+    // Capture en passant
+    if (
+      Math.abs(distanceX) === 1 &&
+      distanceY === 1 &&
+      board.isEnPassantMove(fromX, fromY, toX, toY)
+    ) {
+      board.captureEnPassantIfValid(fromX, fromY, toX, toY);
       return true;
     }
 
