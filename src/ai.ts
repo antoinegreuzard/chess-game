@@ -95,7 +95,11 @@ export class AI {
   }
 
   private convertMove(moveStr: string): Move {
-    const [fromX, fromY, toX, toY] = moveStr.match(/\d+/g)!.map(Number);
+    const digits = moveStr.match(/\d+/g);
+    if (!digits || digits.length !== 4) {
+      throw new Error(`Invalid move string: ${moveStr}`);
+    }
+    const [fromX, fromY, toX, toY] = digits.map(Number);
     return { fromX, fromY, toX, toY };
   }
 

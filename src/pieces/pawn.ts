@@ -29,8 +29,15 @@ export class Pawn extends Piece {
     const distanceY = (toY - fromY) * direction;
     const distanceX = toX - fromX;
 
+    const targetPiece = board.getPiece(toX, toY);
+
+    // 🧱 Vérifie qu'on ne tente pas une promotion sur une case occupée
+    if (toY === promotionRow && targetPiece) {
+      return false;
+    }
+
     // Avance d'une case tout droit
-    if (distanceX === 0 && distanceY === 1 && !board.getPiece(toX, toY)) {
+    if (distanceX === 0 && distanceY === 1 && !targetPiece) {
       if (toY === promotionRow) {
         return this.handlePromotion(toX, toY, board);
       }
@@ -42,7 +49,7 @@ export class Pawn extends Piece {
       distanceX === 0 &&
       distanceY === 2 &&
       fromY === startRow &&
-      !board.getPiece(toX, toY) &&
+      !targetPiece &&
       !board.getPiece(fromX, fromY + direction)
     ) {
       board.updateEnPassantTarget(fromX, fromY, toX, toY, this);
@@ -53,7 +60,7 @@ export class Pawn extends Piece {
     if (
       Math.abs(distanceX) === 1 &&
       distanceY === 1 &&
-      board.getPiece(toX, toY) &&
+      targetPiece &&
       this.canCapture(toX, toY, board)
     ) {
       if (toY === promotionRow) {
