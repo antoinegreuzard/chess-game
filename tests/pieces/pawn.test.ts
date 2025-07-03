@@ -125,24 +125,24 @@ describe('Pawn', () => {
   });
 
   test('isValidMove returns true for promotion move', () => {
-    board.setPiece(3, 6, whitePawn);
-    expect(whitePawn.isValidMove(3, 6, 3, 7, board)).toBe(true);
+    board.setPiece(3, 6, blackPawn);
+    expect(blackPawn.isValidMove(3, 6, 3, 7, board)).toBe(true);
   });
 
   test('isValidMove returns false for backward move', () => {
-    board.setPiece(3, 3, whitePawn);
-    expect(whitePawn.isValidMove(3, 3, 3, 2, board)).toBe(false);
+    board.setPiece(3, 3, blackPawn);
+    expect(blackPawn.isValidMove(3, 3, 3, 2, board)).toBe(false);
   });
 
   test('en passant target is reset after capture', () => {
-    board.setPiece(4, 4, whitePawn);
-    board.setPiece(5, 4, blackPawn);
+    board.setPiece(4, 4, blackPawn);
+    board.setPiece(5, 4, whitePawn);
 
     // Simulate black pawn's two-square move
-    board.updateEnPassantTarget(5, 4, 5, 5, blackPawn);
+    board.updateEnPassantTarget(5, 4, 5, 5, whitePawn);
 
     // White pawn captures en passant
-    expect(whitePawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
+    expect(blackPawn.isValidMove(4, 4, 5, 5, board)).toBe(true);
     board.captureEnPassantIfValid(4, 4, 5, 5);
   });
 });
