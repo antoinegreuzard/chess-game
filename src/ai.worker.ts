@@ -22,9 +22,17 @@ self.onmessage = async (event) => {
 
   let bestMove = ai.makeMove(currentBoard);
   let attempts = 0;
+  let isMoveLegal = bestMove ? await this.isAIMoveLegal(bestMove) : false;
 
-  while (ai.isMoveInvalid(bestMove) && attempts < 50) {
-    bestMove = ai.makeMove(currentBoard);
+  while (!isMoveLegal && bestMove && attempts < 50) {
+    this.aiWorker.postMessage({ invalidMove: bestMove });
+
+    const newEvent = await new Promise((res) => {
+      this.aiWorker.onmessage = res;
+    }) as MessageEvent;
+  
+    bestMove = newEvent.data.bestMove;
+    isMoveLegal = bestMove ? await this.isAIMoveLegal(bestMove) : false;
     attempts++;
   }
 

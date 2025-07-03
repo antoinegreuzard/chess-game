@@ -1,7 +1,7 @@
 // game.ts
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
-import { PieceColor, PieceType } from './piece';
+import { PieceColor } from './piece';
 
 export class Game {
   private readonly board: Board;
@@ -33,7 +33,7 @@ export class Game {
   public makeAIMove(): Promise<void> {
     return new Promise((resolve) => {
       this.aiWorker.onmessage = async (event) => {
-        let { bestMove, captureData, promotionRequired } = event.data;
+        let { bestMove } = event.data;
 
         let isMoveLegal = await this.isAIMoveLegal(bestMove);
         let attempts = 0;
@@ -43,12 +43,9 @@ export class Game {
 
           const newEvent = await new Promise((res) => {
             this.aiWorker.onmessage = res;
-          });
+          }) as MessageEvent;
 
           bestMove = newEvent.data.bestMove;
-          captureData = newEvent.data.captureData;
-          promotionRequired = newEvent.data.promotionRequired;
-
           isMoveLegal = await this.isAIMoveLegal(bestMove);
           attempts++;
         }
