@@ -117,6 +117,23 @@ export class AI {
     let moves = this.getAllValidMoves(board);
     if (moves.length === 0) return null;
 
+    // Prioriser les coups sortant l'IA de l'échec
+    const movesOutOfCheck = moves.filter(move => {
+    const originalPiece = board.getPiece(move.toX, move.toY);
+    const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+
+    board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+      const kingSafe = !board.isKingInCheck(this.color);
+      board.setPiece(move.fromX, move.fromY, movingPiece);
+      board.setPiece(move.toX, move.toY, originalPiece);
+
+      return kingSafe;
+    });
+
+    if (movesOutOfCheck.length > 0) {
+      moves = movesOutOfCheck;
+    }
+
     // Profondeur dynamique : moins il y a de coups, plus on peut aller profond
     const depthLimit = moves.length > 25 ? 2 : 4;
 

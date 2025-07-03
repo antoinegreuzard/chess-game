@@ -280,9 +280,7 @@ export class CanvasRenderer {
     const rawY = Math.floor((event.clientY - rect.top) / this.tileSize);
     const boardX = this.flipBoard ? 7 - rawX : rawX;
     const boardY = this.flipBoard ? 7 - rawY : rawY;
-
-    const moveSuccessful = await this.moveHandler(fromX, fromY, boardX, boardY);
-
+    await this.moveHandler(fromX, fromY, boardX, boardY);
     this.highlightedMoves = [];
 
     this.drawBoard();

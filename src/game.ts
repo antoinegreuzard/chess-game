@@ -54,19 +54,17 @@ export class Game {
         }
 
         if (isMoveLegal && bestMove) {
-          this.lastAIMove = bestMove;
-          this.board.movePiece(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY, false);
+        this.lastAIMove = bestMove;
 
-          if (captureData) {
-            captureData.capturedWhite.forEach((piece: PieceType) =>
-              updateCapturedPieces(piece, PieceColor.WHITE),
-            );
-            captureData.capturedBlack.forEach((piece: PieceType) =>
-              updateCapturedPieces(piece, PieceColor.BLACK),
-            );
+        // Vérification et mise à jour des pièces capturées
+        const targetPiece = this.board.getPiece(bestMove.toX, bestMove.toY);
+          if (targetPiece) {
+            updateCapturedPieces(targetPiece.type, targetPiece.color);
           }
+
+          this.board.movePiece(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY, false);
         } else {
-          console.warn("Aucun coup valide n'a été trouvé par l'IA après plusieurs tentatives.");
+          console.warn("Aucun coup valide trouvé par l'IA après plusieurs tentatives.");
         }
 
         resolve();
