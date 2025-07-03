@@ -12,6 +12,14 @@ class MockBoard implements BoardInterface {
     return this.board[y][x];
   }
 
+  isWithinBounds(x: number, y: number): boolean {
+    return x >= 0 && x < 8 && y >= 0 && y < 8;
+  }
+
+  getPlayerColor(): PieceColor {
+    return PieceColor.WHITE;
+  }    
+
   setPiece(x: number, y: number, piece: Pawn | null): void {
     this.board[y][x] = piece;
   }
