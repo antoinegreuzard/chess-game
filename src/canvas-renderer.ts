@@ -5,7 +5,9 @@ export class CanvasRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
   private readonly tileSize: number;
-  private readonly flipBoard: boolean;
+  private get flipBoard(): boolean {
+    return this.playerColor === PieceColor.BLACK;
+  }
   private draggingPiece: Piece | null = null;
   private startX: number | null = null;
   private startY: number | null = null;
@@ -20,8 +22,8 @@ export class CanvasRenderer {
       fromY: number,
       toX: number,
       toY: number,
-    ) => boolean,
-    flipBoard: boolean = false, // Argument pour inverser le plateau si le joueur est Noir
+    ) => Promise<boolean>,
+    private readonly playerColor: PieceColor,
   ) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) throw new Error(`Canvas with id ${canvasId} not found`);
@@ -29,7 +31,6 @@ export class CanvasRenderer {
     if (!this.context)
       throw new Error(`Canvas context could not be initialized`);
     this.tileSize = this.canvas.width / 8;
-    this.flipBoard = flipBoard;
 
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -37,13 +38,6 @@ export class CanvasRenderer {
   }
 
   private getCoordinates(x: number, y: number): { x: number; y: number } {
-    return this.flipBoard ? { x: 7 - x, y: 7 - y } : { x, y };
-  }
-
-  private getInverseCoordinates(
-    x: number,
-    y: number,
-  ): { x: number; y: number } {
     return this.flipBoard ? { x: 7 - x, y: 7 - y } : { x, y };
   }
 
@@ -213,16 +207,18 @@ export class CanvasRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / this.tileSize);
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
-    const { x: adjustedX, y: adjustedY } = this.getInverseCoordinates(x, y);
 
-    const piece = this.board.getPiece(adjustedX, adjustedY);
-    if (piece && piece.color === this.board.getPlayerColor()) {
+    const boardX = this.flipBoard ? 7 - x : x;
+    const boardY = this.flipBoard ? 7 - y : y;
+
+    const piece = this.board.getPiece(boardX, boardY);
+    if (piece && piece.color === this.playerColor) {
       this.draggingPiece = piece;
-      this.startX = adjustedX;
-      this.startY = adjustedY;
+      this.startX = boardX;
+      this.startY = boardY;
       this.canvas.style.cursor = 'grabbing';
 
-      this.highlightedMoves = this.board.getValidMoves(adjustedX, adjustedY);
+      this.highlightedMoves = this.board.getValidMoves(boardX, boardY);
       this.drawBoard();
       this.highlightValidMoves(this.highlightedMoves);
     } else {
@@ -237,12 +233,12 @@ export class CanvasRenderer {
     const y = Math.floor((event.clientY - rect.top) / this.tileSize);
 
     let piece = null;
-    const { x: adjX, y: adjY } = this.getInverseCoordinates(x, y);
-    if (this.board.isWithinBounds(adjX, adjY))
-      piece = this.board.getPiece(adjX, adjY);
+    if (this.board.isWithinBounds(x, y)) piece = this.board.getPiece(x, y);
 
     this.canvas.style.cursor =
-      piece && !this.draggingPiece ? 'pointer' : 'default';
+      piece && piece.color === this.playerColor && !this.draggingPiece
+        ? 'pointer'
+        : 'default';
 
     if (!this.draggingPiece) return;
 
@@ -262,31 +258,27 @@ export class CanvasRenderer {
   }
 
   // Gestion de la fin du glissement
-  private handleMouseUp(event: MouseEvent): void {
+  private async handleMouseUp(event: MouseEvent): Promise<void> {
     if (!this.draggingPiece || this.startX === null || this.startY === null)
       return;
 
     const rect = this.canvas.getBoundingClientRect();
-    const x = Math.floor((event.clientX - rect.left) / this.tileSize);
-    const y = Math.floor((event.clientY - rect.top) / this.tileSize);
-    const { x: adjustedX, y: adjustedY } = this.getInverseCoordinates(x, y);
+    const rawX = Math.floor((event.clientX - rect.left) / this.tileSize);
+    const rawY = Math.floor((event.clientY - rect.top) / this.tileSize);
 
-    const moveSuccessful = this.moveHandler(
-      this.startX,
-      this.startY,
-      adjustedX,
-      adjustedY,
-    );
+    const fromX = this.startX;
+    const fromY = this.startY;
+    const toX = this.flipBoard ? 7 - rawX : rawX;
+    const toY = this.flipBoard ? 7 - rawY : rawY;
 
     this.draggingPiece = null;
     this.startX = null;
     this.startY = null;
     this.canvas.style.cursor = 'default';
-    this.highlightedMoves = [];
-    this.drawBoard();
 
-    if (moveSuccessful) {
-      this.drawBoard();
-    }
+    await this.moveHandler(fromX, fromY, toX, toY);
+    this.highlightedMoves = [];
+
+    this.drawBoard();
   }
 }

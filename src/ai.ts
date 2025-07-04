@@ -1,167 +1,202 @@
 // src/ai.ts
 import { Board } from './board';
-import { Piece, PieceColor, PieceType } from './piece';
-import {
-  centerControlBonus,
-  evaluateBoard,
-  evaluateKingSafety,
-  pieceValues,
-} from './ai/evaluator';
+import { PieceColor } from './piece';
+import { evaluateBoard, evaluateKingSafety } from './ai/evaluator';
 import { EndgameTablebase } from './ai/endgameTablebase';
 import { OpeningBook } from './ai/openingBook';
 import { GamesAnalyzer } from './ai/gamesAnalyzer';
 import { ContextualMoveDatabase } from './ai/contextualMoveDatabase';
 
-// Classe AI utilisant l'algorithme Minimax avec Alpha-Beta Pruning et Transposition Table
+interface Move {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
 export class AI {
-  private readonly transpositionTable: Map<
-    string,
-    { value: number; depth: number }
-  >; // Table de transposition avec profondeur
-  private readonly maxTime: number;
-  private startTime: number;
-  private readonly killerMoves: Map<
-    number,
-    {
-      move: { fromX: number; fromY: number; toX: number; toY: number };
-      score: number;
-    }[]
-  >;
-  private moveHistory: {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-  }[] = [];
-  private readonly historicalMoveScores: Map<string, number> = new Map();
-  private gamesAnalyzer: GamesAnalyzer;
-  private gamesLoaded: boolean = false;
-  private contextualMoveDatabase: ContextualMoveDatabase;
+  private killerMoves = new Map<number, Move[]>();
+  private moveHistory: Move[] = [];
+  private gamesAnalyzer = new GamesAnalyzer();
+  private contextualDatabase = new ContextualMoveDatabase();
+  private gamesLoaded = false;
+  private startTime: number = 0;
+  private invalidMoves = new Set<string>();
 
   constructor(
-    private readonly color: PieceColor,
-    maxTime: number = 60000,
-  ) {
-    this.transpositionTable = new Map();
-    this.maxTime = maxTime;
-    this.killerMoves = new Map();
-    this.startTime = 0;
-    this.gamesAnalyzer = new GamesAnalyzer();
-    this.contextualMoveDatabase = new ContextualMoveDatabase();
-  }
+    private color: PieceColor,
+    private maxTime = 30000,
+  ) {}
 
   async loadGamesData() {
     await this.gamesAnalyzer.loadGamesData();
     this.gamesLoaded = true;
   }
 
-  private recordMoveInContextualDatabase(
-    positionKey: string,
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-  ): void {
-    this.contextualMoveDatabase.recordMove(positionKey, move);
-  }
-
-  public makeMove(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    if (!this.gamesLoaded) {
-      throw new Error('Games data not loaded. Call loadGamesData() first.');
-    }
+  makeMove(board: Board): Move | null {
+    if (!this.gamesLoaded) throw new Error('Games data not loaded.');
 
     this.startTime = Date.now();
-    this.maxTime = Math.floor(Math.random() * (50000 - 5000 + 1)) + 5000;
 
-    const openingMove = this.getOpeningMove(board);
-    if (
-      openingMove &&
-      typeof openingMove === 'object' &&
-      'fromX' in openingMove &&
-      'fromY' in openingMove &&
-      'toX' in openingMove &&
-      'toY' in openingMove
-    ) {
-      this.moveHistory.push(openingMove);
-      this.recordMoveInContextualDatabase(
-        this.getPositionKey(board),
-        openingMove,
-      ); // Enregistrement du mouvement
-      return openingMove;
+    const openingMove = OpeningBook.getOpeningMove(board.getCurrentMovesHash());
+    if (openingMove) return this.finalizeMove(openingMove, board);
+
+    const endgameMove = this.getEndgameMove(board);
+    if (endgameMove) return this.finalizeMove(endgameMove, board);
+
+    const analyzedMove = this.getAnalyzedMove(board);
+    if (analyzedMove) return this.finalizeMove(analyzedMove, board);
+
+    const bestMove = this.iterativeDeepening(board);
+
+    if (!bestMove) {
+      return null;
     }
 
-    const endgameMove = this.useEndgameTablebase(board);
-    if (
-      endgameMove &&
-      typeof endgameMove === 'object' &&
-      'fromX' in endgameMove &&
-      'fromY' in endgameMove &&
-      'toX' in endgameMove &&
-      'toY' in endgameMove
-    ) {
-      this.moveHistory.push(endgameMove);
-      this.recordMoveInContextualDatabase(
-        this.getPositionKey(board),
-        endgameMove,
-      ); // Enregistrement du mouvement
-      return endgameMove;
+    // 🛡️ Dernier filet de sécurité : vérifie si ce move est bien encore légal
+    const legalMoves = this.getAllValidMoves(board);
+    const isStillLegal = legalMoves.some(
+      (m) =>
+        m.fromX === bestMove.fromX &&
+        m.fromY === bestMove.fromY &&
+        m.toX === bestMove.toX &&
+        m.toY === bestMove.toY,
+    );
+
+    if (!isStillLegal) {
+      console.warn('⚠️ Coup illégal détecté juste avant exécution.');
+      return null;
     }
 
-    const positionKey = this.getPositionKey(board);
-    const analyzedMove = this.getAnalyzedMove(positionKey);
-    if (
-      analyzedMove &&
-      typeof analyzedMove === 'object' &&
-      'fromX' in analyzedMove &&
-      'fromY' in analyzedMove &&
-      'toX' in analyzedMove &&
-      'toY' in analyzedMove
-    ) {
-      this.moveHistory.push(analyzedMove);
-      this.recordMoveInContextualDatabase(positionKey, analyzedMove); // Enregistrement du mouvement
-      return analyzedMove;
-    }
+    return this.finalizeMove(bestMove, board);
+  }
 
-    const bestMove = this.getBestMoveUsingMinimax(board);
-    if (
-      bestMove &&
-      typeof bestMove === 'object' &&
-      'fromX' in bestMove &&
-      'fromY' in bestMove &&
-      'toX' in bestMove &&
-      'toY' in bestMove
-    ) {
-      this.moveHistory.push(bestMove);
-      this.recordMoveInContextualDatabase(positionKey, bestMove); // Enregistrement du mouvement
-      return bestMove;
-    }
+  private finalizeMove(move: Move, board: Board): Move {
+    this.moveHistory.push(move);
+    this.contextualDatabase.recordMove(board.getCurrentMovesHash(), move);
+    return move;
+  }
 
+  private getEndgameMove(board: Board): Move | null {
+    if (board.getPieceCount() <= 5) {
+      const moves = EndgameTablebase.getEndgameMoves(
+        board.getCurrentMovesHash(),
+      );
+      return moves ? moves[0] : null;
+    }
     return null;
   }
 
-  private getOpeningMove(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const boardHash = board.getCurrentMovesHash();
-    const openingMove = OpeningBook.getOpeningMove(boardHash);
-
-    return openingMove ? this.flipMoveIfBlack(openingMove) : null;
+  private getAnalyzedMove(board: Board): Move | null {
+    const bestMove = this.gamesAnalyzer.getBestMove(
+      board.getCurrentMovesHash(),
+    );
+    return bestMove ? this.convertMove(bestMove) : null;
   }
 
-  private flipMoveIfBlack(move: {
+  private convertMove(moveStr: string): Move {
+    const digits = moveStr.match(/\d+/g);
+    if (!digits || digits.length !== 4) {
+      throw new Error(`Invalid move string: ${moveStr}`);
+    }
+    const [fromX, fromY, toX, toY] = digits.map(Number);
+    return { fromX, fromY, toX, toY };
+  }
+
+  public addInvalidMove(move: {
     fromX: number;
     fromY: number;
     toX: number;
     toY: number;
-  }): { fromX: number; fromY: number; toX: number; toY: number } {
-    if (this.color === PieceColor.BLACK) {
-      return {
-        fromX: 7 - move.fromX,
-        fromY: 7 - move.fromY,
-        toX: 7 - move.toX,
-        toY: 7 - move.toY,
-      };
+  }): void {
+    this.invalidMoves.add(`${move.fromX}${move.fromY}${move.toX}${move.toY}`);
+  }
+
+  public isMoveInvalid(move: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): boolean {
+    return this.invalidMoves.has(
+      `${move.fromX}${move.fromY}${move.toX}${move.toY}`,
+    );
+  }
+
+  private iterativeDeepening(board: Board): Move | null {
+    let bestMove: Move | null = null;
+    let bestValue = -Infinity;
+
+    const deadline = this.startTime + this.maxTime;
+
+    let moves = this.getAllValidMoves(board);
+    if (moves.length === 0) return null;
+
+    // Prioriser les coups sortant l'IA de l'échec
+    const movesOutOfCheck = moves.filter((move) => {
+      const originalPiece = board.getPiece(move.toX, move.toY);
+      const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+
+      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+      const kingSafe = !board.isKingInCheck(this.color);
+      board.setPiece(move.fromX, move.fromY, movingPiece);
+      board.setPiece(move.toX, move.toY, originalPiece);
+
+      return kingSafe;
+    });
+
+    if (movesOutOfCheck.length > 0) {
+      moves = movesOutOfCheck;
     }
-    return move;
+
+    // Profondeur dynamique : moins il y a de coups, plus on peut aller profond
+    const depthLimit = moves.length > 25 ? 2 : 4;
+
+    // Tri des coups selon évaluation rapide
+    moves = moves
+      .map((move) => {
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        const score = evaluateBoard(board, this.color);
+        board.setPiece(move.fromX, move.fromY, movingPiece);
+        board.setPiece(move.toX, move.toY, originalPiece);
+
+        return { ...move, weight: score };
+      })
+      .sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
+
+    for (let depth = 1; depth <= depthLimit; depth++) {
+      if (Date.now() > deadline) break;
+
+      for (const move of moves) {
+        if (Date.now() > deadline) return bestMove;
+
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        const movingPiece = board.getPiece(move.fromX, move.fromY)!;
+
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        const value = -this.minimax(
+          board,
+          depth - 1,
+          -Infinity,
+          Infinity,
+          false,
+        );
+        board.setPiece(move.fromX, move.fromY, movingPiece);
+        board.setPiece(move.toX, move.toY, originalPiece);
+
+        if (value > bestValue) {
+          bestValue = value;
+          bestMove = move;
+        }
+
+        if (bestValue >= 10000) return bestMove; // arrêt anticipé
+      }
+    }
+
+    return bestMove;
   }
 
   private minimax(
@@ -169,486 +204,125 @@ export class AI {
     depth: number,
     alpha: number,
     beta: number,
-    isMaximizing: boolean,
-    multiCutThreshold: number = 2,
-    multiCutDepth: number = 3,
-    probCutFactor: number = 0.9,
-    aspirationDelta: number = 25,
+    maximizing: boolean,
   ): number {
-    const phase = this.determineGamePhase(board);
-    const boardKey = `${board.toString()}|${depth}|${phase}`;
-
-    if (Date.now() - this.startTime > this.maxTime) {
-      return this.evaluatePositionWithKingSafety(board, this.color);
-    }
-
-    // Vérification de la table de transposition
-    if (this.transpositionTable.has(boardKey)) {
-      const { value, depth: storedDepth } =
-        this.transpositionTable.get(boardKey)!;
-      if (storedDepth >= depth) return value;
-    }
-
-    // Condition de fin de recherche
-    if (
-      depth === 0 ||
-      board.isCheckmate(this.color) ||
-      board.isCheckmate(this.getOpponentColor())
-    ) {
-      const evaluation = this.quiescenceSearch(board, alpha, beta, phase);
-      this.transpositionTable.set(boardKey, { value: evaluation, depth });
-      return evaluation;
-    }
-
-    // Aspiration Window
-    let evalGuess = this.evaluatePositionWithKingSafety(board, this.color);
-    let localAlpha = evalGuess - aspirationDelta;
-    let localBeta = evalGuess + aspirationDelta;
-    let result: number;
-
-    while (true) {
-      result = this.alphaBetaWithAspirationWindow(
-        board,
-        depth,
-        localAlpha,
-        localBeta,
-        isMaximizing,
-        multiCutThreshold,
-        multiCutDepth,
-        probCutFactor,
+    const now = Date.now();
+    if (depth === 0 || now - this.startTime >= this.maxTime) {
+      return (
+        evaluateBoard(board, this.color) + evaluateKingSafety(board, this.color)
       );
-
-      // Si le résultat est hors de la fenêtre, on l'élargit et on recommence
-      if (result <= localAlpha) {
-        localAlpha -= aspirationDelta; // Elargir en dessous
-      } else if (result >= localBeta) {
-        localBeta += aspirationDelta; // Elargir au-dessus
-      } else {
-        break; // Si le résultat est dans la fenêtre, on le garde
-      }
     }
 
-    this.transpositionTable.set(boardKey, { value: result, depth });
-    return result;
-  }
+    const moves = this.getAllValidMoves(board);
+    if (moves.length === 0) return -9999; // aucun coup possible
 
-  private alphaBetaWithAspirationWindow(
-    board: Board,
-    depth: number,
-    alpha: number,
-    beta: number,
-    isMaximizing: boolean,
-    multiCutThreshold: number,
-    multiCutDepth: number,
-    probCutFactor: number,
-  ): number {
-    if (Date.now() - this.startTime > this.maxTime) return alpha;
+    let value: number;
 
-    let bestEval = isMaximizing ? -Infinity : Infinity;
-    let moves = this.getAllValidMoves(board);
-    moves = this.sortMoves(moves, board, depth, this.determineGamePhase(board));
+    if (maximizing) {
+      value = -Infinity;
 
-    let cutCount = 0;
+      for (const move of moves) {
+        if (Date.now() - this.startTime >= this.maxTime) break;
 
-    for (const move of moves) {
-      const fromPiece = board.getPiece(move.fromX, move.fromY);
-      const toPiece = board.getPiece(move.toX, move.toY);
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
-      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        const evalScore = -this.minimax(board, depth - 1, -beta, -alpha, false);
+        board.setPiece(move.fromX, move.fromY, movingPiece);
+        board.setPiece(move.toX, move.toY, originalPiece);
 
-      let evaluation: number;
+        value = Math.max(value, evalScore);
+        alpha = Math.max(alpha, value);
 
-      // Multi-Cut Pruning combiné avec ProbCut
-      if (depth >= multiCutDepth && cutCount < multiCutThreshold) {
-        evaluation = -this.minimax(
-          board,
-          depth - multiCutDepth,
-          -beta,
-          -alpha,
-          !isMaximizing,
-          multiCutThreshold,
-          multiCutDepth,
-          probCutFactor,
-        );
-        if (evaluation <= alpha) {
-          cutCount++;
-          board.setPiece(move.fromX, move.fromY, fromPiece);
-          board.setPiece(move.toX, move.toY, toPiece);
-          continue;
+        if (alpha >= beta) {
+          this.killerMoves.set(
+            depth,
+            (this.killerMoves.get(depth) || []).slice(0, 1).concat(move),
+          );
+          break;
         }
       }
-
-      evaluation = this.minimax(
-        board,
-        depth - 1,
-        alpha,
-        beta,
-        !isMaximizing,
-        multiCutThreshold,
-        multiCutDepth,
-        probCutFactor,
-      );
-
-      board.setPiece(move.fromX, move.fromY, fromPiece);
-      board.setPiece(move.toX, move.toY, toPiece);
-
-      if (isMaximizing) {
-        if (evaluation > bestEval) {
-          bestEval = evaluation;
-          this.updateHistoricalMoveScore(move);
-          this.addKillerMove(depth, move);
-        }
-        alpha = Math.max(alpha, evaluation);
-      } else {
-        if (evaluation < bestEval) {
-          bestEval = evaluation;
-          this.updateHistoricalMoveScore(move);
-          this.addKillerMove(depth, move);
-        }
-        beta = Math.min(beta, evaluation);
-      }
-
-      if (beta <= alpha) break;
-    }
-
-    return bestEval;
-  }
-
-  private determineGamePhase(board: Board): 'opening' | 'midgame' | 'endgame' {
-    const pieceCount = board.getPieceCount();
-    if (pieceCount > 24) return 'opening';
-    if (pieceCount > 12) return 'midgame';
-    return 'endgame';
-  }
-
-  private addKillerMove(
-    depth: number,
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-  ) {
-    const killers = this.killerMoves.get(depth) ?? [];
-    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
-
-    // Augmenter le score des killer moves pour ce mouvement
-    let existingMove = killers.find(
-      (k) =>
-        `${k.move.fromX},${k.move.fromY},${k.move.toX},${k.move.toY}` ===
-        moveKey,
-    );
-    if (existingMove) {
-      existingMove.score += 10;
     } else {
-      killers.push({ move, score: 10 });
-    }
+      value = Infinity;
 
-    // Trier par score et limiter le nombre de killer moves par profondeur
-    this.killerMoves.set(
-      depth,
-      killers.sort((a, b) => b.score - a.score).slice(0, 2),
-    );
-  }
+      for (const move of moves) {
+        if (Date.now() - this.startTime >= this.maxTime) break;
 
-  private updateHistoricalMoveScore(move: {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-  }) {
-    const moveKey = `${move.fromX},${move.fromY},${move.toX},${move.toY}`;
-    const currentScore = this.historicalMoveScores.get(moveKey) || 0;
-    this.historicalMoveScores.set(moveKey, currentScore + 1);
-  }
+        const originalPiece = board.getPiece(move.toX, move.toY);
+        const movingPiece = board.getPiece(move.fromX, move.fromY)!;
 
-  private quiescenceSearch(
-    board: Board,
-    alpha: number,
-    beta: number,
-    phase: 'opening' | 'midgame' | 'endgame',
-    depth: number = 0,
-  ): number {
-    const maxQuiescenceDepth = this.getAdaptiveQuiescenceDepth(board);
-    if (depth >= maxQuiescenceDepth) {
-      return evaluateBoard(board, this.color);
-    }
+        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
+        const evalScore = -this.minimax(board, depth - 1, -beta, -alpha, true);
+        board.setPiece(move.fromX, move.fromY, movingPiece);
+        board.setPiece(move.toX, move.toY, originalPiece);
 
-    const standPat = evaluateBoard(board, this.color);
-    if (standPat >= beta) return beta;
-    if (alpha < standPat) alpha = standPat;
+        value = Math.min(value, evalScore);
+        beta = Math.min(beta, value);
 
-    const moves = this.getAllValidMoves(board).filter((move) =>
-      board.isCapture(move.fromX, move.fromY, move.toX, move.toY),
-    );
-
-    for (const move of moves) {
-      const fromPiece = board.getPiece(move.fromX, move.fromY);
-      const toPiece = board.getPiece(move.toX, move.toY);
-
-      board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-      let score = -this.quiescenceSearch(
-        board,
-        -beta,
-        -alpha,
-        phase,
-        depth + 1,
-      );
-
-      // En fin de partie, accorder plus d'importance aux captures critiques
-      if (phase === 'endgame' && this.isCriticalMove(fromPiece!, move, board)) {
-        score += 20;
+        if (alpha >= beta) {
+          this.killerMoves.set(
+            depth,
+            (this.killerMoves.get(depth) || []).slice(0, 1).concat(move),
+          );
+          break;
+        }
       }
-
-      board.setPiece(move.fromX, move.fromY, fromPiece);
-      board.setPiece(move.toX, move.toY, toPiece);
-
-      if (score >= beta) return beta;
-      if (score > alpha) alpha = score;
     }
 
-    return alpha;
+    return value;
   }
 
-  private getOpponentColor(): PieceColor {
-    return this.color === PieceColor.WHITE
-      ? PieceColor.BLACK
-      : PieceColor.WHITE;
-  }
+  private getAllValidMoves(board: Board): Move[] {
+    const moves: Move[] = [];
 
-  private getAllValidMoves(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number }[] {
-    const validMoves = [];
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = board.getPiece(x, y);
         if (piece && piece.color === this.color) {
-          const moves = board.getValidMoves(x, y);
-          for (const move of moves) {
-            if (board.isMoveValid(x, y, move.x, move.y)) {
-              const originalPiece = board.getPiece(move.x, move.y);
-              board.setPiece(move.x, move.y, piece);
-              board.setPiece(x, y, null);
+          const validMoves = board.getValidMoves(x, y);
 
-              const kingSafe = !board.isKingInCheck(this.color);
+          const wasInCheck = board.isKingInCheck(this.color);
 
-              board.setPiece(x, y, piece);
-              board.setPiece(move.x, move.y, originalPiece);
+          for (const move of validMoves) {
+            const { x: toX, y: toY } = move;
 
-              if (kingSafe) {
-                validMoves.push({
-                  fromX: x,
-                  fromY: y,
-                  toX: move.x,
-                  toY: move.y,
-                });
+            const originalPiece = board.getPiece(toX, toY);
+            const movingPiece = board.getPiece(x, y)!;
+
+            board.movePiece(x, y, toX, toY);
+
+            let kingX = -1,
+              kingY = -1;
+            if (movingPiece.type === 'king') {
+              kingX = toX;
+              kingY = toY;
+            } else {
+              const king = board.findKing(this.color);
+              if (!king) {
+                board.setPiece(x, y, movingPiece);
+                board.setPiece(toX, toY, originalPiece);
+                continue;
               }
+              kingX = king.x;
+              kingY = king.y;
+            }
+
+            const stillSafe =
+              board.isWithinBounds(kingX, kingY) &&
+              !board.isSquareUnderAttack(kingX, kingY, this.color);
+
+            board.setPiece(x, y, movingPiece);
+            board.setPiece(toX, toY, originalPiece);
+
+            if ((!wasInCheck && stillSafe) || (wasInCheck && stillSafe)) {
+              moves.push({ fromX: x, fromY: y, toX, toY });
             }
           }
         }
       }
     }
-    return validMoves;
-  }
 
-  private sortMoves(
-    moves: { fromX: number; fromY: number; toX: number; toY: number }[],
-    board: Board,
-    depth: number,
-    phase: 'opening' | 'midgame' | 'endgame',
-  ): { fromX: number; fromY: number; toX: number; toY: number }[] {
-    const positionKey = this.getPositionKey(board);
-    const contextualMoves =
-      this.contextualMoveDatabase.getMovesByFrequency(positionKey);
-
-    return moves.sort((a, b) => {
-      const pieceA = board.getPiece(a.toX, a.toY);
-      const pieceB = board.getPiece(b.toX, b.toY);
-
-      const valueA = pieceA ? pieceValues[pieceA.type] : 0;
-      const valueB = pieceB ? pieceValues[pieceB.type] : 0;
-
-      // Prioriser les mouvements contextuels basés sur les données
-      const moveAContextScore = contextualMoves.findIndex(
-        (m) =>
-          m.move.fromX === a.fromX &&
-          m.move.fromY === a.fromY &&
-          m.move.toX === a.toX &&
-          m.move.toY === a.toY,
-      );
-      const moveBContextScore = contextualMoves.findIndex(
-        (m) =>
-          m.move.fromX === b.fromX &&
-          m.move.fromY === b.fromY &&
-          m.move.toX === b.toX &&
-          m.move.toY === b.toY,
-      );
-
-      // Prioriser les mouvements qui apparaissent plus fréquemment
-      if (moveAContextScore !== -1 || moveBContextScore !== -1) {
-        return (
-          (moveAContextScore !== -1 ? moveAContextScore : Infinity) -
-          (moveBContextScore !== -1 ? moveBContextScore : Infinity)
-        );
-      }
-
-      if (phase === 'opening') {
-        const centerControlA = centerControlBonus[`${a.toX},${a.toY}`] || 0;
-        const centerControlB = centerControlBonus[`${b.toX},${b.toY}`] || 0;
-        if (centerControlA !== centerControlB)
-          return centerControlB - centerControlA;
-      } else if (phase === 'endgame') {
-        if (pieceA && pieceA.type === PieceType.PAWN && a.toY === 7) return -1;
-        if (pieceB && pieceB.type === PieceType.PAWN && b.toY === 7) return 1;
-      }
-
-      if (valueA !== valueB) return valueB - valueA;
-
-      const killerMovesAtDepth = this.killerMoves.get(depth);
-      if (
-        killerMovesAtDepth &&
-        killerMovesAtDepth.some(
-          (km) =>
-            km.move.fromX === a.fromX &&
-            km.move.fromY === a.fromY &&
-            km.move.toX === a.toX &&
-            km.move.toY === a.toY,
-        )
-      ) {
-        return -1;
-      }
-
-      const scoreA =
-        this.historicalMoveScores.get(
-          `${a.fromX},${a.fromY},${a.toX},${a.toY}`,
-        ) || 0;
-      const scoreB =
-        this.historicalMoveScores.get(
-          `${b.fromX},${b.fromY},${b.toX},${b.toY}`,
-        ) || 0;
-
-      return scoreB - scoreA;
-    });
-  }
-
-  private getAdaptiveQuiescenceDepth(board: Board): number {
-    const pieceCount = board.getPieceCount();
-    if (pieceCount <= 6) return 7;
-    if (pieceCount <= 12) return 5;
-    return 3;
-  }
-
-  private evaluatePositionWithKingSafety(
-    board: Board,
-    color: PieceColor,
-  ): number {
-    let score = evaluateBoard(board, color);
-    const kingSafety = evaluateKingSafety(board, color);
-    score += kingSafety;
-    return score;
-  }
-
-  private useEndgameTablebase(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    if (board.getPieceCount() <= 5) {
-      const positionKey = board.getCurrentMovesHash();
-      const endgameMove = EndgameTablebase.getEndgameMove(positionKey);
-      return endgameMove ? this.flipMoveIfBlack(endgameMove) : null;
-    }
-    return null;
-  }
-
-  // Fonction pour identifier les mouvements critiques
-  private isCriticalMove(
-    piece: Piece,
-    move: { fromX: number; fromY: number; toX: number; toY: number },
-    board: Board,
-  ): boolean {
-    const targetPiece = board.getPiece(move.toX, move.toY);
-    return <boolean>(
-      (targetPiece &&
-        targetPiece.color !== piece.color &&
-        targetPiece.type !== PieceType.PAWN)
-    );
-  }
-
-  private getPositionKey(board: Board): string {
-    return board.getCurrentMovesHash();
-  }
-
-  private convertMoveToCoords(move: string): {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-  } {
-    const [fromX, fromY, toX, toY] = move.match(/\d+/g)!.map(Number);
-    return { fromX, fromY, toX, toY };
-  }
-
-  private getAnalyzedMove(
-    position: string,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    const bestMove = this.gamesAnalyzer.getBestMove(position);
-    return bestMove ? this.convertMoveToCoords(bestMove) : null;
-  }
-
-  private getBestMoveUsingMinimax(
-    board: Board,
-  ): { fromX: number; fromY: number; toX: number; toY: number } | null {
-    let bestMove = null;
-    let bestValue = -Infinity;
-    const maxDepth = 16;
-    const phase = this.determineGamePhase(board);
-    const THRESHOLD_VALUE = 600;
-
-    for (let depth = 1; depth <= maxDepth; depth++) {
-      if (Date.now() - this.startTime > this.maxTime) break;
-
-      let moves = this.getAllValidMoves(board);
-      moves = this.sortMoves(moves, board, depth, phase);
-
-      for (const move of moves) {
-        if (Date.now() - this.startTime > this.maxTime) return bestMove;
-
-        const piece = board.getPiece(move.fromX, move.fromY);
-        if (!piece) continue;
-        const originalPiece = board.getPiece(move.toX, move.toY);
-
-        board.movePiece(move.fromX, move.fromY, move.toX, move.toY);
-
-        const isCritical =
-          board.isKingInCheck(this.color) ||
-          this.isCriticalMove(piece, move, board);
-        const adjustedDepth = isCritical ? depth + 1 : depth;
-
-        // Fenêtre nulle pour les mouvements de type "killer"
-        const boardValue = this.minimax(
-          board,
-          adjustedDepth - 1,
-          -bestValue,
-          -Infinity,
-          false,
-        );
-
-        board.setPiece(move.fromX, move.fromY, piece);
-        board.setPiece(move.toX, move.toY, originalPiece);
-
-        if (-boardValue > bestValue) {
-          bestValue = -boardValue;
-          bestMove = move;
-
-          if (bestValue >= THRESHOLD_VALUE) return bestMove;
-        }
-
-        if (Date.now() - this.startTime > this.maxTime) {
-          return bestMove;
-        }
-      }
-
-      if (Date.now() - this.startTime > this.maxTime) {
-        break;
-      }
-    }
-
-    return bestMove;
+    return moves;
   }
 }

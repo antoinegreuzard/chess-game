@@ -1,6 +1,8 @@
 // src/utils/utils.ts
 
 import { PieceColor, PieceType } from '../piece';
+import { Board } from '../board';
+import { Move } from '../ai/openingBook';
 
 export let capturedWhite: string[] = [];
 export let capturedBlack: string[] = [];
@@ -60,4 +62,25 @@ export function updateCapturedPiecesDOM(): void {
   if (capturedBlackElement) {
     capturedBlackElement.textContent = capturedBlack.join(' ');
   }
+}
+
+export function describeMove(board: Board, move: Move): string {
+  const piece = board.getPiece(move.fromX, move.fromY);
+  if (!piece) {
+    return `❗ Erreur : aucune pièce à (${move.fromX}, ${move.fromY})`;
+  }
+
+  const symbols = {
+    [PieceType.PAWN]: '♟',
+    [PieceType.KNIGHT]: '♞',
+    [PieceType.BISHOP]: '♝',
+    [PieceType.ROOK]: '♜',
+    [PieceType.QUEEN]: '♛',
+    [PieceType.KING]: '♚',
+  };
+
+  const from = `${String.fromCharCode(97 + move.fromX)}${8 - move.fromY}`;
+  const to = `${String.fromCharCode(97 + move.toX)}${8 - move.toY}`;
+
+  return `${piece.color === PieceColor.WHITE ? 'Blanc' : 'Noir'} joue ${symbols[piece.type]} de ${from} à ${to}`;
 }

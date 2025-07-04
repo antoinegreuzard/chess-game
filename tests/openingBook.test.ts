@@ -9,7 +9,12 @@ describe('OpeningBook', () => {
     expect([
       { fromX: 1, fromY: 7, toX: 3, toY: 7 },
       { fromX: 6, fromY: 7, toX: 5, toY: 5 },
-    ]).toContainEqual(move); // Vérifie si le mouvement retourné est dans les options possibles
+    ]).toContainEqual({
+        fromX: move!.fromX,
+        fromY: move!.fromY,
+        toX: move!.toX,
+        toY: move!.toY,
+      }); // Vérifie si le mouvement retourné est dans les options possibles
   });
 
   it('devrait retourner un autre mouvement pour une autre position connue', () => {
