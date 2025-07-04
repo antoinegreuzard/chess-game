@@ -5,59 +5,60 @@ import { PieceColor, PieceType } from './piece';
 import { Pawn } from './pieces/pawn';
 
 let ai: AI;
+let currentBoard: Board;
 
 self.onmessage = async (event) => {
-  const { boardData, aiColor } = event.data;
+  const { boardData, aiColor, invalidMove } = event.data;
 
-  // Initialisez `ai` ici, après avoir reçu `aiColor`
-  ai = new AI(aiColor);
+  if (boardData && aiColor) {
+    ai = new AI(aiColor);
+    await ai.loadGamesData();
+    currentBoard = await Board.fromData(boardData);
+  }
 
-  // Charge les données JSON avant de continuer
-  await ai.loadGamesData();
+  if (invalidMove) {
+    ai.addInvalidMove(invalidMove);
+  }
 
-  const board = await Board.fromData(boardData);
-  const bestMove = ai.makeMove(board);
+  let bestMove = ai.makeMove(currentBoard);
 
-  // Définit explicitement le type de captureData
   let captureData: {
     capturedWhite: PieceType[];
     capturedBlack: PieceType[];
   } | null = null;
+  let promotionRequired = false;
 
-  // Vérifie si une capture est effectuée
-  if (
-    bestMove &&
-    board.isCapture(bestMove.fromX, bestMove.fromY, bestMove.toX, bestMove.toY)
-  ) {
-    const targetPiece = board.getPiece(bestMove.toX, bestMove.toY);
-    if (targetPiece) {
-      captureData = {
-        capturedWhite: [],
-        capturedBlack: [],
-      };
-      if (targetPiece.color === PieceColor.WHITE) {
-        captureData.capturedWhite.push(targetPiece.type);
-      } else {
-        captureData.capturedBlack.push(targetPiece.type);
+  if (bestMove) {
+    if (
+      currentBoard.isCapture(
+        bestMove.fromX,
+        bestMove.fromY,
+        bestMove.toX,
+        bestMove.toY,
+      )
+    ) {
+      const targetPiece = currentBoard.getPiece(bestMove.toX, bestMove.toY);
+      if (targetPiece) {
+        captureData = {
+          capturedWhite: [],
+          capturedBlack: [],
+        };
+        if (targetPiece.color === PieceColor.WHITE) {
+          captureData.capturedWhite.push(targetPiece.type);
+        } else {
+          captureData.capturedBlack.push(targetPiece.type);
+        }
       }
     }
-  }
 
-  // Vérifie si une promotion est nécessaire pour un pion
-  let promotionRequired = false;
-  if (
-    bestMove &&
-    board.getPiece(bestMove.fromX, bestMove.fromY)?.type === PieceType.PAWN
-  ) {
-    const piece = board.getPiece(bestMove.fromX, bestMove.fromY);
+    const piece = currentBoard.getPiece(bestMove.fromX, bestMove.fromY);
     if (piece instanceof Pawn) {
       const promotionRow = aiColor === PieceColor.WHITE ? 7 : 0;
-      // Vérifie si la pièce est un pion
       if (bestMove.toY === promotionRow) {
         promotionRequired = piece.handlePromotion(
           bestMove.toX,
           bestMove.toY,
-          board,
+          currentBoard,
         );
       }
     }

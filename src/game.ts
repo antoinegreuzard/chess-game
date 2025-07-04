@@ -1,7 +1,7 @@
 // game.ts
 import { Board } from './board';
 import { updateCapturedPieces } from './utils/utils';
-import { PieceColor, PieceType } from './piece';
+import { PieceColor } from './piece';
 
 export class Game {
   private readonly board: Board;
@@ -21,6 +21,8 @@ export class Game {
     });
     this.aiColor =
       playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+
+    this.board.setFlipBoard(false);
   }
 
   public async getBoard(): Promise<Board> {
@@ -30,49 +32,76 @@ export class Game {
 
   public makeAIMove(): Promise<void> {
     return new Promise((resolve) => {
-      this.aiWorker.onmessage = (event) => {
-        const { bestMove, captureData, promotionRequired } = event.data;
+      this.aiWorker.onmessage = async (event) => {
+        let { bestMove } = event.data;
 
-        if (promotionRequired) {
-          // Affiche la boîte de dialogue pour sélectionner la promotion
-          const promotionDialog = document.getElementById(
-            'promotionDialog',
-          ) as HTMLDivElement;
-          promotionDialog.style.display = 'block';
+        let isMoveLegal = await this.isAIMoveLegal(bestMove);
+        let attempts = 0;
 
-          window.promote = (pieceType: string) => {
-            promotionDialog.style.display = 'none';
-            // Envoie la promotion choisie au worker si besoin
-            this.aiWorker.postMessage({ promotionType: pieceType });
-          };
+        while (!isMoveLegal && attempts < 50) {
+          this.aiWorker.postMessage({ invalidMove: bestMove });
+
+          const newEvent = (await new Promise((res) => {
+            this.aiWorker.onmessage = res;
+          })) as MessageEvent;
+
+          bestMove = newEvent.data.bestMove;
+          isMoveLegal = await this.isAIMoveLegal(bestMove);
+          attempts++;
         }
 
-        if (bestMove) {
+        if (isMoveLegal && bestMove) {
           this.lastAIMove = bestMove;
 
-          const wasMoved = this.board.movePiece(
+          // Vérification et mise à jour des pièces capturées
+          const targetPiece = this.board.getPiece(bestMove.toX, bestMove.toY);
+          if (targetPiece) {
+            updateCapturedPieces(targetPiece.type, targetPiece.color);
+          }
+
+          this.board.movePiece(
             bestMove.fromX,
             bestMove.fromY,
             bestMove.toX,
             bestMove.toY,
             false,
           );
-
-          if (wasMoved && captureData) {
-            captureData.capturedWhite.forEach((piece: PieceType) =>
-              updateCapturedPieces(piece, PieceColor.WHITE),
-            );
-            captureData.capturedBlack.forEach((piece: PieceType) =>
-              updateCapturedPieces(piece, PieceColor.BLACK),
-            );
-          }
+        } else {
+          console.warn(
+            "Aucun coup valide trouvé par l'IA après plusieurs tentatives.",
+          );
         }
-        resolve(); // Résout la promesse une fois le coup de l’IA joué
+
+        resolve();
       };
 
       const boardData = this.board.toData();
-      this.aiWorker.postMessage({ boardData, aiColor: this.aiColor }); // Envoie la couleur de l'IA au worker
+      this.aiWorker.postMessage({ boardData, aiColor: this.aiColor });
     });
+  }
+
+  private async isAIMoveLegal(bestMove: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }): Promise<boolean> {
+    const testBoard = await Board.fromData(this.board.toData());
+
+    // Simuler le coup sur un plateau temporaire
+    const piece = testBoard.getPiece(bestMove.fromX, bestMove.fromY);
+    const targetPiece = testBoard.getPiece(bestMove.toX, bestMove.toY);
+
+    testBoard.setPiece(bestMove.toX, bestMove.toY, piece);
+    testBoard.setPiece(bestMove.fromX, bestMove.fromY, null);
+
+    const isStillInCheck = testBoard.isKingInCheck(this.aiColor);
+
+    // Restaurer les positions (inutile si plateau temporaire est jetable)
+    testBoard.setPiece(bestMove.fromX, bestMove.fromY, piece);
+    testBoard.setPiece(bestMove.toX, bestMove.toY, targetPiece);
+
+    return !isStillInCheck;
   }
 
   public getLastAIMove() {

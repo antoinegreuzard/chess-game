@@ -45,7 +45,7 @@ describe('Board', () => {
   });
 
   test('getValidMoves returns correct moves for a piece', () => {
-    const pawn = new Pawn(PieceColor.WHITE);
+    const pawn = new Pawn(PieceColor.BLACK);
     board.setPiece(4, 1, pawn);
 
     const validMoves = board.getValidMoves(4, 1);
@@ -54,9 +54,10 @@ describe('Board', () => {
   });
 
   test('movePiece performs a valid move', () => {
-    const pawn = new Pawn(PieceColor.WHITE);
+    const pawn = new Pawn(PieceColor.BLACK);
     board.setPiece(4, 1, pawn);
 
+    board.setPlayerColor(PieceColor.WHITE);
     const moved = board.movePiece(4, 1, 4, 3);
     expect(moved).toBe(true);
     expect(board.getPiece(4, 3)).toBe(pawn);
